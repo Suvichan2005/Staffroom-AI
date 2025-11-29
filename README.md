@@ -6,7 +6,7 @@ Contents
 - `src/` — React source files
 - `public/` — Static assets
 
-How to run
+How to run 
 
 1. Install dependencies:
 
