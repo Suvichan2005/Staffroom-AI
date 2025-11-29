@@ -1,4 +1,4 @@
-# School Companion — Frontend
+ # School Companion — Frontend
 
 This repository contains the frontend application (Vite + React) extracted from the School-Companion-AI monorepo.
 
