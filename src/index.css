@@ -1,0 +1,53 @@
+/* Minimal global styles (Tailwind handles most) */
+html, body, #root { height: 100%; }
+body { font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,'Noto Sans',sans-serif; }
+
+/* Scrollbar minimal styling */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+/* Utility overrides when Tailwind CDN is used */
+.glass-panel { backdrop-filter: blur(8px); background: rgba(255,255,255,0.6); }
+.card-edge { box-shadow: 0 4px 16px -4px rgba(30,41,59,0.15); }
+
+/* Focus ring accessibility: show only when keyboard focusing */
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+/* Design Tokens */
+:root {
+	--sc-bg: #f8fafc;
+	--sc-surface: #ffffff;
+	--sc-surface-alt: #f1f5f9;
+	--sc-primary: #1e3a8a;
+	--sc-primary-accent: #2563eb;
+	--sc-gradient-start: #0ea5e9;
+	--sc-gradient-end: #6366f1;
+	--sc-radius-sm: 6px;
+	--sc-radius: 16px;
+	--sc-radius-lg: 28px;
+	--sc-shadow: 0 4px 12px -2px rgba(30,41,59,.15);
+	--sc-shadow-hover: 0 6px 18px -2px rgba(30,41,59,.25);
+}
+
+body { background: var(--sc-bg); }
+
+.sc-card { background: var(--sc-surface); border-radius: var(--sc-radius); box-shadow: var(--sc-shadow); padding: 1rem; }
+.sc-card.hoverable { transition: box-shadow .25s, transform .25s; }
+.sc-card.hoverable:hover { box-shadow: var(--sc-shadow-hover); transform: translateY(-2px); }
+
+.sc-heading { font-weight:600; color:#0f172a; letter-spacing:.5px; }
+.sc-subtle { color:#64748b; font-size:.875rem; }
+
+.sc-gradient-bar { height:4px; width:100%; border-radius:999px; background: linear-gradient(90deg,var(--sc-gradient-start),var(--sc-gradient-end)); }
+
+.sc-table { width:100%; border-collapse: separate; border-spacing:0 8px; }
+.sc-table thead th { text-align:left; font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; padding:.5rem .75rem; color:#475569; }
+.sc-table tbody tr { background:var(--sc-surface); box-shadow: var(--sc-shadow); }
+.sc-table tbody td { padding:.75rem .9rem; font-size:.875rem; }
+.sc-badge { display:inline-block; padding:2px 8px; font-size:.65rem; font-weight:600; letter-spacing:.05em; border-radius:999px; background:#e0f2fe; color:#0369a1; }
+
+@media (max-width:640px){
+	.hide-mobile { display:none !important; }
+}
