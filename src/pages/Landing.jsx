@@ -1,221 +1,337 @@
-import { ArrowRight, BarChart3, ShieldCheck, Sparkles, Users, Mic, Brain, Share2 } from "lucide-react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useTeacher } from "../context/TeacherContext";
-import { useAuth } from "../context/AuthContext";
-import { PageShell } from "../components/layout";
-
-const featureHighlights = [
-  {
-    title: "Voice-First Workflow",
-    description:
-      "Log class progress in seconds with voice commands. Just say what you covered, and we'll update your syllabus tracker.",
-    icon: Mic,
-  },
-  {
-    title: "Unified Dashboard",
-    description:
-      "All your classes, syllabi, and analytics in one place. Track attendance, assignments, and curriculum coverage effortlessly.",
-    icon: BarChart3,
-  },
-  {
-    title: "Smart AI Suggestions",
-    description:
-      "Get intelligent recommendations for assignments, identify at-risk students, and receive lesson planning support.",
-    icon: Brain,
-  },
-  {
-    title: "Seamless Collaboration",
-    description:
-      "Share resources, chat with colleagues teaching the same course, and align on curriculum progress across sections.",
-    icon: Share2,
-  },
-  {
-    title: "Role-Based Access",
-    description:
-      "Teachers, HODs, and admins each get tailored views with the right permissions for their responsibilities.",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Real-Time Insights",
-    description:
-      "Track syllabus coverage, attendance patterns, and student performance with live analytics and visual reports.",
-    icon: Sparkles,
-  },
-];
-
-const personaCards = [
-  {
-    persona: "teacher",
-    heading: "For Teachers",
-    blurb: "Streamline your daily workflow with voice logging, smart attendance tracking, and AI-powered lesson planning.",
-    actionLabel: "Explore Teacher View",
-    path: "/dashboard",
-  },
-  {
-    persona: "hod",
-    heading: "For HODs",
-    blurb: "Monitor curriculum progress across sections, identify coverage gaps, and make data-driven decisions for exams.",
-    actionLabel: "See HOD Dashboard",
-    path: "/hod-dashboard",
-  },
-  {
-    persona: "admin",
-    heading: "For Admins",
-    blurb: "Manage school-wide operations with centralized timetables, teacher assignments, and comprehensive audit trails.",
-    actionLabel: "View Admin Panel",
-    path: "/admin-dashboard",
-  },
-];
+import { motion } from "framer-motion";
+import { 
+  ArrowRight, 
+  Mic, 
+  Brain, 
+  BarChart3, 
+  Users,
+  Sparkles,
+  CheckCircle2
+} from "lucide-react";
 
 export default function Landing() {
   const navigate = useNavigate();
-  const teacherCtx = useTeacher();
 
-  const authCtx = useAuth();
-  const handleExplore = (persona, path) => {
-    teacherCtx?.setPersona?.(persona);
-    if (authCtx?.user) {
-      navigate(path);
-    } else {
-      navigate("/login");
+  const features = [
+    {
+      icon: Mic,
+      title: "Voice-First Workflow",
+      description: "Say 'I finished Chapter 4 in 6A Geography' and watch your progress update instantly.",
+      color: "indigo"
+    },
+    {
+      icon: Brain,
+      title: "AI Teaching Assistant",
+      description: "Get smart suggestions for quizzes, identify at-risk students, and plan lessons effortlessly.",
+      color: "purple"
+    },
+    {
+      icon: BarChart3,
+      title: "Real-Time Analytics",
+      description: "Track syllabus coverage, attendance patterns, and student performance at a glance.",
+      color: "indigo"
+    },
+    {
+      icon: Users,
+      title: "Team Collaboration",
+      description: "Share resources, coordinate with colleagues, and align curriculum across sections.",
+      color: "purple"
+    }
+  ];
+
+  const benefits = [
+    "Save hours of manual work weekly",
+    "Voice-powered tracking",
+    "AI-generated quizzes",
+    "At-risk student alerts"
+  ];
+
+  const getColorClasses = (color) => {
+    switch (color) {
+      case 'emerald': return 'bg-emerald-100 text-emerald-600';
+      case 'purple': return 'bg-purple-100 text-purple-600';
+      case 'sky': return 'bg-sky-100 text-sky-600';
+      case 'amber': return 'bg-amber-100 text-amber-600';
+      default: return 'bg-indigo-100 text-indigo-600';
     }
   };
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-      <section className="py-20">
-        <PageShell width="5xl">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
-            <div className="lg:max-w-xl space-y-6">
-              <span className="inline-flex items-center gap-2 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold px-4 py-1">
-                <Sparkles className="h-3.5 w-3.5" />
-                AI-Powered Teacher Assistant
-              </span>
-              <h1 className="text-4xl sm:text-5xl font-semibold text-slate-900 tracking-tight leading-tight">
-                The AI-Powered Staffroom Teachers Deserve
-              </h1>
-              <p className="text-base text-slate-600 leading-relaxed">
-                Streamline attendance, track curriculum, and collaborate — all in one intelligent workspace
-                designed for educators. Spend less time on admin work and more time teaching.
-              </p>
-              <div className="flex flex-wrap gap-3">
+    <div className="min-h-screen bg-slate-50">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-28 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center j ustify-between h-16">
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">S</span>
+              </div>
+              <span className="text-xl font-bold text-slate-800">Staffroom</span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="pt-32 pb-20 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="space-y-8"
+            >
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 text-sm font-medium">
+                  <Sparkles className="w-4 h-4" />
+                  AI-Powered Teacher Assistant
+                </div>
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
+                  The Staffroom
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"> Teachers </span>
+                  Deserve
+                </h1>
+                <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
+                  Streamline attendance, track curriculum, and get AI-powered insights — all through voice commands. 
+                  Spend less time on paperwork, more time teaching.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => handleExplore("teacher", "/dashboard")}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-indigo-600 text-white text-sm font-medium shadow-md shadow-indigo-200 hover:bg-indigo-700 transition"
+                  onClick={() => navigate("/login")}
+                  className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-indigo-600 text-white font-semibold text-base hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300"
                 >
-                  Start Free Trial
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => {
-                    document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-indigo-200 text-indigo-700 text-sm font-medium hover:bg-indigo-50 transition"
-                >
-                  See How It Works
+                  Get Started
+                  <ArrowRight className="w-5 h-5" />
                 </button>
               </div>
-            </div>
-            <div className="flex-1">
-              <div className="relative rounded-3xl border border-indigo-100 bg-white shadow-xl shadow-indigo-100/40 p-6 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-500 text-white grid place-items-center text-lg font-semibold">
-                    S
+
+              {/* Quick Benefits */}
+              <div className="grid grid-cols-2 gap-3 pt-4">
+                {benefits.map((benefit, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm text-slate-600">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                    <span>{benefit}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Right - Preview Card */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="relative rounded-3xl bg-white border border-slate-200 shadow-2xl shadow-slate-200/50 p-6 space-y-5">
+                {/* Mini Dashboard Preview */}
+                <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                    <span className="text-white font-bold text-xl">MA</span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-slate-800">Staffroom</p>
-                    <p className="text-xs text-slate-500">Built for educators, powered by AI</p>
+                    <p className="font-semibold text-slate-800">Mr. Agarwal</p>
+                    <p className="text-sm text-slate-500">Geography Teacher</p>
                   </div>
                 </div>
-                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">What You Get</p>
-                  <ul className="text-sm text-slate-600 space-y-1">
-                    <li>• Voice-powered syllabus tracking and attendance logging</li>
-                    <li>• AI assistant for lesson planning and student insights</li>
-                    <li>• Real-time collaboration with fellow teachers</li>
-                    <li>• Comprehensive analytics and progress reports</li>
-                  </ul>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-indigo-600">6</p>
+                    <p className="text-xs text-slate-500">Classes</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-emerald-600">78%</p>
+                    <p className="text-xs text-slate-500">Syllabus</p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-amber-600">94%</p>
+                    <p className="text-xs text-slate-500">Attendance</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-slate-500">
-                  <Users className="h-4 w-4" />
-                  Join educators streamlining their workflow with Staffroom
+
+                {/* Voice Input Preview */}
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-4 border border-indigo-100">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center">
+                      <Mic className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-700">Voice Command</p>
+                      <p className="text-xs text-slate-500">Tap to speak</p>
+                    </div>
+                  </div>
+                  <div className="bg-white rounded-xl p-3 border border-slate-200">
+                    <p className="text-sm text-slate-600 italic">
+                      "I finished Chapter 4, Landforms in 6A Geography"
+                    </p>
+                  </div>
+                </div>
+
+                {/* AI Suggestion */}
+                <div className="flex items-start gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                    <Brain className="w-4 h-4 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-emerald-800">AI Suggestion</p>
+                    <p className="text-xs text-emerald-600">Next: Chapter 5 - Climate. Estimated 3 classes.</p>
+                  </div>
                 </div>
               </div>
-            </div>
+
+              {/* Decorative elements */}
+              <div className="absolute -z-10 top-8 -right-4 w-72 h-72 bg-indigo-200 rounded-full blur-3xl opacity-30" />
+              <div className="absolute -z-10 -bottom-8 -left-4 w-72 h-72 bg-purple-200 rounded-full blur-3xl opacity-30" />
+            </motion.div>
           </div>
-        </PageShell>
+        </div>
       </section>
 
-      <section id="features" className="py-16 bg-white">
-        <PageShell width="6xl">
-          <div className="text-center mb-10">
-            <p className="text-xs uppercase tracking-widest text-indigo-600 mb-2">Features</p>
-            <h2 className="text-3xl font-semibold text-slate-900">Everything you need to teach smarter</h2>
-            <p className="text-sm text-slate-500 mt-2 max-w-2xl mx-auto">
-              Staffroom brings together attendance, curriculum tracking, and collaboration into one seamless experience
+      {/* Features Section */}
+      <section className="py-20 px-4 sm:px-6 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">Features</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Everything you need to teach smarter
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Staffroom brings together attendance, curriculum tracking, and AI assistance 
+              into one seamless experience designed for educators.
             </p>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featureHighlights.map((feature) => {
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, i) => {
               const Icon = feature.icon;
               return (
-                <div key={feature.title} className="sc-card h-full space-y-3 hover:shadow-lg transition-shadow">
-                  <div className="h-10 w-10 rounded-xl bg-indigo-100 grid place-items-center">
-                    <Icon className="h-5 w-5 text-indigo-600" />
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-slate-50 rounded-2xl p-6 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all border border-transparent hover:border-slate-200"
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${getColorClasses(feature.color)}`}>
+                    <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-800">{feature.title}</h3>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2">{feature.title}</h3>
                   <p className="text-sm text-slate-600 leading-relaxed">{feature.description}</p>
-                </div>
+                </motion.div>
               );
             })}
           </div>
-        </PageShell>
+        </div>
       </section>
 
-      <section className="py-16">
-        <PageShell width="6xl">
-          <div className="mb-8 text-center space-y-2">
-            <p className="text-xs uppercase tracking-widest text-indigo-600">Explore by Role</p>
-            <h2 className="text-3xl font-semibold text-slate-900">Built for every stakeholder</h2>
-            <p className="text-sm text-slate-500">See how Staffroom adapts to your role in the school</p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {personaCards.map((card) => (
-              <div key={card.persona} className="sc-card border border-indigo-100 bg-white flex flex-col gap-4 hover:shadow-lg transition-shadow">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800">{card.heading}</h3>
-                  <p className="text-sm text-slate-600 mt-2 leading-relaxed">{card.blurb}</p>
+      {/* How It Works */}
+      <section className="py-20 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">How It Works</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Simplify your teaching workflow
+            </h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { step: "1", icon: Mic, title: "Speak", desc: "Use voice commands to log attendance, update progress, or ask questions." },
+              { step: "2", icon: Brain, title: "AI Processes", desc: "Our AI understands context and updates your data automatically." },
+              { step: "3", icon: BarChart3, title: "Insights Ready", desc: "Get real-time analytics, suggestions, and reports instantly." }
+            ].map((item, i) => (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15 }}
+                className="relative pt-4"
+              >
+                {/* Step Number */}
+                <div className="absolute top-0 -translate-x-1/2 w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center z-10 shadow-lg">
+                  {item.step}
                 </div>
-                <button
-                  onClick={() => handleExplore(card.persona, card.path)}
-                  className="mt-auto inline-flex items-center gap-2 self-start px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition"
-                >
-                  {card.actionLabel}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 pt-8 text-center hover:shadow-lg transition-shadow">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-slate-800 mb-2">{item.title}</h3>
+                  <p className="text-sm text-slate-600">{item.desc}</p>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </PageShell>
+        </div>
       </section>
 
-      <section className="py-16 bg-gradient-to-br from-indigo-50 to-white">
-        <PageShell width="4xl">
-          <div className="text-center space-y-6">
-            <h2 className="text-3xl font-semibold text-slate-900">Ready to transform your teaching workflow?</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              Start your free trial today and experience how AI can help you focus on what matters most — your students.
-            </p>
-            <button
-              onClick={() => handleExplore("teacher", "/dashboard")}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 text-white text-base font-medium shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition"
-            >
-              Get Started Now
-              <ArrowRight className="h-5 w-5" />
-            </button>
-          </div>
-        </PageShell>
+      {/* CTA Section */}
+      <section className="py-20 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden"
+          >
+            {/* Decorative circles */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-400/20 rounded-full blur-3xl" />
+            
+            <div className="relative z-10">
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                Ready to transform your teaching?
+              </h2>
+              <p className="text-lg text-indigo-100 mb-8 max-w-xl mx-auto">
+                Join educators who are saving hours every week with Staffroom's 
+                AI-powered workflow automation.
+              </p>
+              <button
+                onClick={() => navigate("/login")}
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-indigo-600 font-semibold text-base hover:bg-indigo-50 transition-colors shadow-xl"
+              >
+                Login to Staffroom
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
+          </motion.div>
+        </div>
       </section>
+
+      {/* Footer */}
+      <footer className="py-8 px-4 sm:px-6 border-t border-slate-200">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">S</span>
+            </div>
+            <span className="text-sm font-semibold text-slate-700">Staffroom</span>
+          </div>
+          <p className="text-sm text-slate-500">
+            © 2025 Staffroom. Built for educators, powered by AI.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

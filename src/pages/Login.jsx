@@ -18,14 +18,12 @@ export default function Login() {
     );
   }
 
-  const { setTeacher, mapAuthUserToTeacher, getTeacherDirectory } = teacherCtx;
+  const { mapAuthUserToTeacher } = teacherCtx;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [validationErrors, setValidationErrors] = useState([]);
-
-  const TEST_ADMIN = { email: "admin@staffroom.test", password: "Admin123!" };
 
   async function handleGoogleLogin() {
     setError("");
@@ -73,20 +71,20 @@ export default function Login() {
     }
   }
 
-  function handleDemoLogin() {
-    const dir = getTeacherDirectory();
-    const demo = dir.find((t) => t.id === "T001") || dir[0] || null;
-    if (demo) setTeacher(demo);
-    navigate("/dashboard");
-  }
-
   return (
     <PageShell width="sm" className="min-h-screen flex flex-col justify-center">
       <div className="sc-card">
-        <h1 className="text-2xl font-semibold mb-4">School Companion – Login</h1>
+        <h1 className="text-2xl font-semibold mb-4">Staffroom – Login</h1>
         <p className="text-sm text-slate-600 mb-6">Sign in with Google or your email/password.</p>
 
         {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
+
+        {/* Demo Credentials Info */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5">
+          <p className="text-sm font-medium text-amber-800 mb-2">Demo Credentials</p>
+          <p className="text-sm text-amber-700">Email: <span className="font-mono font-semibold">agarwal@demo.com</span></p>
+          <p className="text-sm text-amber-700">Password: <span className="font-mono font-semibold">demo1234</span></p>
+        </div>
 
         <button
           onClick={handleGoogleLogin}
