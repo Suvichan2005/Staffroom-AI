@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase/client';
 
 const AuthContext = createContext();
@@ -9,13 +9,23 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setPersistence(auth, browserLocalPersistence).catch((err) => {
-            console.warn('Failed to set auth persistence', err?.message || err);
-        });
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
-            setLoading(false);
-        });
+        let unsubscribe = () => {};
+        (async () => {
+            try {
+                await setPersistence(auth, indexedDBLocalPersistence);
+            } catch (err) {
+                console.warn('Failed to set indexedDB persistence, falling back to localStorage', err?.message || err);
+                try {
+                    await setPersistence(auth, browserLocalPersistence);
+                } catch (err2) {
+                    console.warn('Failed to set browserLocalPersistence', err2?.message || err2);
+                }
+            }
+            unsubscribe = onAuthStateChanged(auth, (user) => {
+                setUser(user);
+                setLoading(false);
+            });
+        })();
         return () => unsubscribe();
     }, []);
 
