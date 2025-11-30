@@ -84,8 +84,8 @@ export default function SchedulePage() {
             
             // Color based on subject
             const subjectColors = {
-              geo: { bg: 'bg-emerald-50', border: 'border-emerald-200', accent: 'bg-emerald-500', text: 'text-emerald-700', light: 'text-emerald-500' },
-              hist: { bg: 'bg-amber-50', border: 'border-amber-200', accent: 'bg-amber-500', text: 'text-amber-700', light: 'text-amber-500' },
+              geo: { bg: 'bg-green-50', border: 'border-green-200', accent: 'bg-green-500', text: 'text-green-700', light: 'text-green-500' },
+              hist: { bg: 'bg-yellow-50', border: 'border-yellow-200', accent: 'bg-yellow-500', text: 'text-yellow-700', light: 'text-yellow-500' },
               default: { bg: 'bg-indigo-50', border: 'border-indigo-200', accent: 'bg-indigo-500', text: 'text-indigo-700', light: 'text-indigo-500' },
             };
             
@@ -172,28 +172,28 @@ export default function SchedulePage() {
       {/* Header - Simplified on mobile */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-slate-800 mb-1">Schedule</h1>
-          <p className="text-slate-500 text-sm lg:text-base hidden lg:block">{totalWeeklyClasses} classes this week across {courses.length} courses</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-black-800 mb-1">Schedule</h1>
+          <p className="text-black-500 text-sm lg:text-base hidden lg:block">{totalWeeklyClasses} classes this week across {courses.length} courses</p>
         </div>
         
         {/* Week Navigation - Compact on mobile */}
         <div className="flex items-center gap-2 lg:gap-3">
           <button 
             onClick={() => changeWeek(-1)} 
-            className="p-2 lg:p-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+            className="p-2 lg:p-2.5 rounded-xl bg-white border border-black-200 hover:bg-black-50 hover:border-black-300 transition-all shadow-sm"
           >
-            <ChevronLeft className="w-4 h-4 lg:w-5 lg:h-5 text-slate-600" />
+            <ChevronLeft className="w-4 h-4 lg:w-5 lg:h-5 text-black-600" />
           </button>
-          <div className="px-3 lg:px-4 py-2 bg-white border border-slate-200 rounded-xl shadow-sm min-w-[140px] lg:min-w-[180px] text-center">
-            <span className="text-xs lg:text-sm font-semibold text-slate-700">
+          <div className="px-3 lg:px-4 py-2 bg-white border border-black-200 rounded-xl shadow-sm min-w-[140px] lg:min-w-[180px] text-center">
+            <span className="text-xs lg:text-sm font-semibold text-black-700">
               {formatWeekRange()}
             </span>
           </div>
           <button 
             onClick={() => changeWeek(1)} 
-            className="p-2 lg:p-2.5 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
+            className="p-2 lg:p-2.5 rounded-xl bg-white border border-black-200 hover:bg-black-50 hover:border-black-300 transition-all shadow-sm"
           >
-            <ChevronRight className="w-4 h-4 lg:w-5 lg:h-5 text-slate-600" />
+            <ChevronRight className="w-4 h-4 lg:w-5 lg:h-5 text-black-600" />
           </button>
           <button
             onClick={goToToday}
@@ -207,9 +207,9 @@ export default function SchedulePage() {
       {/* Main Content - Two Column Layout on Desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Week Calendar - Left/Main Column */}
-        <div className="lg:col-span-8 space-y-4 col-span-full lg:col-span-8">
+        <div className="lg:col-span-8 space-y-4 col-span-full lg:col-span-full">
           {/* Week Days Selector */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div className="bg-white rounded-2xl border border-black-200 p-4 shadow-sm">
             <div className="grid grid-cols-7 gap-2">
               {weekDates.map((dateStr) => {
                 const [year, month, day] = dateStr.split('-').map(Number);
@@ -229,7 +229,7 @@ export default function SchedulePage() {
                         ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-200' 
                         : today 
                           ? 'bg-indigo-50 text-indigo-600 border-2 border-indigo-200 hover:border-indigo-300'
-                          : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-transparent hover:border-slate-200'
+                          : 'bg-black-50 text-black-600 hover:bg-black-100 border border-transparent hover:border-black-200'
                       }
                     `}
                   >
@@ -246,7 +246,7 @@ export default function SchedulePage() {
                           />
                         ))}
                         {classes.length > 4 && (
-                          <span className={`text-[8px] ml-0.5 ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>+{classes.length - 4}</span>
+                          <span className={`text-[8px] ml-0.5 ${isSelected ? 'text-white/80' : 'text-black-400'}`}>+{classes.length - 4}</span>
                         )}
                       </div>
                     )}
@@ -257,7 +257,7 @@ export default function SchedulePage() {
           </div>
 
           {/* Selected Day Classes */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+          <div className="bg-white rounded-2xl border border-black-200 p-5 shadow-sm">
             {/* Day Header */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -265,7 +265,7 @@ export default function SchedulePage() {
                   <Calendar className="w-5 h-5 text-indigo-600" />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-slate-800">
+                  <h2 className="font-semibold text-black-800">
                     {(() => {
                       const [year, month, day] = selectedDate.split('-').map(Number);
                       return new Date(year, month - 1, day).toLocaleDateString('en-US', { 
@@ -275,7 +275,7 @@ export default function SchedulePage() {
                       });
                     })()}
                   </h2>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-black-500">
                     {selectedClasses.length} class{selectedClasses.length !== 1 ? 'es' : ''} scheduled
                   </p>
                 </div>
@@ -301,8 +301,8 @@ export default function SchedulePage() {
                     {/* Time Column */}
                     <div className="flex flex-col items-center min-w-[50px] lg:min-w-[60px] text-center">
                       <span className={`text-base lg:text-lg font-bold ${cls.text}`}>{cls.startTime}</span>
-                      <span className="text-[10px] text-slate-400 my-0.5 hidden lg:block">to</span>
-                      <span className="text-xs lg:text-sm text-slate-500">{cls.endTime}</span>
+                      <span className="text-[10px] text-black-400 my-0.5 hidden lg:block">to</span>
+                      <span className="text-xs lg:text-sm text-black-500">{cls.endTime}</span>
                     </div>
 
                     {/* Accent bar */}
@@ -310,15 +310,15 @@ export default function SchedulePage() {
 
                     {/* Details */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-800 text-base lg:text-lg truncate">
+                      <p className="font-semibold text-black-800 text-base lg:text-lg truncate">
                         {cls.courseName?.replace('Grade ', '')}
                       </p>
                       <div className="flex items-center gap-2 lg:gap-3 mt-0.5 lg:mt-1 flex-wrap">
-                        <span className="text-xs lg:text-sm text-slate-500 flex items-center gap-1">
+                        <span className="text-xs lg:text-sm text-black-500 flex items-center gap-1">
                           <Users className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
                           {cls.section}
                         </span>
-                        <span className="text-xs lg:text-sm text-slate-500 flex items-center gap-1">
+                        <span className="text-xs lg:text-sm text-black-500 flex items-center gap-1">
                           <MapPin className="w-3 h-3 lg:w-3.5 lg:h-3.5" />
                           {cls.room}
                         </span>
@@ -333,109 +333,14 @@ export default function SchedulePage() {
                 ))}
               </div>
             ) : (
-              <div className="bg-slate-50 border border-dashed border-slate-200 rounded-2xl p-10 text-center">
-                <div className="w-16 h-16 mx-auto bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
-                  <Calendar className="w-8 h-8 text-slate-400" />
+              <div className="bg-black-50 border border-dashed border-black-200 rounded-2xl p-10 text-center">
+                <div className="w-16 h-16 mx-auto bg-black-100 rounded-2xl flex items-center justify-center mb-4">
+                  <Calendar className="w-8 h-8 text-black-400" />
                 </div>
-                <p className="text-slate-600 font-medium text-lg">No classes scheduled</p>
-                <p className="text-sm text-slate-400 mt-1">Enjoy your free day!</p>
+                <p className="text-black-600 font-medium text-lg">No classes scheduled</p>
+                <p className="text-sm text-black-400 mt-1">Enjoy your free day!</p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Right Sidebar - Desktop Only */}
-        <div className="hidden lg:block lg:col-span-4 space-y-4">
-          {/* Quick Stats */}
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-5 text-white shadow-lg">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5" />
-              This Week
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white/10 rounded-xl p-3 text-center">
-                <p className="text-3xl font-bold">{totalWeeklyClasses}</p>
-                <p className="text-xs text-white/70">Total Classes</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-3 text-center">
-                <p className="text-3xl font-bold">{courses.length}</p>
-                <p className="text-xs text-white/70">Courses</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-3 text-center">
-                <p className="text-3xl font-bold">
-                  {courses.reduce((acc, c) => acc + (c.sections?.length || 0), 0)}
-                </p>
-                <p className="text-xs text-white/70">Sections</p>
-              </div>
-              <div className="bg-white/10 rounded-xl p-3 text-center">
-                <p className="text-3xl font-bold">
-                  {Math.round(totalWeeklyClasses / 5)}
-                </p>
-                <p className="text-xs text-white/70">Avg/Day</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Weekly Overview */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="font-semibold text-slate-800 mb-4">Weekly Overview</h3>
-            <div className="space-y-3">
-              {dayNames.slice(1, 6).map((day, i) => {
-                const classes = scheduleByDay[day] || [];
-                const maxClasses = Math.max(...dayNames.map(d => (scheduleByDay[d] || []).length), 1);
-                const percentage = (classes.length / maxClasses) * 100;
-                
-                return (
-                  <div key={day} className="flex items-center gap-3">
-                    <span className="text-xs font-medium text-slate-500 w-8">{day}</span>
-                    <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all flex items-center justify-end pr-2"
-                        style={{ width: `${Math.max(percentage, 10)}%` }}
-                      >
-                        {classes.length > 0 && (
-                          <span className="text-[10px] font-bold text-white">{classes.length}</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Upcoming Classes Today */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <h3 className="font-semibold text-slate-800 mb-4">Today's Timeline</h3>
-            {(() => {
-              const today = new Date();
-              const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-              const todayClasses = getClassesForDate(todayStr);
-              
-              if (todayClasses.length === 0) {
-                return (
-                  <p className="text-sm text-slate-500 text-center py-4">No classes today</p>
-                );
-              }
-              
-              return (
-                <div className="space-y-2">
-                  {todayClasses.map((cls, i) => (
-                    <div 
-                      key={cls.id}
-                      className={`flex items-center gap-3 p-2 rounded-xl ${cls.bg} border ${cls.border}`}
-                    >
-                      <span className={`text-xs font-bold ${cls.text}`}>{cls.startTime}</span>
-                      <div className={`w-0.5 h-8 ${cls.accent} rounded-full`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-800 truncate">{cls.courseName?.replace('Grade ', '')}</p>
-                        <p className="text-xs text-slate-500">Section {cls.section}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              );
-            })()}
           </div>
         </div>
       </div>

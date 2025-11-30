@@ -139,9 +139,9 @@ export default function VoiceProgressLogger({ courseId, sectionId, onUpdate }) {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+    <div className="bg-white border border-black-200 rounded-lg shadow-sm p-4">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">Voice Progress Logger</h3>
+        <h3 className="text-sm font-semibold text-black-900">Voice Progress Logger</h3>
         
         {status === 'idle' && (
           <button
@@ -191,33 +191,33 @@ export default function VoiceProgressLogger({ courseId, sectionId, onUpdate }) {
 
       {/* Transcript Display */}
       {transcript && (
-        <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 mb-1">You said:</p>
-          <p className="text-sm text-gray-900 italic">"{transcript}"</p>
+        <div className="mb-3 p-3 bg-black-50 rounded-lg">
+          <p className="text-xs text-black-500 mb-1">You said:</p>
+          <p className="text-sm text-black-900 italic">"{transcript}"</p>
         </div>
       )}
 
       {/* Typed Input Fallback */}
       {(status === 'idle' || status === 'error' || status === 'success') && (
-        <div className="mb-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-          <label className="block text-xs text-gray-600 mb-1">Or type your update:</label>
+        <div className="mb-3 p-3 bg-black-50 border border-black-200 rounded-lg">
+          <label className="block text-xs text-black-600 mb-1">Or type your update:</label>
           <div className="flex items-center gap-2">
             <input
               type="text"
               value={typedText}
               onChange={(e) => setTypedText(e.target.value)}
               placeholder="e.g., Finished Chapter 2, Topic 1 in 6A"
-              className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
+              className="flex-1 px-3 py-2 text-sm border border-black-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
             <button
               onClick={() => typedText.trim() && processTextInput(typedText.trim())}
               disabled={!typedText.trim()}
-              className="px-3 py-2 text-sm bg-gray-800 text-white rounded-md disabled:opacity-50"
+              className="px-3 py-2 text-sm bg-black-800 text-white rounded-md disabled:opacity-50"
             >
               Update
             </button>
           </div>
-          <p className="text-[11px] text-gray-500 mt-1">Try: "I finished Chapter 2 Topic 1" or "Mark Chapter 3 Topic 2 ongoing"</p>
+          <p className="text-[11px] text-black-500 mt-1">Try: "I finished Chapter 2 Topic 1" or "Mark Chapter 3 Topic 2 ongoing"</p>
         </div>
       )}
 

@@ -63,7 +63,7 @@ function VoiceRecordButton({
           ? 'bg-red-500 text-white shadow-lg shadow-red-200' 
           : state === 'processing'
             ? 'bg-yellow-100 text-yellow-700'
-            : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+            : 'text-black-400 hover:text-indigo-600 hover:bg-indigo-50'
         }
         disabled:opacity-50 disabled:cursor-not-allowed
       `}
@@ -135,9 +135,9 @@ function VoiceProgressStatus({ status, transcript, result, error, onReset }) {
     >
       {/* Transcript */}
       {transcript && (
-        <div className="p-3 bg-slate-50 rounded-lg mb-2">
-          <p className="text-xs text-slate-500 mb-1">You said:</p>
-          <p className="text-sm text-slate-800 italic">"{transcript}"</p>
+        <div className="p-3 bg-black-50 rounded-lg mb-2">
+          <p className="text-xs text-black-500 mb-1">You said:</p>
+          <p className="text-sm text-black-800 italic">"{transcript}"</p>
         </div>
       )}
 
@@ -343,15 +343,15 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
           <Volume2 className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h3 className="font-semibold text-slate-800">Voice Progress Logger</h3>
-          <p className="text-sm text-slate-500">Update syllabus progress with voice</p>
+          <h3 className="font-semibold text-black-800">Voice Progress Logger</h3>
+          <p className="text-sm text-black-500">Update syllabus progress with voice</p>
         </div>
       </div>
 
       {/* Current Context */}
-      <div className="p-3 bg-slate-50 rounded-lg">
-        <p className="text-xs text-slate-500 mb-1">Current Class:</p>
-        <p className="text-sm font-medium text-slate-800">
+      <div className="p-3 bg-black-50 rounded-lg">
+        <p className="text-xs text-black-500 mb-1">Current Class:</p>
+        <p className="text-sm font-medium text-black-800">
           Section {sectionId} • {(() => {
             const course = getCourseById(teacherData, courseId);
             const syllabus = course ? getSyllabusByRef(course.syllabusRef) : null;
@@ -386,7 +386,7 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
             <Mic className="w-8 h-8 text-white" />
           )}
         </motion.button>
-        <p className="text-sm text-slate-600 mt-3">
+        <p className="text-sm text-black-600 mt-3">
           {status === 'listening' ? 'Listening...' : status === 'processing' ? 'Processing...' : 'Tap to speak'}
         </p>
       </div>
@@ -403,15 +403,15 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
       </AnimatePresence>
 
       {/* Text Input Fallback */}
-      <div className="p-3 bg-slate-50 rounded-lg">
-        <label className="block text-xs text-slate-600 mb-2">Or type your update:</label>
+      <div className="p-3 bg-black-50 rounded-lg">
+        <label className="block text-xs text-black-600 mb-2">Or type your update:</label>
         <div className="flex gap-2">
           <input
             type="text"
             value={typedText}
             onChange={(e) => setTypedText(e.target.value)}
             placeholder="e.g., Finished Chapter 2, Topic 1"
-            className="flex-1 px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="flex-1 px-3 py-2 text-sm border border-black-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && typedText.trim()) {
                 processTextInput(typedText.trim());
@@ -421,7 +421,7 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
           <button
             onClick={() => typedText.trim() && processTextInput(typedText.trim())}
             disabled={!typedText.trim() || status === 'processing'}
-            className="px-4 py-2 bg-slate-800 text-white text-sm rounded-lg disabled:opacity-50 hover:bg-slate-700"
+            className="px-4 py-2 bg-black-800 text-white text-sm rounded-lg disabled:opacity-50 hover:bg-black-700"
           >
             Update
           </button>
@@ -447,7 +447,7 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
  * Voice Progress Controls Component
  * Compact controls rendered in chat input area
  */
-function VoiceProgressControls({ context, onMessage }) {
+function VoiceProgressControls({ context, onMessage, onStart, onStop }) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -459,6 +459,9 @@ function VoiceProgressControls({ context, onMessage }) {
       });
       return;
     }
+
+    // Notify parent (PersistentChatBar) that recording started so UI can expand
+    try { onStart?.(); } catch (e) { /* ignore */ }
 
     setIsRecording(true);
 
@@ -530,6 +533,7 @@ function VoiceProgressControls({ context, onMessage }) {
     } finally {
       setIsRecording(false);
       setIsProcessing(false);
+      try { onStop?.(); } catch (e) { /* ignore */ }
     }
   };
 

@@ -20,13 +20,13 @@ export function EmptyState({
       className={`flex flex-col items-center justify-center text-center py-12 px-6 ${className}`}
     >
       {icon && (
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center mb-4">
-          <span className="text-slate-400">{icon}</span>
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-black-100 to-black-50 flex items-center justify-center mb-4">
+          <span className="text-black-400">{icon}</span>
         </div>
       )}
-      <h3 className="text-lg font-semibold text-slate-700 mb-1">{title}</h3>
+      <h3 className="text-lg font-semibold text-black-700 mb-1">{title}</h3>
       {description && (
-        <p className="text-sm text-slate-500 max-w-sm mb-4">{description}</p>
+        <p className="text-sm text-black-500 max-w-sm mb-4">{description}</p>
       )}
       {action && (
         <button
@@ -71,12 +71,12 @@ export function ErrorState({
           />
         </svg>
       </div>
-      <h3 className="text-lg font-semibold text-slate-700 mb-1">{title}</h3>
-      <p className="text-sm text-slate-500 max-w-sm mb-4">{description}</p>
+      <h3 className="text-lg font-semibold text-black-700 mb-1">{title}</h3>
+      <p className="text-sm text-black-500 max-w-sm mb-4">{description}</p>
       {onRetry && (
         <button
           onClick={onRetry}
-          className="px-4 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-200 transition-colors"
+          className="px-4 py-2 bg-black-100 text-black-700 text-sm font-medium rounded-xl hover:bg-black-200 transition-colors"
         >
           Try Again
         </button>
@@ -93,10 +93,10 @@ export function OfflineState({ className = '' }) {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex items-center justify-center gap-2 py-2 px-4 bg-amber-50 border-b border-amber-100 ${className}`}
+      className={`flex items-center justify-center gap-2 py-2 px-4 bg-yellow-50 border-b border-yellow-100 ${className}`}
     >
-      <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-      <span className="text-sm text-amber-700 font-medium">
+      <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+      <span className="text-sm text-yellow-700 font-medium">
         You're offline. Some features may be unavailable.
       </span>
     </motion.div>
@@ -113,10 +113,10 @@ export function LoadingState({
   return (
     <div className={`flex flex-col items-center justify-center py-12 ${className}`}>
       <div className="relative w-12 h-12 mb-4">
-        <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
+        <div className="absolute inset-0 rounded-full border-4 border-black-200" />
         <div className="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" />
       </div>
-      <p className="text-sm text-slate-500">{message}</p>
+      <p className="text-sm text-black-500">{message}</p>
     </div>
   );
 }

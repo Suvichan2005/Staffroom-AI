@@ -31,8 +31,8 @@ export default function CourseGrid({ courses = [], syllabusMap = {}, onCourseCli
 
   if (!courses.length) {
     return (
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 text-center">
-        <p className="text-slate-500">No courses assigned.</p>
+      <div className="bg-white rounded-3xl border border-black-200 p-6 text-center">
+        <p className="text-black-500">No courses assigned.</p>
       </div>
     );
   }
@@ -48,7 +48,7 @@ export default function CourseGrid({ courses = [], syllabusMap = {}, onCourseCli
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-3xl border border-slate-200 overflow-hidden hover:shadow-lg transition-shadow group h-full min-h-[160px]"
+            className="bg-white rounded-3xl border border-black-200 overflow-hidden hover:shadow-lg transition-shadow group h-full min-h-[160px]"
           >
             {/* Course Header/Image */}
             <button
@@ -81,15 +81,15 @@ export default function CourseGrid({ courses = [], syllabusMap = {}, onCourseCli
                   <button
                     key={section.id}
                     onClick={(e) => handleSectionClick(course.id, section.id, e)}
-                    className="w-full flex items-center gap-3 p-2 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 transition-all text-left"
+                    className="w-full flex items-center gap-3 p-2 rounded-xl bg-black-50 hover:bg-indigo-50 border border-transparent hover:border-indigo-200 transition-all text-left"
                   >
-                    <span className="text-xs font-semibold text-slate-700 w-10">
+                    <span className="text-xs font-semibold text-black-700 w-10">
                       {section.id}
                     </span>
                     <div className="flex-1">
                       <ProgressBar value={pct} />
                     </div>
-                    <span className="text-xs font-medium text-slate-500">
+                    <span className="text-xs font-medium text-black-500">
                       {pct}%
                     </span>
                   </button>

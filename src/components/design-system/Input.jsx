@@ -63,7 +63,7 @@ export const Input = forwardRef(({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-medium text-slate-700 mb-1.5"
+          className="block text-sm font-medium text-black-700 mb-1.5"
         >
           {label}
         </label>
@@ -72,7 +72,7 @@ export const Input = forwardRef(({
       <div className="relative">
         {/* Left Icon */}
         {(leftIcon || isSearch) && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-black-400 pointer-events-none">
             {isSearch ? <Search className={iconSizes[size]} /> : leftIcon}
           </div>
         )}
@@ -87,15 +87,15 @@ export const Input = forwardRef(({
           className={`
             w-full rounded-xl border bg-white
             transition-all duration-200
-            placeholder:text-slate-400
+            placeholder:text-black-400
             focus:outline-none focus:ring-2 focus:ring-offset-0
-            disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed
+            disabled:bg-black-50 disabled:text-black-500 disabled:cursor-not-allowed
             ${sizes[size]}
             ${leftIcon || isSearch ? 'pl-10' : ''}
             ${rightIcon || isPassword || (clearable && hasValue) ? 'pr-10' : ''}
             ${error
               ? 'border-red-300 text-red-900 focus:border-red-500 focus:ring-red-200'
-              : 'border-slate-200 text-slate-900 focus:border-indigo-500 focus:ring-indigo-100'
+              : 'border-black-200 text-black-900 focus:border-indigo-500 focus:ring-indigo-100'
             }
           `}
           aria-invalid={error ? 'true' : 'false'}
@@ -109,7 +109,7 @@ export const Input = forwardRef(({
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+              className="text-black-400 hover:text-black-600 transition-colors p-1"
               tabIndex={-1}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
@@ -125,7 +125,7 @@ export const Input = forwardRef(({
             <button
               type="button"
               onClick={handleClear}
-              className="text-slate-400 hover:text-slate-600 transition-colors p-1"
+              className="text-black-400 hover:text-black-600 transition-colors p-1"
               tabIndex={-1}
               aria-label="Clear input"
             >
@@ -134,7 +134,7 @@ export const Input = forwardRef(({
           )}
           
           {rightIcon && !isPassword && !(clearable && hasValue) && (
-            <span className="text-slate-400 pointer-events-none">{rightIcon}</span>
+            <span className="text-black-400 pointer-events-none">{rightIcon}</span>
           )}
         </div>
       </div>
@@ -156,7 +156,7 @@ export const Input = forwardRef(({
 
       {/* Hint Text */}
       {hint && !error && (
-        <p id={`${inputId}-hint`} className="mt-1.5 text-sm text-slate-500">
+        <p id={`${inputId}-hint`} className="mt-1.5 text-sm text-black-500">
           {hint}
         </p>
       )}
@@ -185,7 +185,7 @@ export const Textarea = forwardRef(({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-medium text-slate-700 mb-1.5"
+          className="block text-sm font-medium text-black-700 mb-1.5"
         >
           {label}
         </label>
@@ -197,15 +197,15 @@ export const Textarea = forwardRef(({
         rows={rows}
         className={`
           w-full px-4 py-3 rounded-xl border bg-white
-          text-sm text-slate-900
+          text-sm text-black-900
           transition-all duration-200
-          placeholder:text-slate-400
+          placeholder:text-black-400
           focus:outline-none focus:ring-2 focus:ring-offset-0
-          disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed
+          disabled:bg-black-50 disabled:text-black-500 disabled:cursor-not-allowed
           resize-none
           ${error
             ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-            : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'
+            : 'border-black-200 focus:border-indigo-500 focus:ring-indigo-100'
           }
         `}
         aria-invalid={error ? 'true' : 'false'}
@@ -223,7 +223,7 @@ export const Textarea = forwardRef(({
       )}
 
       {hint && !error && (
-        <p className="mt-1.5 text-sm text-slate-500">{hint}</p>
+        <p className="mt-1.5 text-sm text-black-500">{hint}</p>
       )}
     </div>
   );

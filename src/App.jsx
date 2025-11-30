@@ -65,7 +65,7 @@ function PageLoader() {
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-        <p className="text-sm text-slate-500">Loading...</p>
+        <p className="text-sm text-black-500">Loading...</p>
       </div>
     </div>
   );
@@ -115,7 +115,7 @@ export default function App() {
   return (
     <LayoutProvider>
       <AIProvider>
-        <div className="min-h-screen bg-slate-50 text-slate-900">
+        <div className="min-h-screen bg-black-50 text-black-900">
         <ScrollToTop />
         <Toaster 
           position="top-right" 
@@ -287,8 +287,8 @@ export default function App() {
             <Route path="*" element={
               <AppLayout>
                 <div className="p-6 text-center">
-                  <h1 className="text-2xl font-bold text-slate-800 mb-2">Page Not Found</h1>
-                  <p className="text-slate-600">The page you're looking for doesn't exist.</p>
+                  <h1 className="text-2xl font-bold text-black-800 mb-2">Page Not Found</h1>
+                  <p className="text-black-600">The page you're looking for doesn't exist.</p>
                 </div>
               </AppLayout>
             } />

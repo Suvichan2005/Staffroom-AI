@@ -108,10 +108,10 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
             <button 
               type="button"
               onClick={goToPreviousDay}
-              className="p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer select-none"
+              className="p-2 rounded-lg hover:bg-black-100 active:bg-black-200 transition-colors cursor-pointer select-none"
               aria-label="Previous day"
             >
-              <ChevronLeft className="w-5 h-5 text-slate-600" />
+              <ChevronLeft className="w-5 h-5 text-black-600" />
             </button>
             <input
               type="date"
@@ -120,15 +120,15 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
                 const val = e.target.value;
                 if (val) setSelectedDate(val);
               }}
-              className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600 w-[120px] cursor-pointer"
+              className="text-xs bg-white border border-black-200 rounded-lg px-2 py-1.5 text-black-600 w-[120px] cursor-pointer"
             />
             <button 
               type="button"
               onClick={goToNextDay}
-              className="p-2 rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer select-none"
+              className="p-2 rounded-lg hover:bg-black-100 active:bg-black-200 transition-colors cursor-pointer select-none"
               aria-label="Next day"
             >
-              <ChevronRight className="w-5 h-5 text-slate-600" />
+              <ChevronRight className="w-5 h-5 text-black-600" />
             </button>
           </div>
         )}
@@ -141,7 +141,7 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
             return (
               <div 
                 key={`${session.courseId}-${session.classId}-${session.date}-${index}`} 
-                className={`rounded-xl bg-slate-50 border border-slate-200 flex flex-col gap-1 ${compact ? 'p-2' : 'p-3'}`}
+                className={`rounded-xl bg-black-50 border border-black-200 flex flex-col gap-1 ${compact ? 'p-2' : 'p-3'}`}
                 role="listitem"
               >
                 <div className="flex items-center justify-between">
@@ -149,10 +149,10 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
                     {session.subject} – {session.classId}
                   </p>
                   {!showDateSelector && (
-                    <span className="text-xs text-slate-500">{session.date}</span>
+                    <span className="text-xs text-black-500">{session.date}</span>
                   )}
                 </div>
-                <p className={`text-slate-600 ${compact ? 'text-[11px]' : 'text-xs'}`}>
+                <p className={`text-black-600 ${compact ? 'text-[11px]' : 'text-xs'}`}>
                   {session.startTime} – {session.endTime}
                 </p>
                 <div className="mt-1 flex justify-end">
@@ -164,7 +164,7 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
                     } ${
                       active
                         ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                        : "bg-slate-200 text-slate-500 cursor-not-allowed"
+                        : "bg-black-200 text-black-500 cursor-not-allowed"
                     }`}
                     aria-label={active ? "Open attendance sheet" : "Attendance available near class time"}
                   >
@@ -175,7 +175,7 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
             );
           })
         ) : (
-          <div className="border border-dashed border-slate-300 rounded-xl bg-slate-50 p-4 text-sm text-slate-500 text-center">
+          <div className="border border-dashed border-black-300 rounded-xl bg-black-50 p-4 text-sm text-black-500 text-center">
             No classes scheduled for this day.
           </div>
         )}

@@ -132,7 +132,7 @@ export default function SettingsPage() {
       onClick={onChange}
       className={`
         relative w-12 h-7 rounded-full transition-colors
-        ${value ? 'bg-indigo-600' : 'bg-slate-200'}
+        ${value ? 'bg-indigo-600' : 'bg-black-200'}
       `}
     >
       <motion.div
@@ -151,8 +151,8 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-2xl font-bold text-slate-800">Settings</h1>
-          <p className="text-slate-500">Manage your app preferences</p>
+          <h1 className="text-2xl font-bold text-black-800">Settings</h1>
+          <p className="text-black-500">Manage your app preferences</p>
         </motion.div>
 
         {/* Settings Sections */}
@@ -164,30 +164,30 @@ export default function SettingsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: sectionIndex * 0.1 }}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
+              className="bg-white rounded-2xl border border-black-200 overflow-hidden"
             >
               {/* Section Header */}
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
-                <div className="p-2 bg-slate-100 rounded-lg">
-                  <SectionIcon className="w-4 h-4 text-slate-600" />
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-black-100">
+                <div className="p-2 bg-black-100 rounded-lg">
+                  <SectionIcon className="w-4 h-4 text-black-600" />
                 </div>
-                <h2 className="text-sm font-semibold text-slate-800">{section.title}</h2>
+                <h2 className="text-sm font-semibold text-black-800">{section.title}</h2>
               </div>
 
               {/* Section Items */}
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-black-100">
                 {section.items.map((item, itemIndex) => {
                   const ItemIcon = item.icon;
                   return (
                     <div
                       key={itemIndex}
-                      className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
+                      className="flex items-center justify-between px-5 py-4 hover:bg-black-50 transition-colors"
                     >
                       <div className="flex items-center gap-3">
-                        <ItemIcon className="w-5 h-5 text-slate-400" />
+                        <ItemIcon className="w-5 h-5 text-black-400" />
                         <div>
-                          <p className="text-sm font-medium text-slate-700">{item.label}</p>
-                          <p className="text-xs text-slate-500">{item.desc}</p>
+                          <p className="text-sm font-medium text-black-700">{item.label}</p>
+                          <p className="text-xs text-black-500">{item.desc}</p>
                         </div>
                       </div>
 
@@ -196,14 +196,14 @@ export default function SettingsPage() {
                       )}
 
                       {item.type === 'link' && (
-                        <ChevronRight className="w-5 h-5 text-slate-400" />
+                        <ChevronRight className="w-5 h-5 text-black-400" />
                       )}
 
                       {item.type === 'select' && (
                         <select
                           value={item.value}
                           onChange={item.onChange}
-                          className="px-3 py-1.5 bg-slate-100 rounded-lg text-sm text-slate-700 border-none focus:ring-2 focus:ring-indigo-200"
+                          className="px-3 py-1.5 bg-black-100 rounded-lg text-sm text-black-700 border-none focus:ring-2 focus:ring-indigo-200"
                         >
                           {item.options.map(opt => (
                             <option key={opt.value} value={opt.value}>
@@ -225,9 +225,9 @@ export default function SettingsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
+          className="bg-white rounded-2xl border border-black-200 overflow-hidden"
         >
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-black-100">
             <div className="p-2 bg-red-100 rounded-lg">
               <Trash2 className="w-4 h-4 text-red-600" />
             </div>
@@ -285,7 +285,7 @@ export default function SettingsPage() {
 
         {/* Version Info */}
         <div className="text-center py-4">
-          <p className="text-xs text-slate-400">Staffroom v1.0.0 • © 2025</p>
+          <p className="text-xs text-black-400">Staffroom v1.0.0 • © 2025</p>
         </div>
       </div>
     </PageShell>

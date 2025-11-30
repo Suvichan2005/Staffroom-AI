@@ -43,9 +43,9 @@ export function Avatar({
 
   const statusColors = {
     online: 'bg-green-500',
-    offline: 'bg-slate-400',
+    offline: 'bg-black-400',
     busy: 'bg-red-500',
-    away: 'bg-amber-500',
+    away: 'bg-yellow-500',
   };
 
   const shapes = {
@@ -64,11 +64,11 @@ export function Avatar({
 
   // Generate consistent color from name
   const getColorFromName = (name) => {
-    if (!name) return 'bg-slate-200';
+    if (!name) return 'bg-black-200';
     const colors = [
       'bg-red-200 text-red-700',
       'bg-orange-200 text-orange-700',
-      'bg-amber-200 text-amber-700',
+      'bg-yellow-200 text-yellow-700',
       'bg-green-200 text-green-700',
       'bg-teal-200 text-teal-700',
       'bg-blue-200 text-blue-700',
@@ -88,7 +88,7 @@ export function Avatar({
           ${shapes[shape]}
           ${ring ? 'ring-2 ring-white ring-offset-2' : ''}
           overflow-hidden flex items-center justify-center font-semibold
-          ${src ? 'bg-slate-100' : getColorFromName(name)}
+          ${src ? 'bg-black-100' : getColorFromName(name)}
         `}
         {...props}
       >
@@ -106,7 +106,7 @@ export function Avatar({
         
         {/* Fallback */}
         <span className={src ? 'hidden' : ''}>
-          {initials || <User className="w-1/2 h-1/2 text-slate-400" />}
+          {initials || <User className="w-1/2 h-1/2 text-black-400" />}
         </span>
       </div>
 
@@ -180,7 +180,7 @@ export function AvatarGroup({
             ${overlapSizes[size]}
             ${countSizes[size]}
             flex items-center justify-center
-            rounded-full bg-slate-100 text-slate-600 font-medium
+            rounded-full bg-black-100 text-black-600 font-medium
             ring-2 ring-white
           `}
           style={{ zIndex: 0 }}

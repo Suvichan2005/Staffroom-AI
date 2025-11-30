@@ -42,7 +42,7 @@ export default function MobileLayout({ children, title, showBack, onBack, hideNa
   }, [location.pathname, closeDrawer]);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-slate-50 flex flex-col">
+    <div className="min-h-screen min-h-[100dvh] bg-black-50 flex flex-col">
       {/* Top Navigation */}
       {!shouldHideNav && (
         <TopNav

@@ -50,9 +50,9 @@ export default function MobileDashboard() {
   const quickActions = [
     { id: 'attendance', icon: ClipboardCheck, label: 'Mark Attendance', color: 'from-indigo-500 to-blue-500', badge: todayActions.pendingAttendance, path: '/attendance' },
     { id: 'schedule', icon: Calendar, label: 'Today\'s Classes', color: 'from-purple-500 to-pink-500', path: '/schedule' },
-    { id: 'students', icon: Users, label: 'Students', color: 'from-emerald-500 to-teal-500', path: '/students' },
-    { id: 'resources', icon: BookOpen, label: 'Resources', color: 'from-orange-500 to-amber-500', path: '/resources' },
-    { id: 'tasks', icon: FileText, label: 'Tasks', color: 'from-rose-500 to-red-500', badge: todayActions.assignmentsDue, path: '/tasks' },
+    { id: 'students', icon: Users, label: 'Students', color: 'from-green-500 to-teal-500', path: '/students' },
+    { id: 'resources', icon: BookOpen, label: 'Resources', color: 'from-orange-500 to-yellow-500', path: '/resources' },
+    { id: 'tasks', icon: FileText, label: 'Tasks', color: 'from-red-500 to-red-500', badge: todayActions.assignmentsDue, path: '/tasks' },
   ];
 
   // Today's classes (mock data based on teacher courses)
@@ -83,7 +83,7 @@ export default function MobileDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
+    <div className="min-h-screen bg-black-50 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 px-4 pt-12 pb-6 rounded-b-3xl">
         <div className="flex items-start justify-between mb-4">
@@ -162,7 +162,7 @@ export default function MobileDashboard() {
           className="bg-white rounded-2xl shadow-lg p-4"
         >
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-slate-800">Quick Actions</h2>
+            <h2 className="text-sm font-semibold text-black-800">Quick Actions</h2>
             <button className="text-xs text-indigo-600 font-medium">Customize</button>
           </div>
           <div className="grid grid-cols-5 gap-2">
@@ -190,7 +190,7 @@ export default function MobileDashboard() {
                 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all
                 ${activeFilter === filter.id
                   ? 'bg-indigo-600 text-white shadow-md'
-                  : 'bg-white text-slate-600 border border-slate-200'
+                  : 'bg-white text-black-600 border border-black-200'
                 }
               `}
             >
@@ -203,7 +203,7 @@ export default function MobileDashboard() {
       {/* Today's Classes */}
       <div className="px-4 mt-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-slate-800">Today's Classes</h2>
+          <h2 className="text-base font-semibold text-black-800">Today's Classes</h2>
           <button 
             onClick={() => navigate('/schedule')}
             className="text-sm text-indigo-600 font-medium flex items-center gap-1"
@@ -233,7 +233,7 @@ export default function MobileDashboard() {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-indigo-600" />
-            <h2 className="text-base font-semibold text-slate-800">AI Insights</h2>
+            <h2 className="text-base font-semibold text-black-800">AI Insights</h2>
           </div>
           <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 text-xs font-medium rounded-full">
             Beta
@@ -298,7 +298,7 @@ function QuickActionItem({ action, delay, onClick }) {
           </span>
         )}
       </div>
-      <span className="text-[10px] text-slate-600 font-medium text-center leading-tight">
+      <span className="text-[10px] text-black-600 font-medium text-center leading-tight">
         {action.label.split(' ').slice(0, 2).join(' ')}
       </span>
     </motion.button>
@@ -318,7 +318,7 @@ function ClassItem({ classData, onClick }) {
         w-full text-left p-4 rounded-2xl border transition-all
         ${isNow 
           ? 'bg-indigo-50 border-indigo-200 shadow-sm' 
-          : 'bg-white border-slate-200 hover:border-indigo-200'
+          : 'bg-white border-black-200 hover:border-indigo-200'
         }
       `}
     >
@@ -326,26 +326,26 @@ function ClassItem({ classData, onClick }) {
         {/* Time indicator */}
         <div className={`
           flex-shrink-0 w-14 text-center
-          ${isNow ? 'text-indigo-600' : 'text-slate-500'}
+          ${isNow ? 'text-indigo-600' : 'text-black-500'}
         `}>
           <p className="text-sm font-semibold">{classData.time.split(' ')[0]}</p>
           <p className="text-xs">{classData.time.split(' ')[1]}</p>
         </div>
 
         {/* Divider */}
-        <div className={`w-0.5 h-12 rounded-full ${isNow ? 'bg-indigo-400' : 'bg-slate-200'}`} />
+        <div className={`w-0.5 h-12 rounded-full ${isNow ? 'bg-indigo-400' : 'bg-black-200'}`} />
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-slate-800 truncate">{classData.subject}</h3>
+            <h3 className="font-semibold text-black-800 truncate">{classData.subject}</h3>
             {isNow && (
               <span className="px-2 py-0.5 bg-indigo-600 text-white text-[10px] font-bold rounded-full animate-pulse">
                 NOW
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-500 mt-0.5">
+          <p className="text-sm text-black-500 mt-0.5">
             {classData.section} • {classData.room} • {classData.students} students
           </p>
         </div>
@@ -353,13 +353,13 @@ function ClassItem({ classData, onClick }) {
         {/* Status badge */}
         <div className="flex-shrink-0">
           {isPending ? (
-            <div className="px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full flex items-center gap-1">
+            <div className="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full flex items-center gap-1">
               <Clock className="w-3 h-3" />
               <span>Pending</span>
             </div>
           ) : (
-            <div className="p-1.5 bg-emerald-100 rounded-full">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <div className="p-1.5 bg-green-100 rounded-full">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
             </div>
           )}
         </div>
@@ -380,9 +380,9 @@ function InsightCard({ insight }) {
 
   const getColors = () => {
     switch (insight.type) {
-      case 'alert': return 'bg-amber-50 border-amber-200 text-amber-700';
+      case 'alert': return 'bg-yellow-50 border-yellow-200 text-yellow-700';
       case 'suggestion': return 'bg-indigo-50 border-indigo-200 text-indigo-700';
-      default: return 'bg-slate-50 border-slate-200 text-slate-700';
+      default: return 'bg-black-50 border-black-200 text-black-700';
     }
   };
 
@@ -394,7 +394,7 @@ function InsightCard({ insight }) {
         <Icon className="w-4 h-4" />
       </div>
       <p className="flex-1 text-sm">{insight.message}</p>
-      <button className="flex-shrink-0 px-3 py-1 bg-white rounded-lg text-xs font-medium shadow-sm border border-current/20 hover:bg-slate-50 transition-colors">
+      <button className="flex-shrink-0 px-3 py-1 bg-white rounded-lg text-xs font-medium shadow-sm border border-current/20 hover:bg-black-50 transition-colors">
         {insight.action}
       </button>
     </div>

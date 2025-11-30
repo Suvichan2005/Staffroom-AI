@@ -79,11 +79,11 @@ export default function ResourceGallery({
     <div className={`${rootClass} ${containerClass}`.trim()}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-semibold text-slate-800">{title}</h2>
+          <h2 className="text-xl font-semibold text-black-800">{title}</h2>
           {courseId ? (
-            <p className="text-sm text-slate-500">Resources tailored for this course.</p>
+            <p className="text-sm text-black-500">Resources tailored for this course.</p>
           ) : (
-            <p className="text-sm text-slate-500">Browse shared materials across the department.</p>
+            <p className="text-sm text-black-500">Browse shared materials across the department.</p>
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -118,22 +118,22 @@ export default function ResourceGallery({
                   className="h-10 w-10 rounded-full object-cover border border-white shadow"
                 />
                 <div className="flex-1">
-                  <h3 className="text-base font-semibold text-slate-800">{res.title}</h3>
-                  <p className="text-xs text-slate-500">Topic: {res.topic}</p>
+                  <h3 className="text-base font-semibold text-black-800">{res.title}</h3>
+                  <p className="text-xs text-black-500">Topic: {res.topic}</p>
                 </div>
                 <span className="text-xs uppercase tracking-wide px-2 py-1 rounded-full border border-indigo-200 text-indigo-600">
                   {res.fileType}
                 </span>
               </div>
-              <p className="text-sm text-slate-600 flex-1">{res.description}</p>
-              <div className="flex items-center justify-between text-xs text-slate-500">
+              <p className="text-sm text-black-600 flex-1">{res.description}</p>
+              <div className="flex items-center justify-between text-xs text-black-500">
                 <span>
-                  Uploaded by <span className="font-medium text-slate-600">{res.uploadedBy}</span> on {res.uploadedOn}
+                  Uploaded by <span className="font-medium text-black-600">{res.uploadedBy}</span> on {res.uploadedOn}
                 </span>
                 <span className="text-indigo-500 font-medium cursor-pointer">Share</span>
               </div>
               <div className="flex justify-end gap-2">
-                <button className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-sm">
+                <button className="px-3 py-1.5 rounded-lg bg-black-100 hover:bg-black-200 text-sm">
                   Preview
                 </button>
                 <button className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700">
@@ -144,7 +144,7 @@ export default function ResourceGallery({
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+        <div className="rounded-2xl border border-dashed border-black-300 bg-black-50 p-6 text-center text-sm text-black-500">
           No resources shared for this course yet. Use the upload button to add one.
         </div>
       )}

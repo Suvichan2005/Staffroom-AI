@@ -8,7 +8,7 @@ export default function AttendanceTable({ grouped }) {
       <h3 className="sc-heading text-base mb-3">Attendance</h3>
       <div className="space-y-4 max-h-64 overflow-auto pr-1">
         {dates.map(date => (
-          <div key={date} className="border rounded-lg p-3 bg-slate-50">
+          <div key={date} className="border rounded-lg p-3 bg-black-50">
             <p className="text-sm font-medium mb-1">{date}</p>
             <div className="flex flex-wrap gap-2">
               {grouped[date].map(rec => (

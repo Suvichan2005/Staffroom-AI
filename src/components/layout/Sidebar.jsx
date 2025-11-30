@@ -58,7 +58,7 @@ export default function Sidebar() {
           transition-all duration-200 group
           ${isActive
             ? 'bg-indigo-50 text-indigo-700 font-medium'
-            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-800'
+            : 'text-black-600 hover:bg-black-50 hover:text-black-800'
           }
         `}
       >
@@ -70,7 +70,7 @@ export default function Sidebar() {
           />
         )}
         
-        <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+        <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-indigo-600' : 'text-black-400 group-hover:text-black-600'}`} />
         
         {!sidebarCollapsed && (
           <span className="text-sm truncate">
@@ -82,7 +82,7 @@ export default function Sidebar() {
         {sidebarCollapsed && (
           <div className="
             absolute left-full ml-2 px-2 py-1 
-            bg-slate-800 text-white text-xs rounded-md
+            bg-black-800 text-white text-xs rounded-md
             opacity-0 group-hover:opacity-100 transition-opacity
             pointer-events-none whitespace-nowrap z-50
           ">
@@ -96,7 +96,7 @@ export default function Sidebar() {
   const NavSection = ({ title, items }) => (
     <div className="space-y-1">
       {!sidebarCollapsed && title && (
-        <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <p className="px-3 py-2 text-xs font-semibold text-black-400 uppercase tracking-wider">
           {title}
         </p>
       )}
@@ -110,7 +110,7 @@ export default function Sidebar() {
     <aside
       className={`
         fixed top-16 left-0 bottom-0 z-30
-        bg-white border-r border-slate-200
+        bg-white border-r border-black-200
         flex flex-col
         transition-all duration-300 ease-in-out
         ${sidebarCollapsed ? 'w-16' : 'w-60'}
