@@ -179,7 +179,7 @@ export default function CoursePage() {
           className="absolute top-4 left-4 flex items-center gap-1 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm hover:bg-white/30 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Back</span>
+          <span className="px-2 sm:px-3 py-1 sm:py-1.5 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors truncate max-w-[100px] sm:max-w-none text-xs sm:text-sm">Home</span>
         </button>
 
         {/* Course Info Overlay */}

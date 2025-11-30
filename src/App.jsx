@@ -1,10 +1,11 @@
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import React, { Suspense, useEffect } from "react";
 
 // Context Providers
 import { LayoutProvider } from "./context/LayoutContext";
 import { AIProvider } from "./context/AIContext";
+import { useAuth } from "./context/AuthContext";
 
 // Original Pages
 import Login from "./pages/Login";
@@ -94,6 +95,22 @@ function AuthLayout({ children }) {
   );
 }
 
+/**
+ * PublicRoute - redirects authenticated users away from auth pages
+ */
+function PublicRoute({ children }) {
+  // useAuth returns auth helpers; check common user fields
+  let auth;
+  try {
+    auth = useAuth();
+  } catch (e) {
+    auth = null;
+  }
+  const user = auth?.user ?? auth?.currentUser ?? null;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return children;
+}
+
 export default function App() {
   return (
     <LayoutProvider>
@@ -121,19 +138,25 @@ export default function App() {
               </AuthLayout>
             } />
             <Route path="/login" element={
-              <AuthLayout>
-                <Login />
-              </AuthLayout>
+              <PublicRoute>
+                <AuthLayout>
+                  <Login />
+                </AuthLayout>
+              </PublicRoute>
             } />
             <Route path="/register" element={
-              <AuthLayout>
-                <Register />
-              </AuthLayout>
+              <PublicRoute>
+                <AuthLayout>
+                  <Register />
+                </AuthLayout>
+              </PublicRoute>
             } />
             <Route path="/ai-test" element={
-              <AuthLayout>
-                <AITest />
-              </AuthLayout>
+              <ProtectedRoute>
+                <AuthLayout>
+                  <AITest />
+                </AuthLayout>
+              </ProtectedRoute>
             } />
             
             {/* Dashboard - New responsive design */}
