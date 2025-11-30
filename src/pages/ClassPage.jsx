@@ -244,7 +244,7 @@ export default function ClassPage() {
         <img 
           src={course.imageUrl} 
           alt={course.title} 
-          className="w-full h-36 sm:h-40 md:h-56 object-cover"
+          className="w-full h-44 md:h-56 object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
@@ -257,21 +257,21 @@ export default function ClassPage() {
               style={{ color: '#ffffff' }}
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Home</span>
+              <span className="px-2 sm:px-3 py-1 sm:py-1.5 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors truncate max-w-[100px] sm:max-w-none text-xs sm:text-sm">Home</span>
             </button>
-            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.5)' }} />
+            <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" style={{ color: 'rgba(255,255,255,0.5)' }} />
             <button
               onClick={() => navigate(`/course/${courseId}`)}
               className="px-2 sm:px-3 py-1 sm:py-1.5 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors truncate max-w-[100px] sm:max-w-none text-xs sm:text-sm"
               style={{ color: '#ffffff' }}
             >
-              {course.title.replace('Grade ', '').replace('Geography ', 'Geo ').replace('History ', 'Hist ')}
+              {course.title}
             </button>
           </nav>
         </div>
 
-        {/* Class Info */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-6">
+        {/* Class Info (desktop/md+ - absolute overlay) */}
+        <div className="hidden md:block absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-6">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-2 sm:gap-4">
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 flex-wrap">
@@ -309,6 +309,43 @@ export default function ClassPage() {
               <div className="text-center px-4 py-2 bg-white/10 backdrop-blur-sm rounded-xl">
                 <p className="text-2xl font-bold" style={{ color: '#ffffff' }}>{attendanceMetrics.avgPercent}%</p>
                 <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>Attendance</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Class Info (overlay on top of banner for small screens) */}
+        <div className="md:hidden absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-sm rounded-b-2xl z-20">
+          <div className="flex flex-col gap-2">
+            <div>
+                  <h1 className="text-lg text-white truncate">{course.title}</h1>
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-600">
+                <span className="px-2 py-0.5 text-white">Section {classId}</span>
+                {isWithinWindow && (
+                  <span className="px-2 py-0.5 bg-emerald-100 rounded-full text-emerald-700">Active</span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg text-white">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white">{progressPercent}%</p>
+                  <p className="text-xs text-white">Progress</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-lg text-white">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white">{attendanceMetrics.avgPercent}%</p>
+                  <p className="text-xs text-white">Attendance</p>
+                </div>
               </div>
             </div>
           </div>
