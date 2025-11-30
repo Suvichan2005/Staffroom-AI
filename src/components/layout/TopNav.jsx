@@ -117,7 +117,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
   if (isMobile) {
     
     return (
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-black-200">
+      <header className="sticky top-0 z-40 bg-white border-b border-black-200">
         <div className="px-4 h-14 flex items-center justify-between">
           {/* Left side - Hamburger or Back button */}
           <div className="flex items-center gap-2">
