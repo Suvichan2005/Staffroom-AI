@@ -153,21 +153,21 @@ export default function IntegrationSmokeCheck() {
   const errorCount = results.filter(r => r.status === 'error').length;
 
   return (
-    <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+    <div className="p-4 bg-white rounded-xl border border-black-200 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-800">Integration Smoke Check</h3>
+        <h3 className="text-lg font-semibold text-black-800">Integration Smoke Check</h3>
         {running ? (
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="flex items-center gap-2 text-sm text-black-500">
             <Loader2 className="w-4 h-4 animate-spin" />
             Running checks...
           </div>
         ) : (
           <div className="flex items-center gap-4 text-sm">
-            <span className="text-emerald-600 flex items-center gap-1">
+            <span className="text-green-600 flex items-center gap-1">
               <CheckCircle className="w-4 h-4" /> {passCount} passed
             </span>
             {failCount > 0 && (
-              <span className="text-amber-600 flex items-center gap-1">
+              <span className="text-yellow-600 flex items-center gap-1">
                 <AlertTriangle className="w-4 h-4" /> {failCount} failed
               </span>
             )}
@@ -186,19 +186,19 @@ export default function IntegrationSmokeCheck() {
             key={index}
             className={`flex items-center justify-between p-3 rounded-lg ${
               result.status === 'pass'
-                ? 'bg-emerald-50 border border-emerald-200'
+                ? 'bg-green-50 border border-green-200'
                 : result.status === 'fail'
-                ? 'bg-amber-50 border border-amber-200'
+                ? 'bg-yellow-50 border border-yellow-200'
                 : 'bg-red-50 border border-red-200'
             }`}
           >
-            <span className="text-sm font-medium text-slate-700">{result.name}</span>
+            <span className="text-sm font-medium text-black-700">{result.name}</span>
             <div className="flex items-center gap-2">
               {result.status === 'pass' && (
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                <CheckCircle className="w-5 h-5 text-green-600" />
               )}
               {result.status === 'fail' && (
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
+                <AlertTriangle className="w-5 h-5 text-yellow-600" />
               )}
               {result.status === 'error' && (
                 <>
@@ -216,21 +216,21 @@ export default function IntegrationSmokeCheck() {
         {running && integrationChecks.slice(results.length).map((check, index) => (
           <div
             key={`pending-${index}`}
-            className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200"
+            className="flex items-center justify-between p-3 rounded-lg bg-black-50 border border-black-200"
           >
-            <span className="text-sm font-medium text-slate-400">{check.name}</span>
-            <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />
+            <span className="text-sm font-medium text-black-400">{check.name}</span>
+            <Loader2 className="w-5 h-5 text-black-400 animate-spin" />
           </div>
         ))}
       </div>
 
       {/* Summary */}
       {!running && (
-        <div className="mt-4 pt-4 border-t border-slate-200">
+        <div className="mt-4 pt-4 border-t border-black-200">
           <div className={`text-sm font-medium ${
             failCount === 0 && errorCount === 0
-              ? 'text-emerald-600'
-              : 'text-amber-600'
+              ? 'text-green-600'
+              : 'text-yellow-600'
           }`}>
             {failCount === 0 && errorCount === 0
               ? '✅ All integrations verified successfully!'

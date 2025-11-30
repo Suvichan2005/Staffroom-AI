@@ -42,19 +42,19 @@ export function Button({
       shadow-sm hover:shadow-md
     `,
     secondary: `
-      bg-slate-100 text-slate-800
-      hover:bg-slate-200
-      focus-visible:ring-slate-400
+      bg-black-100 text-black-800
+      hover:bg-black-200
+      focus-visible:ring-black-400
     `,
     outline: `
-      border-2 border-slate-200 text-slate-700 bg-transparent
-      hover:bg-slate-50 hover:border-slate-300
-      focus-visible:ring-slate-400
+      border-2 border-black-200 text-black-700 bg-transparent
+      hover:bg-black-50 hover:border-black-300
+      focus-visible:ring-black-400
     `,
     ghost: `
-      text-slate-600 bg-transparent
-      hover:bg-slate-100 hover:text-slate-800
-      focus-visible:ring-slate-400
+      text-black-600 bg-transparent
+      hover:bg-black-100 hover:text-black-800
+      focus-visible:ring-black-400
     `,
     danger: `
       bg-red-600 text-white
@@ -124,14 +124,14 @@ export function IconButton({
       focus-visible:ring-indigo-500
     `,
     secondary: `
-      bg-slate-100 text-slate-700
-      hover:bg-slate-200
-      focus-visible:ring-slate-400
+      bg-black-100 text-black-700
+      hover:bg-black-200
+      focus-visible:ring-black-400
     `,
     ghost: `
-      text-slate-500 bg-transparent
-      hover:bg-slate-100 hover:text-slate-700
-      focus-visible:ring-slate-400
+      text-black-500 bg-transparent
+      hover:bg-black-100 hover:text-black-700
+      focus-visible:ring-black-400
     `,
     danger: `
       text-red-500 bg-transparent

@@ -124,7 +124,7 @@ export default function DesktopDashboard() {
           className="bg-white/10 backdrop-blur-sm rounded-2xl p-4"
         >
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-amber-300" />
+            <Sparkles className="w-4 h-4 text-yellow-300" />
             <span className="text-sm font-medium">Today's Overview</span>
           </div>
           <div className="flex items-center justify-between text-sm">
@@ -156,7 +156,7 @@ export default function DesktopDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h2 className="text-sm font-semibold text-slate-800 mb-3">Quick Actions</h2>
+            <h2 className="text-sm font-semibold text-black-800 mb-3">Quick Actions</h2>
             <QuickActions />
           </motion.div>
 
@@ -167,7 +167,7 @@ export default function DesktopDashboard() {
             transition={{ delay: 0.3 }}
           >
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold text-slate-800">My Courses</h2>
+              <h2 className="text-sm font-semibold text-black-800">My Courses</h2>
               <button 
                 onClick={() => navigate('/classes')}
                 className="text-xs text-indigo-600 font-medium hover:underline"
@@ -192,10 +192,10 @@ export default function DesktopDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
           >
-            <h2 className="text-sm font-semibold text-slate-800 mb-3">Schedule</h2>
+            <h2 className="text-sm font-semibold text-black-800 mb-3">Schedule</h2>
             <UpcomingClasses 
               showDateSelector 
-              className="!p-4 !border !border-slate-200 !shadow-sm !bg-white !rounded-2xl" 
+              className="!p-4 !border !border-black-200 !shadow-sm !bg-white !rounded-2xl" 
             />
           </motion.div>
 
@@ -207,8 +207,8 @@ export default function DesktopDashboard() {
               transition={{ delay: 0.25 }}
             >
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-slate-800">Upcoming Classes</h2>
-                <span className="text-xs text-slate-500">{upcomingClasses.length} today</span>
+                <h2 className="text-sm font-semibold text-black-800">Upcoming Classes</h2>
+                <span className="text-xs text-black-500">{upcomingClasses.length} today</span>
               </div>
               <div className="space-y-2">
                 {upcomingClasses.slice(0, 4).map((cls, index) => (
@@ -218,14 +218,14 @@ export default function DesktopDashboard() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.25 + index * 0.05 }}
                     onClick={() => handleSectionClick(cls.courseId, cls.sectionId)}
-                    className="w-full flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all"
+                    className="w-full flex items-center gap-3 p-3 bg-white rounded-xl border border-black-200 hover:border-indigo-300 hover:shadow-md transition-all"
                   >
                     <div className="w-1 h-10 rounded-full bg-indigo-500" />
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-medium text-slate-800">{cls.courseName}</p>
-                      <p className="text-xs text-slate-500">{cls.time} • Section {cls.section}</p>
+                      <p className="text-sm font-medium text-black-800">{cls.courseName}</p>
+                      <p className="text-xs text-black-500">{cls.time} • Section {cls.section}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                    <ChevronRight className="w-4 h-4 text-black-400" />
                   </motion.button>
                 ))}
               </div>

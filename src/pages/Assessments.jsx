@@ -138,12 +138,12 @@ export default function Assessments() {
   const getTypeColor = (type) => {
     switch (type) {
       case 'quiz': return 'bg-purple-100 text-purple-700';
-      case 'unit-test': return 'bg-amber-100 text-amber-700';
-      case 'mid-term': return 'bg-rose-100 text-rose-700';
+      case 'unit-test': return 'bg-yellow-100 text-yellow-700';
+      case 'mid-term': return 'bg-red-100 text-red-700';
       case 'final': return 'bg-red-100 text-red-700';
-      case 'project': return 'bg-emerald-100 text-emerald-700';
-      case 'homework': return 'bg-sky-100 text-sky-700';
-      default: return 'bg-slate-100 text-slate-700';
+      case 'project': return 'bg-green-100 text-green-700';
+      case 'homework': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-black-100 text-black-700';
     }
   };
 
@@ -162,11 +162,11 @@ export default function Assessments() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'completed':
-        return <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full flex items-center gap-1">
+        return <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full flex items-center gap-1">
           <CheckCircle2 className="w-3 h-3" /> Complete
         </span>;
       case 'overdue':
-        return <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded-full flex items-center gap-1">
+        return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded-full flex items-center gap-1">
           <AlertTriangle className="w-3 h-3" /> Overdue
         </span>;
       default:
@@ -202,8 +202,8 @@ export default function Assessments() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Assessments</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage assignments, tests, and quizzes across all classes</p>
+          <h1 className="text-2xl font-bold text-black-800">Assessments</h1>
+          <p className="text-sm text-black-500 mt-1">Manage assignments, tests, and quizzes across all classes</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -220,10 +220,10 @@ export default function Assessments() {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         {[
           { label: 'Total', value: stats.total, icon: ClipboardList, color: 'indigo', bg: 'bg-indigo-50' },
-          { label: 'Assignments', value: stats.assignments, icon: FileText, color: 'sky', bg: 'bg-sky-50' },
+          { label: 'Assignments', value: stats.assignments, icon: FileText, color: 'blue', bg: 'bg-blue-50' },
           { label: 'Tests', value: stats.tests, icon: BookOpen, color: 'purple', bg: 'bg-purple-50' },
-          { label: 'Needs Grading', value: stats.needsGrading, icon: Edit, color: 'amber', bg: 'bg-amber-50' },
-          { label: 'Overdue', value: stats.overdue, icon: AlertTriangle, color: 'rose', bg: 'bg-rose-50' },
+          { label: 'Needs Grading', value: stats.needsGrading, icon: Edit, color: 'yellow', bg: 'bg-yellow-50' },
+          { label: 'Overdue', value: stats.overdue, icon: AlertTriangle, color: 'red', bg: 'bg-red-50' },
         ].map((stat, idx) => (
           <motion.div
             key={idx}
@@ -233,14 +233,14 @@ export default function Assessments() {
             className={`${stat.bg} rounded-2xl p-4`}
           >
             <stat.icon className={`w-5 h-5 text-${stat.color}-600 mb-2`} />
-            <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
-            <p className="text-xs text-slate-500">{stat.label}</p>
+            <p className="text-2xl font-bold text-black-800">{stat.value}</p>
+            <p className="text-xs text-black-500">{stat.label}</p>
           </motion.div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-6">
+      <div className="bg-white rounded-2xl border border-black-200 p-4 mb-6">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Status Filter Tabs */}
           <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0 flex-shrink-0">
@@ -252,14 +252,14 @@ export default function Assessments() {
                   flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all
                   ${activeFilter === filter.id
                     ? 'bg-indigo-600 text-white shadow-md'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    : 'bg-black-100 text-black-600 hover:bg-black-200'
                   }
                 `}
               >
                 {filter.label}
                 <span className={`
                   px-1.5 py-0.5 rounded-full text-xs
-                  ${activeFilter === filter.id ? 'bg-white/20' : 'bg-white text-slate-500'}
+                  ${activeFilter === filter.id ? 'bg-white/20' : 'bg-white text-black-500'}
                 `}>
                   {filter.count}
                 </span>
@@ -272,7 +272,7 @@ export default function Assessments() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              className="px-3 py-2 bg-black-50 border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
             >
               <option value="all">All Types</option>
               <option value="assignment">Assignments</option>
@@ -282,7 +282,7 @@ export default function Assessments() {
             <select
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              className="px-3 py-2 bg-black-50 border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
             >
               <option value="all">All Classes</option>
               {allClasses.map(cls => (
@@ -292,13 +292,13 @@ export default function Assessments() {
 
             {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
               <input
                 type="text"
                 placeholder="Search assessments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="w-full pl-10 pr-4 py-2 bg-black-50 border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
               />
             </div>
           </div>
@@ -316,7 +316,7 @@ export default function Assessments() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ delay: idx * 0.03 }}
-              className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-lg hover:border-indigo-200 transition-all group"
+              className="bg-white rounded-2xl border border-black-200 p-4 hover:shadow-lg hover:border-indigo-200 transition-all group"
             >
               <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                 {/* Left: Info */}
@@ -326,19 +326,19 @@ export default function Assessments() {
                       {getTypeLabel(assessment.type)}
                     </span>
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      assessment.category === 'test' ? 'bg-purple-50 text-purple-600' : 'bg-sky-50 text-sky-600'
+                      assessment.category === 'test' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'
                     }`}>
                       {assessment.category === 'test' ? 'Test' : 'Assignment'}
                     </span>
                     {getStatusBadge(assessment.status)}
                   </div>
-                  <h3 className="font-semibold text-slate-800 text-lg group-hover:text-indigo-600 transition-colors">
+                  <h3 className="font-semibold text-black-800 text-lg group-hover:text-indigo-600 transition-colors">
                     {assessment.title}
                   </h3>
                   {assessment.description && (
-                    <p className="text-sm text-slate-500 mt-1 line-clamp-1">{assessment.description}</p>
+                    <p className="text-sm text-black-500 mt-1 line-clamp-1">{assessment.description}</p>
                   )}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-slate-500">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-black-500">
                     <span className="flex items-center gap-1">
                       <GraduationCap className="w-4 h-4" />
                       {assessment.course} - {assessment.section}
@@ -357,31 +357,31 @@ export default function Assessments() {
                 {/* Middle: Progress */}
                 <div className="flex items-center gap-4 lg:gap-6">
                   <div className="text-center min-w-[60px]">
-                    <p className="text-xs text-slate-500 mb-1">Submitted</p>
-                    <p className="text-xl font-bold text-slate-800">
-                      {assessment.submitted}<span className="text-sm text-slate-400">/{assessment.totalStudents}</span>
+                    <p className="text-xs text-black-500 mb-1">Submitted</p>
+                    <p className="text-xl font-bold text-black-800">
+                      {assessment.submitted}<span className="text-sm text-black-400">/{assessment.totalStudents}</span>
                     </p>
                   </div>
                   <div className="text-center min-w-[60px]">
-                    <p className="text-xs text-slate-500 mb-1">Graded</p>
-                    <p className="text-xl font-bold text-emerald-600">
-                      {assessment.graded}<span className="text-sm text-slate-400">/{assessment.submitted}</span>
+                    <p className="text-xs text-black-500 mb-1">Graded</p>
+                    <p className="text-xl font-bold text-green-600">
+                      {assessment.graded}<span className="text-sm text-black-400">/{assessment.submitted}</span>
                     </p>
                   </div>
                   <div className="hidden sm:block">
-                    <p className="text-xs text-slate-500 mb-1">Avg Score</p>
+                    <p className="text-xs text-black-500 mb-1">Avg Score</p>
                     <p className="text-xl font-bold text-indigo-600">
                       {assessment.averageGrade || '-'}
                     </p>
                   </div>
                   <div className="w-24 hidden md:block">
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-black-100 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
                         style={{ width: `${assessment.totalStudents ? (assessment.submitted / assessment.totalStudents) * 100 : 0}%` }}
                       />
                     </div>
-                    <p className="text-xs text-slate-400 mt-1 text-center">
+                    <p className="text-xs text-black-400 mt-1 text-center">
                       {assessment.totalStudents ? Math.round((assessment.submitted / assessment.totalStudents) * 100) : 0}%
                     </p>
                   </div>
@@ -396,10 +396,10 @@ export default function Assessments() {
                     <Edit className="w-4 h-4" />
                     <span className="hidden sm:inline">Grade</span>
                   </button>
-                  <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                  <button className="p-2 text-black-400 hover:text-black-600 hover:bg-black-100 rounded-lg transition-colors">
                     <Eye className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                  <button className="p-2 text-black-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
@@ -409,12 +409,12 @@ export default function Assessments() {
         </AnimatePresence>
 
         {filteredAssessments.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200">
-            <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
-              <ClipboardList className="w-8 h-8 text-slate-400" />
+          <div className="text-center py-16 bg-white rounded-2xl border border-black-200">
+            <div className="w-16 h-16 mx-auto bg-black-100 rounded-full flex items-center justify-center mb-4">
+              <ClipboardList className="w-8 h-8 text-black-400" />
             </div>
-            <p className="text-slate-600 font-medium">No assessments found</p>
-            <p className="text-sm text-slate-500 mt-1">Try adjusting your filters or create a new assessment</p>
+            <p className="text-black-600 font-medium">No assessments found</p>
+            <p className="text-sm text-black-500 mt-1">Try adjusting your filters or create a new assessment</p>
           </div>
         )}
       </div>
@@ -422,23 +422,23 @@ export default function Assessments() {
       {/* Create Assessment Modal */}
       <AnimatePresence>
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-black-100 bg-gradient-to-r from-indigo-50 to-purple-50">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800">Create Assessment</h3>
-                  <p className="text-sm text-slate-500">Add a new assignment or test</p>
+                  <h3 className="text-lg font-semibold text-black-800">Create Assessment</h3>
+                  <p className="text-sm text-black-500">Add a new assignment or test</p>
                 </div>
                 <button
                   onClick={() => setShowCreateModal(false)}
                   className="p-2 hover:bg-white/50 rounded-xl transition-colors"
                 >
-                  <X className="w-5 h-5 text-slate-500" />
+                  <X className="w-5 h-5 text-black-500" />
                 </button>
               </div>
               <div className="p-6 space-y-4">
@@ -448,25 +448,25 @@ export default function Assessments() {
                     <p className="font-medium">Assignment</p>
                     <p className="text-xs text-indigo-500">Homework, Project</p>
                   </button>
-                  <button className="p-4 rounded-xl border-2 border-slate-200 hover:border-purple-300 hover:bg-purple-50 transition-all">
-                    <BookOpen className="w-6 h-6 mx-auto mb-2 text-slate-400" />
-                    <p className="font-medium text-slate-600">Test</p>
-                    <p className="text-xs text-slate-400">Quiz, Unit Test</p>
+                  <button className="p-4 rounded-xl border-2 border-black-200 hover:border-purple-300 hover:bg-purple-50 transition-all">
+                    <BookOpen className="w-6 h-6 mx-auto mb-2 text-black-400" />
+                    <p className="font-medium text-black-600">Test</p>
+                    <p className="text-xs text-black-400">Quiz, Unit Test</p>
                   </button>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                    <label className="block text-sm font-medium text-black-700 mb-1">Title</label>
                     <input
                       type="text"
                       placeholder="e.g., Chapter 3 Quiz"
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
-                      <select className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                      <label className="block text-sm font-medium text-black-700 mb-1">Class</label>
+                      <select className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200">
                         <option value="">Select class</option>
                         {allClasses.map(cls => (
                           <option key={cls.id} value={cls.id}>{cls.name}</option>
@@ -474,27 +474,27 @@ export default function Assessments() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Due Date</label>
+                      <label className="block text-sm font-medium text-black-700 mb-1">Due Date</label>
                       <input
                         type="date"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Max Points</label>
+                    <label className="block text-sm font-medium text-black-700 mb-1">Max Points</label>
                     <input
                       type="number"
                       placeholder="100"
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50">
+              <div className="flex justify-end gap-3 px-6 py-4 border-t border-black-100 bg-black-50">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+                  className="px-4 py-2 text-black-600 hover:bg-black-200 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
@@ -516,36 +516,36 @@ export default function Assessments() {
       {/* Grading Modal */}
       <AnimatePresence>
         {showGradingModal && selectedAssessment && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50 flex-shrink-0">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-black-100 bg-gradient-to-r from-green-50 to-teal-50 flex-shrink-0">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800">Grade Assessment</h3>
-                  <p className="text-sm text-slate-500">{selectedAssessment.title} • Max {selectedAssessment.maxPoints} pts</p>
+                  <h3 className="text-lg font-semibold text-black-800">Grade Assessment</h3>
+                  <p className="text-sm text-black-500">{selectedAssessment.title} • Max {selectedAssessment.maxPoints} pts</p>
                 </div>
                 <button
                   onClick={() => setShowGradingModal(false)}
                   className="p-2 hover:bg-white/50 rounded-xl transition-colors"
                 >
-                  <X className="w-5 h-5 text-slate-500" />
+                  <X className="w-5 h-5 text-black-500" />
                 </button>
               </div>
               
               {/* Quick Stats */}
-              <div className="px-6 py-3 bg-slate-50 border-b border-slate-100 flex-shrink-0">
+              <div className="px-6 py-3 bg-black-50 border-b border-black-100 flex-shrink-0">
                 <div className="flex items-center gap-6 text-sm">
-                  <span className="text-slate-500">
-                    <span className="font-semibold text-slate-800">{selectedAssessment.section}</span> • {classStudents.length} students
+                  <span className="text-black-500">
+                    <span className="font-semibold text-black-800">{selectedAssessment.section}</span> • {classStudents.length} students
                   </span>
-                  <span className="text-slate-500">
-                    Submitted: <span className="font-semibold text-emerald-600">{selectedAssessment.submitted}</span>
+                  <span className="text-black-500">
+                    Submitted: <span className="font-semibold text-green-600">{selectedAssessment.submitted}</span>
                   </span>
-                  <span className="text-slate-500">
+                  <span className="text-black-500">
                     Graded: <span className="font-semibold text-indigo-600">{selectedAssessment.graded}</span>
                   </span>
                 </div>
@@ -567,18 +567,18 @@ export default function Assessments() {
                         transition={{ delay: idx * 0.02 }}
                         className={`flex items-center gap-4 p-3 rounded-xl border transition-all ${
                           hasSubmitted 
-                            ? 'bg-white border-slate-200 hover:border-indigo-200' 
-                            : 'bg-slate-50 border-slate-100'
+                            ? 'bg-white border-black-200 hover:border-indigo-200' 
+                            : 'bg-black-50 border-black-100'
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                          hasSubmitted ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
+                          hasSubmitted ? 'bg-green-100 text-green-700' : 'bg-black-200 text-black-500'
                         }`}>
                           {student.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-slate-800">{student.name}</p>
-                          <p className="text-xs text-slate-500">
+                          <p className="font-medium text-black-800">{student.name}</p>
+                          <p className="text-xs text-black-500">
                             {hasSubmitted 
                               ? `Submitted ${new Date(submission.submittedDate).toLocaleDateString()}`
                               : 'Not submitted'
@@ -599,11 +599,11 @@ export default function Assessments() {
                             placeholder="-"
                             className={`w-20 px-3 py-2 text-center border rounded-xl text-sm font-medium transition-all ${
                               hasSubmitted 
-                                ? 'border-slate-200 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300' 
-                                : 'border-slate-100 bg-slate-100 text-slate-400 cursor-not-allowed'
+                                ? 'border-black-200 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300' 
+                                : 'border-black-100 bg-black-100 text-black-400 cursor-not-allowed'
                             }`}
                           />
-                          <span className="text-sm text-slate-400">/ {selectedAssessment.maxPoints}</span>
+                          <span className="text-sm text-black-400">/ {selectedAssessment.maxPoints}</span>
                         </div>
                       </motion.div>
                     );
@@ -611,20 +611,20 @@ export default function Assessments() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50 flex-shrink-0">
-                <div className="text-sm text-slate-500">
+              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-black-100 bg-black-50 flex-shrink-0">
+                <div className="text-sm text-black-500">
                   {Object.keys(grades).filter(k => grades[k] !== '').length} grades entered
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowGradingModal(false)}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
+                    className="px-4 py-2 text-black-600 hover:bg-black-200 rounded-xl transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSaveGrades}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors font-medium"
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium"
                   >
                     <Save className="w-4 h-4" />
                     Save Grades

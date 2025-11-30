@@ -17,8 +17,8 @@ export default function ProfilePage() {
 
   const stats = [
     { label: 'Courses', value: teacher.courses?.length || 0, icon: BookOpen, color: 'indigo' },
-    { label: 'Sections', value: teacher.courses?.reduce((sum, c) => sum + (c.sections?.length || 0), 0) || 0, icon: Building, color: 'emerald' },
-    { label: 'Experience', value: '5 years', icon: Award, color: 'amber' },
+    { label: 'Sections', value: teacher.courses?.reduce((sum, c) => sum + (c.sections?.length || 0), 0) || 0, icon: Building, color: 'green' },
+    { label: 'Experience', value: '5 years', icon: Award, color: 'yellow' },
     { label: 'This Month', value: '24 classes', icon: Calendar, color: 'purple' },
   ];
 
@@ -33,8 +33,8 @@ export default function ProfilePage() {
 
   const colorMap = {
     indigo: 'bg-indigo-100 text-indigo-600',
-    emerald: 'bg-emerald-100 text-emerald-600',
-    amber: 'bg-amber-100 text-amber-600',
+    green: 'bg-green-100 text-green-600',
+    yellow: 'bg-yellow-100 text-yellow-600',
     purple: 'bg-purple-100 text-purple-600',
   };
 
@@ -45,7 +45,7 @@ export default function ProfilePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-slate-200 overflow-hidden"
+          className="bg-white rounded-2xl border border-black-200 overflow-hidden"
         >
           {/* Cover Image */}
           <div className="h-32 bg-gradient-to-r from-indigo-600 to-purple-600 relative">
@@ -69,12 +69,12 @@ export default function ProfilePage() {
               
               {/* Name & Role */}
               <div className="flex-1 sm:pb-2 sm:pt-16 z-10">
-                <h1 className="text-2xl font-bold text-slate-800">{teacher.name}</h1>
-                <p className="text-slate-500">{teacherInfo.role || 'Teacher'} • {teacherInfo.subject}</p>
+                <h1 className="text-2xl font-bold text-black-800">{teacher.name}</h1>
+                <p className="text-black-500">{teacherInfo.role || 'Teacher'} • {teacherInfo.subject}</p>
               </div>
               
               {/* Edit Button */}
-              <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-medium text-slate-700 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2 bg-black-100 hover:bg-black-200 rounded-xl text-sm font-medium text-black-700 transition-colors">
                 <Edit2 className="w-4 h-4" />
                 Edit Profile
               </button>
@@ -92,12 +92,12 @@ export default function ProfilePage() {
           {stats.map((stat, i) => {
             const Icon = stat.icon;
             return (
-              <div key={i} className="bg-white rounded-2xl border border-slate-200 p-4">
+              <div key={i} className="bg-white rounded-2xl border border-black-200 p-4">
                 <div className={`w-10 h-10 rounded-xl ${colorMap[stat.color]} flex items-center justify-center mb-3`}>
                   <Icon className="w-5 h-5" />
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
-                <p className="text-sm text-slate-500">{stat.label}</p>
+                <p className="text-2xl font-bold text-black-800">{stat.value}</p>
+                <p className="text-sm text-black-500">{stat.label}</p>
               </div>
             );
           })}
@@ -110,35 +110,35 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl border border-slate-200 p-5"
+            className="bg-white rounded-2xl border border-black-200 p-5"
           >
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">Contact Information</h2>
+            <h2 className="text-lg font-semibold text-black-800 mb-4">Contact Information</h2>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-100 rounded-lg">
-                  <Mail className="w-4 h-4 text-slate-600" />
+                <div className="p-2 bg-black-100 rounded-lg">
+                  <Mail className="w-4 h-4 text-black-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Email</p>
-                  <p className="text-sm font-medium text-slate-700">{teacherInfo.contact || 'teacher@school.edu'}</p>
+                  <p className="text-xs text-black-500">Email</p>
+                  <p className="text-sm font-medium text-black-700">{teacherInfo.contact || 'teacher@school.edu'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-100 rounded-lg">
-                  <Phone className="w-4 h-4 text-slate-600" />
+                <div className="p-2 bg-black-100 rounded-lg">
+                  <Phone className="w-4 h-4 text-black-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Phone</p>
-                  <p className="text-sm font-medium text-slate-700">+91 98765 43210</p>
+                  <p className="text-xs text-black-500">Phone</p>
+                  <p className="text-sm font-medium text-black-700">+91 98765 43210</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-100 rounded-lg">
-                  <Building className="w-4 h-4 text-slate-600" />
+                <div className="p-2 bg-black-100 rounded-lg">
+                  <Building className="w-4 h-4 text-black-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Department</p>
-                  <p className="text-sm font-medium text-slate-700">{teacherInfo.subject} Department</p>
+                  <p className="text-xs text-black-500">Department</p>
+                  <p className="text-sm font-medium text-black-700">{teacherInfo.subject} Department</p>
                 </div>
               </div>
             </div>
@@ -149,12 +149,12 @@ export default function ProfilePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-white rounded-2xl border border-slate-200 p-5"
+            className="bg-white rounded-2xl border border-black-200 p-5"
           >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-800">Recent Activity</h2>
-              <button className="p-1 hover:bg-slate-100 rounded-lg">
-                <MoreHorizontal className="w-4 h-4 text-slate-400" />
+              <h2 className="text-lg font-semibold text-black-800">Recent Activity</h2>
+              <button className="p-1 hover:bg-black-100 rounded-lg">
+                <MoreHorizontal className="w-4 h-4 text-black-400" />
               </button>
             </div>
             <div className="space-y-3">
@@ -166,21 +166,21 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.25 + index * 0.05 }}
-                    className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors"
+                    className="flex items-start gap-3 p-2 rounded-xl hover:bg-black-50 transition-colors"
                   >
                     <div className={`
                       p-2 rounded-lg
-                      ${activity.type === 'attendance' ? 'bg-emerald-100 text-emerald-600' : ''}
+                      ${activity.type === 'attendance' ? 'bg-green-100 text-green-600' : ''}
                       ${activity.type === 'progress' ? 'bg-indigo-100 text-indigo-600' : ''}
-                      ${activity.type === 'assignment' ? 'bg-amber-100 text-amber-600' : ''}
+                      ${activity.type === 'assignment' ? 'bg-yellow-100 text-yellow-600' : ''}
                       ${activity.type === 'ai' ? 'bg-purple-100 text-purple-600' : ''}
-                      ${activity.type === 'submission' ? 'bg-sky-100 text-sky-600' : ''}
+                      ${activity.type === 'submission' ? 'bg-blue-100 text-blue-600' : ''}
                     `}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-slate-700">{activity.text}</p>
-                      <p className="text-xs text-slate-400">{activity.time}</p>
+                      <p className="text-sm text-black-700">{activity.text}</p>
+                      <p className="text-xs text-black-400">{activity.time}</p>
                     </div>
                   </motion.div>
                 );
@@ -194,12 +194,12 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl border border-slate-200 p-5"
+          className="bg-white rounded-2xl border border-black-200 p-5"
         >
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Current Courses</h2>
+          <h2 className="text-lg font-semibold text-black-800 mb-4">Current Courses</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {teacher.courses?.map((course, i) => (
-              <div key={course.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+              <div key={course.id} className="flex items-center justify-between p-3 bg-black-50 rounded-xl">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg overflow-hidden">
                     <img 
@@ -209,11 +209,11 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-700">{course.title}</p>
-                    <p className="text-xs text-slate-500">{course.sections?.length || 0} sections</p>
+                    <p className="text-sm font-medium text-black-700">{course.title}</p>
+                    <p className="text-xs text-black-500">{course.sections?.length || 0} sections</p>
                   </div>
                 </div>
-                <Clock className="w-4 h-4 text-slate-400" />
+                <Clock className="w-4 h-4 text-black-400" />
               </div>
             ))}
           </div>
@@ -224,9 +224,9 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl border border-slate-200 p-5"
+          className="bg-white rounded-2xl border border-black-200 p-5"
         >
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Account Settings</h2>
+          <h2 className="text-lg font-semibold text-black-800 mb-4">Account Settings</h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
             {[
               { icon: Shield, label: 'Security', desc: 'Password & 2FA' },
@@ -237,14 +237,14 @@ export default function ProfilePage() {
               return (
                 <button 
                   key={i}
-                  className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all text-left"
+                  className="flex items-center gap-3 p-4 rounded-xl border border-black-200 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all text-left"
                 >
-                  <div className="p-2 bg-slate-100 rounded-lg">
-                    <Icon className="w-5 h-5 text-slate-600" />
+                  <div className="p-2 bg-black-100 rounded-lg">
+                    <Icon className="w-5 h-5 text-black-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-700">{item.label}</p>
-                    <p className="text-xs text-slate-500">{item.desc}</p>
+                    <p className="text-sm font-medium text-black-700">{item.label}</p>
+                    <p className="text-xs text-black-500">{item.desc}</p>
                   </div>
                 </button>
               );

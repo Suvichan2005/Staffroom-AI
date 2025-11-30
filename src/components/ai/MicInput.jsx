@@ -17,7 +17,7 @@ export default function MicInput({ onSubmit }) {
         <button
           type="button"
           className={`relative h-11 w-11 rounded-full text-white shadow-inner transition ${
-            isListening ? "bg-rose-500" : "bg-indigo-600"
+            isListening ? "bg-red-500" : "bg-indigo-600"
           }`}
           title="Record (simulated)"
           onClick={() => cycleListening()}
@@ -35,16 +35,16 @@ export default function MicInput({ onSubmit }) {
           value={value}
           onChange={(event) => setValue(event.target.value)}
           placeholder="Speak or type a command..."
-          className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm"
+          className="flex-1 border border-black-200 rounded-xl px-3 py-2 text-sm"
         />
         <button
-          className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-300"
+          className="px-4 py-2 rounded-xl bg-black-200 text-black-700 text-sm font-medium hover:bg-black-300"
           onClick={handleSend}
         >
           Send
         </button>
       </div>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-black-400">
         Voice capture is simulated. Tap the mic to toggle the animated listening state.
       </p>
     </div>

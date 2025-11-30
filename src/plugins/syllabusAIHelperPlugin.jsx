@@ -55,7 +55,7 @@ function QuickActionButton({ icon: Icon, label, onClick, active, disabled }) {
         transition-all border
         ${active 
           ? 'bg-purple-100 text-purple-700 border-purple-300' 
-          : 'bg-white text-slate-600 border-slate-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200'
+          : 'bg-white text-black-600 border-black-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200'
         }
         disabled:opacity-50 disabled:cursor-not-allowed
       `}
@@ -90,13 +90,13 @@ function QuizResultDisplay({ questions, onClose, onSave }) {
       className="space-y-3"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-black-800 flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-purple-600" />
           Generated Quiz ({questions.length} questions)
         </h4>
         <button
           onClick={onClose}
-          className="p-1 text-slate-400 hover:text-slate-600"
+          className="p-1 text-black-400 hover:text-black-600"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -107,15 +107,15 @@ function QuizResultDisplay({ questions, onClose, onSave }) {
         {questions.map((q, idx) => (
           <div 
             key={idx} 
-            className="p-3 bg-white rounded-lg border border-slate-200 hover:border-purple-200 transition-colors"
+            className="p-3 bg-white rounded-lg border border-black-200 hover:border-purple-200 transition-colors"
           >
             <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-medium text-slate-800">
+              <p className="text-sm font-medium text-black-800">
                 {idx + 1}. {q.question}
               </p>
               <button
                 onClick={() => handleCopy(q, idx)}
-                className="p-1 text-slate-400 hover:text-purple-600 flex-shrink-0"
+                className="p-1 text-black-400 hover:text-purple-600 flex-shrink-0"
                 aria-label="Copy question"
               >
                 {copiedIndex === idx ? (
@@ -132,14 +132,14 @@ function QuizResultDisplay({ questions, onClose, onSave }) {
                   className={`text-xs px-2 py-1 rounded ${
                     key === q.correctAnswer
                       ? 'bg-green-100 text-green-800 font-medium'
-                      : 'bg-slate-50 text-slate-600'
+                      : 'bg-black-50 text-black-600'
                   }`}
                 >
                   {key}. {value}
                 </div>
               ))}
             </div>
-            <p className="text-xs text-slate-500 mt-2 italic">
+            <p className="text-xs text-black-500 mt-2 italic">
               💡 {q.explanation}
             </p>
           </div>
@@ -171,13 +171,13 @@ function AssignmentResultDisplay({ assignment, onClose, onCreate }) {
       className="space-y-3"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-black-800 flex items-center gap-2">
           <FileText className="w-4 h-4 text-purple-600" />
           {assignment.title}
         </h4>
         <button
           onClick={onClose}
-          className="p-1 text-slate-400 hover:text-slate-600"
+          className="p-1 text-black-400 hover:text-black-600"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -185,24 +185,24 @@ function AssignmentResultDisplay({ assignment, onClose, onCreate }) {
       </div>
 
       <div className="space-y-3 max-h-[300px] overflow-y-auto">
-        <div className="p-3 bg-white rounded-lg border border-slate-200">
-          <p className="text-xs text-slate-500 mb-1">Description</p>
-          <p className="text-sm text-slate-800">{assignment.description}</p>
+        <div className="p-3 bg-white rounded-lg border border-black-200">
+          <p className="text-xs text-black-500 mb-1">Description</p>
+          <p className="text-sm text-black-800">{assignment.description}</p>
         </div>
 
-        <div className="p-3 bg-white rounded-lg border border-slate-200">
-          <p className="text-xs text-slate-500 mb-1">Instructions</p>
-          <p className="text-sm text-slate-700 whitespace-pre-line">{assignment.instructions}</p>
+        <div className="p-3 bg-white rounded-lg border border-black-200">
+          <p className="text-xs text-black-500 mb-1">Instructions</p>
+          <p className="text-sm text-black-700 whitespace-pre-line">{assignment.instructions}</p>
         </div>
 
-        <div className="p-3 bg-white rounded-lg border border-slate-200">
-          <p className="text-xs text-slate-500 mb-2">Rubric</p>
+        <div className="p-3 bg-white rounded-lg border border-black-200">
+          <p className="text-xs text-black-500 mb-2">Rubric</p>
           <div className="space-y-2">
             {assignment.rubric?.map((r, idx) => (
-              <div key={idx} className="flex justify-between items-start p-2 bg-slate-50 rounded">
+              <div key={idx} className="flex justify-between items-start p-2 bg-black-50 rounded">
                 <div>
-                  <p className="text-sm font-medium text-slate-800">{r.criterion}</p>
-                  <p className="text-xs text-slate-500">{r.description}</p>
+                  <p className="text-sm font-medium text-black-800">{r.criterion}</p>
+                  <p className="text-xs text-black-500">{r.description}</p>
                 </div>
                 <span className="text-sm font-semibold text-purple-600">{r.points} pts</span>
               </div>
@@ -210,7 +210,7 @@ function AssignmentResultDisplay({ assignment, onClose, onCreate }) {
           </div>
         </div>
 
-        <div className="flex gap-4 text-xs text-slate-600 p-2 bg-slate-50 rounded-lg">
+        <div className="flex gap-4 text-xs text-black-600 p-2 bg-black-50 rounded-lg">
           <span>⏱️ Est. Time: {assignment.estimatedTime}</span>
           <span>📅 Due in: {assignment.dueInDays} days</span>
         </div>
@@ -239,39 +239,39 @@ function TopicSuggestionDisplay({ suggestion, onClose }) {
       className="space-y-3"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-slate-800 flex items-center gap-2">
-          <Lightbulb className="w-4 h-4 text-amber-500" />
+        <h4 className="text-sm font-semibold text-black-800 flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-yellow-500" />
           Next Topic Suggestion
         </h4>
         <button
           onClick={onClose}
-          className="p-1 text-slate-400 hover:text-slate-600"
+          className="p-1 text-black-400 hover:text-black-600"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
-        <p className="text-lg font-semibold text-slate-800 mb-1">
+      <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
+        <p className="text-lg font-semibold text-black-800 mb-1">
           {suggestion.suggestedTopic}
         </p>
-        <p className="text-sm text-slate-700">{suggestion.reasoning}</p>
+        <p className="text-sm text-black-700">{suggestion.reasoning}</p>
       </div>
 
-      <div className="p-3 bg-white rounded-lg border border-slate-200">
-        <p className="text-xs text-slate-500 mb-2">Preparation Tips</p>
+      <div className="p-3 bg-white rounded-lg border border-black-200">
+        <p className="text-xs text-black-500 mb-2">Preparation Tips</p>
         <ul className="space-y-1">
           {suggestion.preparationTips?.map((tip, idx) => (
-            <li key={idx} className="text-sm text-slate-700 flex items-start gap-2">
-              <span className="text-amber-500">•</span>
+            <li key={idx} className="text-sm text-black-700 flex items-start gap-2">
+              <span className="text-yellow-500">•</span>
               <span>{tip}</span>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="text-sm text-slate-600 p-2 bg-slate-50 rounded-lg">
+      <div className="text-sm text-black-600 p-2 bg-black-50 rounded-lg">
         ⏱️ Estimated: {suggestion.estimatedHours || 2} hours
       </div>
     </motion.div>
@@ -480,26 +480,26 @@ function SyllabusAIPanel({ context, onGenerated }) {
           <Sparkles className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h3 className="font-semibold text-slate-800">Syllabus AI Helper</h3>
-          <p className="text-sm text-slate-500">Generate quizzes, assignments & suggestions</p>
+          <h3 className="font-semibold text-black-800">Syllabus AI Helper</h3>
+          <p className="text-sm text-black-500">Generate quizzes, assignments & suggestions</p>
         </div>
       </div>
 
       {!hasData ? (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-center">
-          <p className="text-amber-700">No courses available. Please set up your courses first.</p>
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+          <p className="text-yellow-700">No courses available. Please set up your courses first.</p>
         </div>
       ) : (
         <>
           {/* Dynamic Course/Chapter/Topic Selection */}
-          <div className="space-y-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="space-y-3 p-3 bg-black-50 rounded-lg border border-black-200">
             {/* Course Selection */}
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Course</label>
+              <label className="block text-xs font-medium text-black-600 mb-1">Course</label>
               <select
                 value={selectedCourseId}
                 onChange={(e) => handleCourseChange(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+                className="w-full px-3 py-2 bg-white border border-black-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
               >
                 <option value="">Select a course...</option>
                 {allCourses.map(course => (
@@ -513,11 +513,11 @@ function SyllabusAIPanel({ context, onGenerated }) {
             {/* Chapter Selection - Only for Quiz/Assignment */}
             {activeTab !== 'suggest' && selectedCourseId && chapters.length > 0 && (
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Chapter</label>
+                <label className="block text-xs font-medium text-black-600 mb-1">Chapter</label>
                 <select
                   value={selectedChapterIndex}
                   onChange={(e) => handleChapterChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+                  className="w-full px-3 py-2 bg-white border border-black-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
                 >
                   <option value="">Select a chapter...</option>
                   {chapters.map(chapter => (
@@ -532,11 +532,11 @@ function SyllabusAIPanel({ context, onGenerated }) {
             {/* Topic Selection - Only for Quiz/Assignment */}
             {activeTab !== 'suggest' && selectedChapterIndex && topics.length > 0 && (
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Topic</label>
+                <label className="block text-xs font-medium text-black-600 mb-1">Topic</label>
                 <select
                   value={selectedTopicIndex}
                   onChange={(e) => { setSelectedTopicIndex(e.target.value); setResult(null); setError(''); }}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+                  className="w-full px-3 py-2 bg-white border border-black-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
                 >
                   <option value="">Select a topic...</option>
                   {topics.map(topic => (
@@ -550,7 +550,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
 
             {/* Current Selection Summary */}
             {selectedCourseId && (
-              <div className="pt-2 border-t border-slate-200">
+              <div className="pt-2 border-t border-black-200">
                 <p className="text-xs text-purple-600 font-medium">
                   {subject} {grade ? `- Grade ${grade}` : ''}
                   {selectedChapter && ` → ${selectedChapter.title}`}
@@ -561,7 +561,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-slate-200">
+          <div className="flex border-b border-black-200">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -574,7 +574,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
                     transition-colors border-b-2 -mb-px
                     ${isActive
                       ? 'text-purple-700 border-purple-600 bg-purple-50'
-                      : 'text-slate-600 border-transparent hover:text-slate-800 hover:bg-slate-50'
+                      : 'text-black-600 border-transparent hover:text-black-800 hover:bg-black-50'
                     }
                   `}
                 >
@@ -627,8 +627,8 @@ function SyllabusAIPanel({ context, onGenerated }) {
                 >
                   {/* Quiz Options */}
                   {activeTab === 'quiz' && (
-                    <div className="p-3 bg-slate-50 rounded-lg">
-                      <label className="block text-xs text-slate-600 mb-2">
+                    <div className="p-3 bg-black-50 rounded-lg">
+                      <label className="block text-xs text-black-600 mb-2">
                         Number of questions
                       </label>
                       <div className="flex gap-2">
@@ -640,7 +640,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
                               px-4 py-2 rounded-lg text-sm font-medium transition-colors
                               ${questionCount === num
                                 ? 'bg-purple-600 text-white'
-                                : 'bg-white border border-slate-200 text-slate-700 hover:bg-purple-50'
+                                : 'bg-white border border-black-200 text-black-700 hover:bg-purple-50'
                               }
                             `}
                           >
@@ -653,8 +653,8 @@ function SyllabusAIPanel({ context, onGenerated }) {
 
                   {/* Suggest Tab Info */}
                   {activeTab === 'suggest' && (
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                      <p className="text-sm text-amber-800">
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <p className="text-sm text-yellow-800">
                         💡 AI will analyze your progress and suggest the best next topic to teach based on syllabus sequence and upcoming exams.
                       </p>
                     </div>
@@ -694,7 +694,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
 
                   {/* Validation Message */}
                   {!canGenerate && !error && (
-                    <p className="text-xs text-slate-500 text-center">
+                    <p className="text-xs text-black-500 text-center">
                       {activeTab === 'suggest' 
                         ? 'Select a course to get suggestions'
                         : 'Select course, chapter, and topic to generate'}
@@ -702,7 +702,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
                   )}
 
                   {/* Info */}
-                  <p className="text-xs text-slate-400 text-center">
+                  <p className="text-xs text-black-400 text-center">
                     Powered by Google Gemini AI
                   </p>
                 </motion.div>
@@ -835,7 +835,7 @@ function SyllabusQuickActions({ context, onMessage, expanded, onToggleExpanded }
       />
       <button
         onClick={onToggleExpanded}
-        className="p-1.5 text-slate-400 hover:text-slate-600"
+        className="p-1.5 text-black-400 hover:text-black-600"
         aria-label="Collapse"
       >
         <ChevronUp className="w-4 h-4" />

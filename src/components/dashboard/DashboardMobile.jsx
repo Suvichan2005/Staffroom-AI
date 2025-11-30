@@ -90,7 +90,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-4">
+    <div className="min-h-screen bg-black-50 pb-4">
       {/* Header */}
       <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white px-4 md:px-6 pt-6 pb-8 md:rounded-3xl md:mx-2 md:mt-0 rounded-b-3xl">
         <div className="flex items-center justify-between mb-4">
@@ -107,7 +107,7 @@ export default function Dashboard() {
           className="bg-white/10 backdrop-blur-sm rounded-3xl p-4"
         >
           <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-4 h-4 text-amber-300" />
+            <Sparkles className="w-4 h-4 text-yellow-300" />
             <span className="text-sm font-medium">Today's Overview</span>
           </div>
           <div className="flex items-center justify-between text-sm">
@@ -141,7 +141,7 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <h2 className="text-sm font-semibold text-slate-800 mb-3">Quick Actions</h2>
+              <h2 className="text-sm font-semibold text-black-800 mb-3">Quick Actions</h2>
               <QuickActions />
             </motion.div>
 
@@ -152,7 +152,7 @@ export default function Dashboard() {
               transition={{ delay: 0.3 }}
             >
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-sm font-semibold text-slate-800">My Courses</h2>
+                <h2 className="text-sm font-semibold text-black-800">My Courses</h2>
                 <button 
                   onClick={() => navigate('/classes')}
                   className="text-xs text-indigo-600 font-medium hover:underline"
@@ -177,8 +177,8 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <h2 className="text-sm font-semibold text-slate-800 mb-3 md:hidden">Schedule</h2>
-              <UpcomingClasses showDateSelector className="!p-3 md:!p-4 !border !border-slate-200 !shadow-sm !bg-white !rounded-2xl" />
+              <h2 className="text-sm font-semibold text-black-800 mb-3 md:hidden">Schedule</h2>
+              <UpcomingClasses showDateSelector className="!p-3 md:!p-4 !border !border-black-200 !shadow-sm !bg-white !rounded-2xl" />
             </motion.div>
 
 

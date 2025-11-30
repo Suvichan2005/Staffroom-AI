@@ -3,7 +3,7 @@ import { ProgressBar } from '../charts';
 
 const STATUS_FLOW = ["not-started", "ongoing", "done"];
 const STATUS_META = {
-  "not-started": { label: "Not Started", class: "bg-slate-200 text-slate-700" },
+  "not-started": { label: "Not Started", class: "bg-black-200 text-black-700" },
   "ongoing": { label: "Ongoing", class: "bg-indigo-100 text-indigo-700" },
   "done": { label: "Done", class: "bg-green-100 text-green-700" },
 };
@@ -112,7 +112,7 @@ export default function SyllabusProgress({
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 isDirty
                   ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                  : "bg-slate-200 text-slate-500 cursor-not-allowed"
+                  : "bg-black-200 text-black-500 cursor-not-allowed"
               }`}
             >
               Save Progress
@@ -132,7 +132,7 @@ export default function SyllabusProgress({
               <span className="text-sm font-medium">
                 {chapter.index}. {chapter.title}
               </span>
-              <span className="text-xs text-slate-600">
+              <span className="text-xs text-black-600">
                 Pages {completedPages}/{totalPages}
               </span>
             </div>
@@ -147,13 +147,13 @@ export default function SyllabusProgress({
                   <li
                     key={topic.index}
                     onClick={action}
-                    className={`flex justify-between items-center text-xs border rounded px-2 py-1.5 bg-slate-50 transition-colors ${
+                    className={`flex justify-between items-center text-xs border rounded px-2 py-1.5 bg-black-50 transition-colors ${
                       editable ? "cursor-pointer hover:bg-indigo-50 hover:border-indigo-200 active:bg-indigo-100" : ""
                     }`}
                     title={editable ? "Click to cycle status" : undefined}
                   >
                     <span className="truncate" title={topic.title}>
-                      {topic.title} <span className="text-[10px] text-slate-500">(p.{topic.pageFrom}-{topic.pageTo})</span>
+                      {topic.title} <span className="text-[10px] text-black-500">(p.{topic.pageFrom}-{topic.pageTo})</span>
                     </span>
                     <span
                       className={`px-2 py-0.5 rounded-full font-medium ${meta.class}`}

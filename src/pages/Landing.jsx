@@ -50,18 +50,18 @@ export default function Landing() {
 
   const getColorClasses = (color) => {
     switch (color) {
-      case 'emerald': return 'bg-emerald-100 text-emerald-600';
+      case 'green': return 'bg-green-100 text-green-600';
       case 'purple': return 'bg-purple-100 text-purple-600';
-      case 'sky': return 'bg-sky-100 text-sky-600';
-      case 'amber': return 'bg-amber-100 text-amber-600';
+      case 'blue': return 'bg-blue-100 text-blue-600';
+      case 'yellow': return 'bg-yellow-100 text-yellow-600';
       default: return 'bg-indigo-100 text-indigo-600';
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-black-50">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-28 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <nav className="fixed top-0 left-0 right-28 z-50 bg-white/80 backdrop-blur-md border-b border-black-200">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center j ustify-between h-16">
             {/* Logo */}
@@ -69,7 +69,7 @@ export default function Landing() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
                 <span className="text-white font-bold text-lg">S</span>
               </div>
-              <span className="text-xl font-bold text-slate-800">Staffroom</span>
+              <span className="text-xl font-bold text-black-800">Staffroom</span>
             </div>
           </div>
         </div>
@@ -91,12 +91,12 @@ export default function Landing() {
                   <Sparkles className="w-4 h-4" />
                   AI-Powered Teacher Assistant
                 </div>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black-900 leading-tight">
                   The Staffroom
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600"> Teachers </span>
                   Deserve
                 </h1>
-                <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
+                <p className="text-lg text-black-600 leading-relaxed max-w-xl">
                   Streamline attendance, track curriculum, and get AI-powered insights — all through voice commands. 
                   Spend less time on paperwork, more time teaching.
                 </p>
@@ -115,8 +115,8 @@ export default function Landing() {
               {/* Quick Benefits */}
               <div className="grid grid-cols-2 gap-3 pt-4">
                 {benefits.map((benefit, i) => (
-                  <div key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                  <div key={i} className="flex items-center gap-2 text-sm text-black-600">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
                     <span>{benefit}</span>
                   </div>
                 ))}
@@ -130,31 +130,31 @@ export default function Landing() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="relative"
             >
-              <div className="relative rounded-3xl bg-white border border-slate-200 shadow-2xl shadow-slate-200/50 p-6 space-y-5">
+              <div className="relative rounded-3xl bg-white border border-black-200 shadow-2xl shadow-black-200/50 p-6 space-y-5">
                 {/* Mini Dashboard Preview */}
-                <div className="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div className="flex items-center gap-3 pb-4 border-b border-black-100">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
                     <span className="text-white font-bold text-xl">MA</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-800">Mr. Agarwal</p>
-                    <p className="text-sm text-slate-500">Geography Teacher</p>
+                    <p className="font-semibold text-black-800">Mr. Agarwal</p>
+                    <p className="text-sm text-black-500">Geography Teacher</p>
                   </div>
                 </div>
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                  <div className="bg-black-50 rounded-xl p-3 text-center">
                     <p className="text-2xl font-bold text-indigo-600">6</p>
-                    <p className="text-xs text-slate-500">Classes</p>
+                    <p className="text-xs text-black-500">Classes</p>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-3 text-center">
-                    <p className="text-2xl font-bold text-emerald-600">78%</p>
-                    <p className="text-xs text-slate-500">Syllabus</p>
+                  <div className="bg-black-50 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-green-600">78%</p>
+                    <p className="text-xs text-black-500">Syllabus</p>
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-3 text-center">
-                    <p className="text-2xl font-bold text-amber-600">94%</p>
-                    <p className="text-xs text-slate-500">Attendance</p>
+                  <div className="bg-black-50 rounded-xl p-3 text-center">
+                    <p className="text-2xl font-bold text-yellow-600">94%</p>
+                    <p className="text-xs text-black-500">Attendance</p>
                   </div>
                 </div>
 
@@ -165,25 +165,25 @@ export default function Landing() {
                       <Mic className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-slate-700">Voice Command</p>
-                      <p className="text-xs text-slate-500">Tap to speak</p>
+                      <p className="text-sm font-medium text-black-700">Voice Command</p>
+                      <p className="text-xs text-black-500">Tap to speak</p>
                     </div>
                   </div>
-                  <div className="bg-white rounded-xl p-3 border border-slate-200">
-                    <p className="text-sm text-slate-600 italic">
+                  <div className="bg-white rounded-xl p-3 border border-black-200">
+                    <p className="text-sm text-black-600 italic">
                       "I finished Chapter 4, Landforms in 6A Geography"
                     </p>
                   </div>
                 </div>
 
                 {/* AI Suggestion */}
-                <div className="flex items-start gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                    <Brain className="w-4 h-4 text-emerald-600" />
+                <div className="flex items-start gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <Brain className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-emerald-800">AI Suggestion</p>
-                    <p className="text-xs text-emerald-600">Next: Chapter 5 - Climate. Estimated 3 classes.</p>
+                    <p className="text-sm font-medium text-green-800">AI Suggestion</p>
+                    <p className="text-xs text-green-600">Next: Chapter 5 - Climate. Estimated 3 classes.</p>
                   </div>
                 </div>
               </div>
@@ -206,10 +206,10 @@ export default function Landing() {
             className="text-center mb-16"
           >
             <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">Features</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-black-900 mb-4">
               Everything you need to teach smarter
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            <p className="text-lg text-black-600 max-w-2xl mx-auto">
               Staffroom brings together attendance, curriculum tracking, and AI assistance 
               into one seamless experience designed for educators.
             </p>
@@ -225,13 +225,13 @@ export default function Landing() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-slate-50 rounded-2xl p-6 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all border border-transparent hover:border-slate-200"
+                  className="bg-black-50 rounded-2xl p-6 hover:bg-white hover:shadow-xl hover:shadow-black-200/50 transition-all border border-transparent hover:border-black-200"
                 >
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${getColorClasses(feature.color)}`}>
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-2">{feature.title}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-lg font-semibold text-black-800 mb-2">{feature.title}</h3>
+                  <p className="text-sm text-black-600 leading-relaxed">{feature.description}</p>
                 </motion.div>
               );
             })}
@@ -249,7 +249,7 @@ export default function Landing() {
             className="text-center mb-16"
           >
             <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">How It Works</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            <h2 className="text-3xl sm:text-4xl font-bold text-black-900 mb-4">
               Simplify your teaching workflow
             </h2>
           </motion.div>
@@ -272,12 +272,12 @@ export default function Landing() {
                 <div className="absolute top-0 -translate-x-1/2 w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center z-10 shadow-lg">
                   {item.step}
                 </div>
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 pt-8 text-center hover:shadow-lg transition-shadow">
+                <div className="bg-white rounded-2xl border border-black-200 p-6 pt-8 text-center hover:shadow-lg transition-shadow">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mx-auto mb-4">
                     <item.icon className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="text-xl font-semibold text-slate-800 mb-2">{item.title}</h3>
-                  <p className="text-sm text-slate-600">{item.desc}</p>
+                  <h3 className="text-xl font-semibold text-black-800 mb-2">{item.title}</h3>
+                  <p className="text-sm text-black-600">{item.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -319,15 +319,15 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 sm:px-6 border-t border-slate-200">
+      <footer className="py-8 px-4 sm:px-6 border-t border-black-200">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">S</span>
             </div>
-            <span className="text-sm font-semibold text-slate-700">Staffroom</span>
+            <span className="text-sm font-semibold text-black-700">Staffroom</span>
           </div>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-black-500">
             © 2025 Staffroom. Built for educators, powered by AI.
           </p>
         </div>

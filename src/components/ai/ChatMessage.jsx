@@ -10,9 +10,9 @@ function renderMarkdown(text) {
   
   return text
     // Code blocks (triple backticks)
-    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-slate-100 dark:bg-slate-800 p-2 rounded text-xs overflow-x-auto my-2"><code>$2</code></pre>')
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-black-100 dark:bg-black-800 p-2 rounded text-xs overflow-x-auto my-2"><code>$2</code></pre>')
     // Inline code
-    .replace(/`([^`]+)`/g, '<code class="bg-slate-100 dark:bg-slate-700 px-1 py-0.5 rounded text-xs">$1</code>')
+    .replace(/`([^`]+)`/g, '<code class="bg-black-100 dark:bg-black-700 px-1 py-0.5 rounded text-xs">$1</code>')
     // Bold
     .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>')
     // Italic
@@ -57,22 +57,22 @@ export default function ChatMessage({ message }) {
         max-w-[75%] px-4 py-2.5 rounded-2xl
         ${isUser 
           ? 'bg-indigo-600 text-white rounded-tr-sm' 
-          : 'bg-white text-slate-700 border border-slate-200 rounded-tl-sm shadow-sm'
+          : 'bg-white text-black-700 border border-black-200 rounded-tl-sm shadow-sm'
         }
       `}>
         {isUser ? (
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
         ) : (
           <div 
-            className="text-sm prose prose-sm prose-slate max-w-none
+            className="text-sm pred pred-sm pred-black max-w-none
               [&_strong]:font-semibold [&_em]:italic
-              [&_code]:bg-slate-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
-              [&_pre]:bg-slate-100 [&_pre]:p-2 [&_pre]:rounded [&_pre]:text-xs [&_pre]:overflow-x-auto
+              [&_code]:bg-black-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
+              [&_pre]:bg-black-100 [&_pre]:p-2 [&_pre]:rounded [&_pre]:text-xs [&_pre]:overflow-x-auto
               [&_li]:ml-4"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
           />
         )}
-        <p className={`text-[10px] mt-1 ${isUser ? 'text-indigo-200' : 'text-slate-400'}`}>
+        <p className={`text-[10px] mt-1 ${isUser ? 'text-indigo-200' : 'text-black-400'}`}>
           {formatTime(message.timestamp)}
         </p>
       </div>

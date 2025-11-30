@@ -10,7 +10,7 @@ const renderSimpleMarkdown = (text) => {
   // Italic: *text*
   result = result.replace(/\*(.+?)\*/g, '<em>$1</em>');
   // Code: `text`
-  result = result.replace(/`(.+?)`/g, '<code class="px-1 py-0.5 bg-slate-100 rounded text-xs">$1</code>');
+  result = result.replace(/`(.+?)`/g, '<code class="px-1 py-0.5 bg-black-100 rounded text-xs">$1</code>');
   return result;
 };
 
@@ -65,21 +65,21 @@ export default function GlobalAssistant({ placeholder = "Ask anything about your
         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
           <Sparkles className="h-4 w-4 text-white" />
         </div>
-        <p className="text-sm font-semibold text-slate-700">AI Companion</p>
+        <p className="text-sm font-semibold text-black-700">AI Companion</p>
       </div>
       <div className="flex flex-wrap gap-2">
         {suggestions.map((suggestion) => (
           <button
             key={suggestion}
             onClick={() => handleSuggestion(suggestion)}
-            className="px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors flex items-center gap-1"
+            className="px-3 py-1.5 rounded-full text-xs font-medium bg-black-100 text-black-600 hover:bg-indigo-100 hover:text-indigo-700 transition-colors flex items-center gap-1"
           >
             <ChevronRight className="w-3 h-3" />
             {suggestion}
           </button>
         ))}
       </div>
-      <div className="bg-gradient-to-b from-slate-50 to-white border border-slate-200 rounded-2xl max-h-52 overflow-y-auto p-3 space-y-2 text-sm">
+      <div className="bg-gradient-to-b from-black-50 to-white border border-black-200 rounded-2xl max-h-52 overflow-y-auto p-3 space-y-2 text-sm">
         {latestMessages.map((message) => (
           <motion.div
             key={message.id}
@@ -87,7 +87,7 @@ export default function GlobalAssistant({ placeholder = "Ask anything about your
             animate={{ opacity: 1, y: 0 }}
             className={`max-w-[85%] px-3 py-2 rounded-2xl ${
               message.role === "assistant"
-                ? "bg-white text-slate-700 border border-slate-100 shadow-sm rounded-bl-sm"
+                ? "bg-white text-black-700 border border-black-100 shadow-sm rounded-bl-sm"
                 : "ml-auto bg-indigo-600 text-white rounded-br-sm"
             }`}
           >
@@ -102,7 +102,7 @@ export default function GlobalAssistant({ placeholder = "Ask anything about your
       <div className="flex items-center gap-2">
         <input
           ref={inputRef}
-          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 placeholder-slate-400 text-slate-800 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          className="flex-1 bg-black-50 border border-black-200 rounded-xl px-3 py-2.5 placeholder-black-400 text-black-800 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
           placeholder={placeholder}
           aria-label={placeholder}
           onKeyDown={(event) => {

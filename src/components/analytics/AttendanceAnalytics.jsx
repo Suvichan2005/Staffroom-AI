@@ -88,20 +88,20 @@ export default function AttendanceAnalytics({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Avg Attendance" value={`${analytics.avgPercent}%`} icon={Users} trend={analytics.trend} color="indigo" />
         <StatCard label="Days Recorded" value={analytics.totalDays} icon={Grid3X3} color="slate" />
-        <StatCard label="At Risk" value={analytics.atRisk.length} icon={AlertTriangle} color="rose" alert={analytics.atRisk.length > 0} />
-        <StatCard label="Perfect" value={analytics.perfectAttendance.length} icon={Award} color="emerald" />
+        <StatCard label="At Risk" value={analytics.atRisk.length} icon={AlertTriangle} color="red" />
+        <StatCard label="Perfect" value={analytics.perfectAttendance.length} icon={Award} color="green" />
       </div>
 
       {/* Trend Chart */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5">
+      <div className="bg-white rounded-2xl border border-black-200 p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold text-slate-800">Attendance Trend</h3>
-            <p className="text-xs text-slate-500">Last 14 days</p>
+            <h3 className="font-semibold text-black-800">Attendance Trend</h3>
+            <p className="text-xs text-black-500">Last 14 days</p>
           </div>
           {analytics.trend !== 0 && (
             <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-              analytics.trend > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+              analytics.trend > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
             }`}>
               {analytics.trend > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
               {Math.abs(analytics.trend).toFixed(1)}%
@@ -128,30 +128,30 @@ export default function AttendanceAnalytics({
 
       {/* Student Heatmap */}
       {!compact && heatmapData.matrix.length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="bg-white rounded-2xl border border-black-200 p-5">
           <div className="mb-4">
-            <h3 className="font-semibold text-slate-800">Student Attendance Heatmap</h3>
-            <p className="text-xs text-slate-500">Last 14 days • Sorted by attendance (lowest first)</p>
+            <h3 className="font-semibold text-black-800">Student Attendance Heatmap</h3>
+            <p className="text-xs text-black-500">Last 14 days • Sorted by attendance (lowest first)</p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full">
               <thead>
                 <tr>
-                  <th className="text-left text-xs font-medium text-slate-500 pb-3 pr-4 sticky left-0 bg-white">Student</th>
+                  <th className="text-left text-xs font-medium text-black-500 pb-3 pr-4 sticky left-0 bg-white">Student</th>
                   {heatmapData.dates.map((date) => (
-                    <th key={date} className="text-center text-[10px] font-medium text-slate-500 pb-3 px-1">
+                    <th key={date} className="text-center text-[10px] font-medium text-black-500 pb-3 px-1">
                       {new Date(date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric' })}
                     </th>
                   ))}
-                  <th className="text-center text-xs font-medium text-slate-500 pb-3 pl-3">%</th>
+                  <th className="text-center text-xs font-medium text-black-500 pb-3 pl-3">%</th>
                 </tr>
               </thead>
               <tbody>
                 {heatmapData.matrix.slice(0, 15).map((row, rowIdx) => (
                   <motion.tr key={row.studentId} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: rowIdx * 0.02 }}>
-                    <td className="text-sm text-slate-700 py-1.5 pr-4 sticky left-0 bg-white">
+                    <td className="text-sm text-black-700 py-1.5 pr-4 sticky left-0 bg-white">
                       <div className="flex items-center gap-2">
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${row.percent < 75 ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-600'}`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${row.percent < 75 ? 'bg-red-100 text-red-600' : 'bg-black-100 text-black-600'}`}>
                           {row.name?.charAt(0) || 'S'}
                         </div>
                         <span className="truncate max-w-[80px]">{row.name}</span>
@@ -160,14 +160,14 @@ export default function AttendanceAnalytics({
                     {row.cells.map((cell, cellIdx) => (
                       <td key={cellIdx} className="py-1.5 px-1">
                         <div className={`w-6 h-6 rounded flex items-center justify-center text-[9px] font-medium ${
-                          cell.status === 'present' ? 'bg-emerald-500 text-white' : cell.status === 'absent' ? 'bg-rose-500 text-white' : 'bg-slate-100 text-slate-400'
+                          cell.status === 'present' ? 'bg-green-500 text-white' : cell.status === 'absent' ? 'bg-red-500 text-white' : 'bg-black-100 text-black-400'
                         }`} title={`${row.name} - ${cell.shortDate}: ${cell.status}`}>
                           {cell.status === 'present' ? '✓' : cell.status === 'absent' ? '✗' : '-'}
                         </div>
                       </td>
                     ))}
                     <td className="py-1.5 pl-3 text-center">
-                      <span className={`text-sm font-bold ${row.percent >= 90 ? 'text-emerald-600' : row.percent >= 75 ? 'text-amber-600' : 'text-rose-600'}`}>
+                      <span className={`text-sm font-bold ${row.percent >= 90 ? 'text-green-600' : row.percent >= 75 ? 'text-yellow-600' : 'text-red-600'}`}>
                         {row.percent}%
                       </span>
                     </td>
@@ -177,30 +177,30 @@ export default function AttendanceAnalytics({
             </table>
           </div>
           {/* Legend */}
-          <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-slate-100">
-            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-emerald-500" /><span className="text-xs text-slate-600">Present</span></div>
-            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-rose-500" /><span className="text-xs text-slate-600">Absent</span></div>
-            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-slate-100" /><span className="text-xs text-slate-600">No Record</span></div>
+          <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-black-100">
+            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-green-500" /><span className="text-xs text-black-600">Present</span></div>
+            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-red-500" /><span className="text-xs text-black-600">Absent</span></div>
+            <div className="flex items-center gap-2"><div className="w-4 h-4 rounded bg-black-100" /><span className="text-xs text-black-600">No Record</span></div>
           </div>
         </div>
       )}
 
       {/* At Risk Students */}
       {analytics.atRisk.length > 0 && (
-        <div className="bg-rose-50 rounded-2xl border border-rose-200 p-5">
+        <div className="bg-red-50 rounded-2xl border border-red-200 p-5">
           <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-5 h-5 text-rose-600" />
-            <h3 className="font-semibold text-rose-800">Students at Risk ({analytics.atRisk.length})</h3>
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            <h3 className="font-semibold text-red-800">Students at Risk ({analytics.atRisk.length})</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {analytics.atRisk.slice(0, 6).map(student => (
-              <div key={student.studentId} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-rose-200">
-                <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center">
-                  <span className="text-xs font-bold text-rose-600">{student.name?.charAt(0) || 'S'}</span>
+              <div key={student.studentId} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-red-200">
+                <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                  <span className="text-xs font-bold text-red-600">{student.name?.charAt(0) || 'S'}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-800 truncate">{student.name}</p>
-                  <p className="text-xs text-rose-600">{student.percent}% attendance</p>
+                  <p className="text-sm font-medium text-black-800 truncate">{student.name}</p>
+                  <p className="text-xs text-red-600">{student.percent}% attendance</p>
                 </div>
               </div>
             ))}
@@ -210,16 +210,16 @@ export default function AttendanceAnalytics({
 
       {/* Perfect Attendance */}
       {analytics.perfectAttendance.length > 0 && (
-        <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-5">
+        <div className="bg-green-50 rounded-2xl border border-green-200 p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Award className="w-5 h-5 text-emerald-600" />
-            <h3 className="font-semibold text-emerald-800">Perfect Attendance ({analytics.perfectAttendance.length})</h3>
+            <Award className="w-5 h-5 text-green-600" />
+            <h3 className="font-semibold text-green-800">Perfect Attendance ({analytics.perfectAttendance.length})</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {analytics.perfectAttendance.slice(0, 12).map(student => (
-              <div key={student.studentId} className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-emerald-200">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-sm text-slate-700">{student.name}</span>
+              <div key={student.studentId} className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-green-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
+                <span className="text-sm text-black-700">{student.name}</span>
               </div>
             ))}
           </div>
@@ -232,25 +232,25 @@ export default function AttendanceAnalytics({
 function StatCard({ label, value, icon: Icon, trend, color, alert }) {
   const colors = {
     indigo: 'bg-indigo-50 text-indigo-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    rose: 'bg-rose-50 text-rose-600',
-    amber: 'bg-amber-50 text-amber-600',
-    slate: 'bg-slate-50 text-slate-600',
+    green: 'bg-green-50 text-green-600',
+    red: 'bg-red-50 text-red-600',
+    yellow: 'bg-yellow-50 text-yellow-600',
+    slate: 'bg-black-50 text-black-600',
   };
   return (
-    <div className={`p-4 rounded-xl border ${alert ? 'border-rose-200 bg-rose-50/50' : 'border-slate-200 bg-white'}`}>
+    <div className={`p-4 rounded-xl border ${alert ? 'border-red-200 bg-red-50/50' : 'border-black-200 bg-white'}`}>
       <div className={`w-8 h-8 rounded-lg ${colors[color]} flex items-center justify-center mb-2`}>
         <Icon className="w-4 h-4" />
       </div>
       <div className="flex items-end gap-2">
-        <p className="text-xl font-bold text-slate-800">{value}</p>
+        <p className="text-xl font-bold text-black-800">{value}</p>
         {trend !== undefined && trend !== 0 && (
-          <span className={`text-xs font-medium mb-0.5 ${trend > 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+          <span className={`text-xs font-medium mb-0.5 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
             {trend > 0 ? '+' : ''}{trend.toFixed(1)}%
           </span>
         )}
       </div>
-      <p className="text-xs text-slate-500 mt-1">{label}</p>
+      <p className="text-xs text-black-500 mt-1">{label}</p>
     </div>
   );
 }

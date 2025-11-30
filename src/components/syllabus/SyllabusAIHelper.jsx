@@ -96,15 +96,15 @@ export default function SyllabusAIHelper({ subject, grade, chapterTitle, topicTi
   ];
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+    <div className="bg-white border border-black-200 rounded-lg shadow-sm">
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-black-200 bg-gradient-to-r from-purple-50 to-blue-50">
         <Sparkles className="w-5 h-5 text-purple-600" />
-        <h3 className="text-sm font-semibold text-gray-900">AI Assistant</h3>
+        <h3 className="text-sm font-semibold text-black-900">AI Assistant</h3>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-black-200">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -114,7 +114,7 @@ export default function SyllabusAIHelper({ subject, grade, chapterTitle, topicTi
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'text-purple-700 border-b-2 border-purple-600 bg-purple-50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  : 'text-black-600 hover:text-black-900 hover:bg-black-50'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -127,12 +127,12 @@ export default function SyllabusAIHelper({ subject, grade, chapterTitle, topicTi
       {/* Content */}
       <div className="p-4">
         {/* Context Display */}
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <p className="text-xs text-gray-500 mb-1">Current Context:</p>
-          <p className="text-sm text-gray-900">
+        <div className="mb-4 p-3 bg-black-50 rounded-lg">
+          <p className="text-xs text-black-500 mb-1">Current Context:</p>
+          <p className="text-sm text-black-900">
             <strong>{subject}</strong> - Grade {grade}
           </p>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-black-700">
             {chapterTitle} {topicTitle && `→ ${topicTitle}`}
           </p>
         </div>
@@ -193,18 +193,18 @@ function QuizResult({ questions, onClose }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">Generated Quiz</h4>
+        <h4 className="text-sm font-semibold text-black-900">Generated Quiz</h4>
         <button
           onClick={onClose}
-          className="text-xs text-gray-500 hover:text-gray-700"
+          className="text-xs text-black-500 hover:text-black-700"
         >
           Close
         </button>
       </div>
 
       {questions.map((q, idx) => (
-        <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-sm font-medium text-gray-900 mb-2">
+        <div key={idx} className="p-3 bg-black-50 rounded-lg border border-black-200">
+          <p className="text-sm font-medium text-black-900 mb-2">
             {idx + 1}. {q.question}
           </p>
           <div className="space-y-1 mb-2">
@@ -214,14 +214,14 @@ function QuizResult({ questions, onClose }) {
                 className={`text-xs px-2 py-1 rounded ${
                   key === q.correctAnswer
                     ? 'bg-green-100 text-green-800 font-medium'
-                    : 'bg-white text-gray-700'
+                    : 'bg-white text-black-700'
                 }`}
               >
                 {key}. {value}
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-600 italic">
+          <p className="text-xs text-black-600 italic">
             <strong>Answer:</strong> {q.correctAnswer} - {q.explanation}
           </p>
         </div>
@@ -239,10 +239,10 @@ function AssignmentResult({ assignment, onClose }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">{assignment.title}</h4>
+        <h4 className="text-sm font-semibold text-black-900">{assignment.title}</h4>
         <button
           onClick={onClose}
-          className="text-xs text-gray-500 hover:text-gray-700"
+          className="text-xs text-black-500 hover:text-black-700"
         >
           Close
         </button>
@@ -250,23 +250,23 @@ function AssignmentResult({ assignment, onClose }) {
 
       <div className="space-y-3">
         <div>
-          <p className="text-xs text-gray-500">Description:</p>
-          <p className="text-sm text-gray-900">{assignment.description}</p>
+          <p className="text-xs text-black-500">Description:</p>
+          <p className="text-sm text-black-900">{assignment.description}</p>
         </div>
 
         <div>
-          <p className="text-xs text-gray-500">Instructions:</p>
-          <p className="text-sm text-gray-700 whitespace-pre-line">{assignment.instructions}</p>
+          <p className="text-xs text-black-500">Instructions:</p>
+          <p className="text-sm text-black-700 whitespace-pre-line">{assignment.instructions}</p>
         </div>
 
         <div>
-          <p className="text-xs text-gray-500 mb-2">Rubric:</p>
+          <p className="text-xs text-black-500 mb-2">Rubric:</p>
           <div className="space-y-1">
             {assignment.rubric.map((r, idx) => (
-              <div key={idx} className="flex justify-between items-start p-2 bg-gray-50 rounded">
+              <div key={idx} className="flex justify-between items-start p-2 bg-black-50 rounded">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{r.criterion}</p>
-                  <p className="text-xs text-gray-600">{r.description}</p>
+                  <p className="text-sm font-medium text-black-900">{r.criterion}</p>
+                  <p className="text-xs text-black-600">{r.description}</p>
                 </div>
                 <span className="text-sm font-semibold text-purple-600">{r.points} pts</span>
               </div>
@@ -274,7 +274,7 @@ function AssignmentResult({ assignment, onClose }) {
           </div>
         </div>
 
-        <div className="flex gap-4 text-xs text-gray-600">
+        <div className="flex gap-4 text-xs text-black-600">
           <span>⏱️ Est. Time: {assignment.estimatedTime}</span>
           <span>📅 Due in: {assignment.dueInDays} days</span>
         </div>
@@ -292,27 +292,27 @@ function SuggestionResult({ suggestion, onClose }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">Next Topic Suggestion</h4>
+        <h4 className="text-sm font-semibold text-black-900">Next Topic Suggestion</h4>
         <button
           onClick={onClose}
-          className="text-xs text-gray-500 hover:text-gray-700"
+          className="text-xs text-black-500 hover:text-black-700"
         >
           Close
         </button>
       </div>
 
       <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
-        <p className="text-lg font-semibold text-gray-900 mb-1">
+        <p className="text-lg font-semibold text-black-900 mb-1">
           {suggestion.suggestedTopic}
         </p>
-        <p className="text-sm text-gray-700">{suggestion.reasoning}</p>
+        <p className="text-sm text-black-700">{suggestion.reasoning}</p>
       </div>
 
       <div>
-        <p className="text-xs text-gray-500 mb-2">Preparation Tips:</p>
+        <p className="text-xs text-black-500 mb-2">Preparation Tips:</p>
         <ul className="space-y-1">
           {suggestion.preparationTips?.map((tip, idx) => (
-            <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+            <li key={idx} className="text-sm text-black-700 flex items-start gap-2">
               <span className="text-yellow-600">•</span>
               <span>{tip}</span>
             </li>
@@ -320,7 +320,7 @@ function SuggestionResult({ suggestion, onClose }) {
         </ul>
       </div>
 
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-black-600">
         ⏱️ Estimated Hours: {suggestion.estimatedHours || 2}
       </div>
     </div>

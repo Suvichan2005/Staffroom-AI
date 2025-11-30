@@ -72,7 +72,7 @@ export default function Register() {
     <PageShell width="sm" className="min-h-screen flex flex-col justify-center">
       <div className="sc-card">
         <h1 className="text-2xl font-semibold mb-4">Create an account</h1>
-        <p className="text-sm text-slate-600 mb-6">Register with email/password or Google.</p>
+        <p className="text-sm text-black-600 mb-6">Register with email/password or Google.</p>
 
         {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
 
@@ -87,7 +87,7 @@ export default function Register() {
         <button
           onClick={handleGoogleRegister}
           disabled={loading}
-          className="w-full mb-4 px-4 py-2 rounded-lg bg-white border border-slate-200 text-sm font-medium flex items-center justify-center gap-3 hover:shadow"
+          className="w-full mb-4 px-4 py-2 rounded-lg bg-white border border-black-200 text-sm font-medium flex items-center justify-center gap-3 hover:shadow"
         >
           <svg width="18" height="18" viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg" className="inline-block">
             <path fill="#4285f4" d="M533.5 278.4c0-17.4-1.4-34.1-4-50.4H272v95.4h147.4c-6.4 34.3-25.9 63.4-55.5 82.9v68h89.5c52.3-48.2 82.1-119.3 82.1-196z"/>
@@ -95,7 +95,7 @@ export default function Register() {
             <path fill="#fbbc04" d="M121.4 325.9c-11.3-33.5-11.3-69.6 0-103.1V153.2H31.1c-39.2 76.3-39.2 166.6 0 242.9l90.3-70.2z"/>
             <path fill="#ea4335" d="M272 107.7c39.9 0 75.8 13.7 104 40.5l78-78C404.9 24 342.9 0 272 0 168 0 76.8 56.8 31.1 153.2l90.3 69.4C142.6 155 202 107.7 272 107.7z"/>
           </svg>
-          <span className="text-slate-700">Sign up with Google</span>
+          <span className="text-black-700">Sign up with Google</span>
         </button>
 
         <form onSubmit={handleRegister} className="flex flex-col gap-3">

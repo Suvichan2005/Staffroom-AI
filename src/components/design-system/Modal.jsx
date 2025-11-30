@@ -100,7 +100,7 @@ export function Modal({
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"
+            className="fixed inset-0 bg-black-900/50 backdrop-blur-sm"
             onClick={closeOnOverlay && closable ? onClose : undefined}
             aria-hidden="true"
           />
@@ -125,12 +125,12 @@ export function Modal({
             >
               {/* Header */}
               {(title || closable) && (
-                <div className="flex items-start justify-between p-4 sm:p-6 border-b border-slate-100">
+                <div className="flex items-start justify-between p-4 sm:p-6 border-b border-black-100">
                   <div>
                     {title && (
                       <h2
                         id="modal-title"
-                        className="text-lg font-semibold text-slate-800"
+                        className="text-lg font-semibold text-black-800"
                       >
                         {title}
                       </h2>
@@ -138,7 +138,7 @@ export function Modal({
                     {description && (
                       <p
                         id="modal-description"
-                        className="text-sm text-slate-500 mt-1"
+                        className="text-sm text-black-500 mt-1"
                       >
                         {description}
                       </p>
@@ -165,7 +165,7 @@ export function Modal({
 
               {/* Footer */}
               {footer && (
-                <div className="flex items-center justify-end gap-3 p-4 sm:p-6 border-t border-slate-100">
+                <div className="flex items-center justify-end gap-3 p-4 sm:p-6 border-t border-black-100">
                   {footer}
                 </div>
               )}
@@ -215,7 +215,7 @@ export function ConfirmModal({
         </>
       }
     >
-      <p className="text-slate-600">{message}</p>
+      <p className="text-black-600">{message}</p>
     </Modal>
   );
 }

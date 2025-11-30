@@ -116,7 +116,7 @@ export default function HODDashboard() {
       <PageShell width="5xl">
         <div className="sc-card">
           <h1 className="text-2xl font-semibold">HOD Overview</h1>
-          <p className="mt-2 text-slate-500">No courses configured yet.</p>
+          <p className="mt-2 text-black-500">No courses configured yet.</p>
         </div>
       </PageShell>
     );
@@ -139,9 +139,9 @@ export default function HODDashboard() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
         <div>
-          <p className="text-xs uppercase tracking-wide text-slate-500">HOD Overview</p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800">{overview.subject} Department</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-xs uppercase tracking-wide text-black-500">HOD Overview</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-black-800">{overview.subject} Department</h1>
+          <p className="text-sm text-black-500 mt-1">
             Monitor section parity, progress, and teaching insights
           </p>
         </div>
@@ -149,7 +149,7 @@ export default function HODDashboard() {
           <select
             value={activeCourseId}
             onChange={(event) => setActiveCourseId(event.target.value)}
-            className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white"
+            className="border border-black-200 rounded-xl px-4 py-2.5 text-sm bg-white"
           >
             {overview.filters.subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
@@ -175,21 +175,21 @@ export default function HODDashboard() {
             label="Total Students" 
             value={aggregateMetrics.totalStudents}
             subtext="In this subject"
-            color="emerald"
+            color="green"
           />
           <MetricCard 
             icon={Award} 
             label="Section Parity" 
             value={`${aggregateMetrics.parityScore}%`}
             subtext={aggregateMetrics.parityScore >= 80 ? "Good alignment" : "Needs attention"}
-            color={aggregateMetrics.parityScore >= 80 ? "sky" : "amber"}
+            color={aggregateMetrics.parityScore >= 80 ? "blue" : "yellow"}
           />
           <MetricCard 
             icon={AlertTriangle} 
             label="Chapters Behind" 
             value={aggregateMetrics.chaptersNeedingAttention.length}
             subtext="Below 40% progress"
-            color="rose"
+            color="red"
             alert={aggregateMetrics.chaptersNeedingAttention.length > 0}
           />
         </div>
@@ -209,7 +209,7 @@ export default function HODDashboard() {
             className={`px-4 py-2.5 rounded-xl transition whitespace-nowrap ${
               activeTab === tab.id
                 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                : "bg-white text-black-600 border border-black-200 hover:bg-black-50"
             }`}
           >
             {tab.label}
@@ -222,8 +222,8 @@ export default function HODDashboard() {
         <div className="grid gap-6 lg:grid-cols-12">
           <div className="lg:col-span-8 space-y-6">
             {/* Progress Comparison Chart */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold text-slate-800 mb-4">Section Progress Comparison</h3>
+            <div className="bg-white rounded-2xl border border-black-200 p-5">
+              <h3 className="font-semibold text-black-800 mb-4">Section Progress Comparison</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart 
@@ -252,8 +252,8 @@ export default function HODDashboard() {
 
             {/* Radar Chart for Chapter Comparison */}
             {radarData.length > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                <h3 className="font-semibold text-slate-800 mb-4">Chapter Coverage by Section</h3>
+              <div className="bg-white rounded-2xl border border-black-200 p-5">
+                <h3 className="font-semibold text-black-800 mb-4">Chapter Coverage by Section</h3>
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart data={radarData}>
@@ -282,7 +282,7 @@ export default function HODDashboard() {
                         className="w-3 h-3 rounded-full" 
                         style={{ background: sectionColors[i % sectionColors.length] }}
                       />
-                      <span className="text-sm text-slate-600">{sec.sectionId}</span>
+                      <span className="text-sm text-black-600">{sec.sectionId}</span>
                     </div>
                   ))}
                 </div>
@@ -294,27 +294,27 @@ export default function HODDashboard() {
           <div className="lg:col-span-4 space-y-6">
             {/* Best & Worst Sections */}
             {aggregateMetrics && (
-              <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                <h3 className="font-semibold text-slate-800 mb-4">Section Highlights</h3>
+              <div className="bg-white rounded-2xl border border-black-200 p-5">
+                <h3 className="font-semibold text-black-800 mb-4">Section Highlights</h3>
                 <div className="space-y-4">
                   {aggregateMetrics.bestSection && (
-                    <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                    <div className="p-4 rounded-xl bg-green-50 border border-green-200">
                       <div className="flex items-center gap-2 mb-2">
-                        <TrendingUp className="w-4 h-4 text-emerald-600" />
-                        <span className="text-xs font-medium text-emerald-700">Top Performer</span>
+                        <TrendingUp className="w-4 h-4 text-green-600" />
+                        <span className="text-xs font-medium text-green-700">Top Performer</span>
                       </div>
-                      <p className="text-lg font-bold text-emerald-800">{aggregateMetrics.bestSection.sectionId}</p>
-                      <p className="text-sm text-emerald-600">{aggregateMetrics.bestSection.progressPercent}% complete</p>
+                      <p className="text-lg font-bold text-green-800">{aggregateMetrics.bestSection.sectionId}</p>
+                      <p className="text-sm text-green-600">{aggregateMetrics.bestSection.progressPercent}% complete</p>
                     </div>
                   )}
                   {aggregateMetrics.worstSection && aggregateMetrics.totalSections > 1 && (
-                    <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
+                    <div className="p-4 rounded-xl bg-yellow-50 border border-yellow-200">
                       <div className="flex items-center gap-2 mb-2">
-                        <TrendingDown className="w-4 h-4 text-amber-600" />
-                        <span className="text-xs font-medium text-amber-700">Needs Support</span>
+                        <TrendingDown className="w-4 h-4 text-yellow-600" />
+                        <span className="text-xs font-medium text-yellow-700">Needs Support</span>
                       </div>
-                      <p className="text-lg font-bold text-amber-800">{aggregateMetrics.worstSection.sectionId}</p>
-                      <p className="text-sm text-amber-600">{aggregateMetrics.worstSection.progressPercent}% complete</p>
+                      <p className="text-lg font-bold text-yellow-800">{aggregateMetrics.worstSection.sectionId}</p>
+                      <p className="text-sm text-yellow-600">{aggregateMetrics.worstSection.progressPercent}% complete</p>
                     </div>
                   )}
                 </div>
@@ -322,8 +322,8 @@ export default function HODDashboard() {
             )}
 
             {/* Teacher Insights */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold text-slate-800 mb-4">Teacher Insights</h3>
+            <div className="bg-white rounded-2xl border border-black-200 p-5">
+              <h3 className="font-semibold text-black-800 mb-4">Teacher Insights</h3>
               <div className="space-y-3">
                 <InsightRow 
                   label="Syllabus Updates" 
@@ -378,13 +378,13 @@ export default function HODDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-2xl border border-slate-200 p-5"
+              className="bg-white rounded-2xl border border-black-200 p-5"
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Section</p>
-                  <h2 className="text-xl font-bold text-slate-800">{section.sectionId}</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs uppercase tracking-wide text-black-500">Section</p>
+                  <h2 className="text-xl font-bold text-black-800">{section.sectionId}</h2>
+                  <p className="text-xs text-black-500 mt-0.5">
                     {section.schedules?.join(" • ") || "Schedule TBC"}
                   </p>
                 </div>
@@ -395,7 +395,7 @@ export default function HODDashboard() {
                   }}
                 >
                   <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
-                    <span className="text-sm font-bold text-slate-800">{section.progressPercent}%</span>
+                    <span className="text-sm font-bold text-black-800">{section.progressPercent}%</span>
                   </div>
                 </div>
               </div>
@@ -404,12 +404,12 @@ export default function HODDashboard() {
                 {section.chapterBreakdown?.slice(0, 4).map((chapter) => (
                   <div key={chapter.chapterIndex}>
                     <div className="flex items-center justify-between text-sm mb-1">
-                      <span className="text-slate-600 truncate flex-1">
+                      <span className="text-black-600 truncate flex-1">
                         {chapter.chapterIndex}. {chapter.chapterTitle}
                       </span>
-                      <span className="text-slate-500 ml-2">{chapter.percent}%</span>
+                      <span className="text-black-500 ml-2">{chapter.percent}%</span>
                     </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-black-100 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all"
                         style={{ 
@@ -421,7 +421,7 @@ export default function HODDashboard() {
                   </div>
                 ))}
                 {section.chapterBreakdown?.length > 4 && (
-                  <p className="text-xs text-slate-400 text-center pt-2">
+                  <p className="text-xs text-black-400 text-center pt-2">
                     +{section.chapterBreakdown.length - 4} more chapters
                   </p>
                 )}
@@ -433,18 +433,18 @@ export default function HODDashboard() {
 
       {/* Heatmap Tab */}
       {activeTab === "heatmap" && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="bg-white rounded-2xl border border-black-200 p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-semibold text-slate-800">Syllabus Heatmap</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="font-semibold text-black-800">Syllabus Heatmap</h3>
+              <p className="text-xs text-black-500">
                 Hover cells to inspect completion by chapter and section
               </p>
             </div>
-            <div className="text-xs text-slate-500 min-w-[180px]">
+            <div className="text-xs text-black-500 min-w-[180px]">
               {hoveredCell ? (
                 <div className="text-right">
-                  <p className="font-medium text-slate-700">{hoveredCell.sectionId}</p>
+                  <p className="font-medium text-black-700">{hoveredCell.sectionId}</p>
                   <p>{hoveredCell.chapterTitle}</p>
                   <p className="text-indigo-600 font-semibold">{hoveredCell.percent}% done</p>
                 </div>
@@ -459,9 +459,9 @@ export default function HODDashboard() {
 
       {/* Exams Tab */}
       {activeTab === "exams" && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="bg-white rounded-2xl border border-black-200 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-slate-800">Exam Planning</h3>
+            <h3 className="font-semibold text-black-800">Exam Planning</h3>
             <button
               onClick={handleGenerateExamTopics}
               className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors"
@@ -472,11 +472,11 @@ export default function HODDashboard() {
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200">
-                  <th className="text-left py-3 px-4 text-xs uppercase text-slate-500 font-semibold">Section</th>
-                  <th className="text-left py-3 px-4 text-xs uppercase text-slate-500 font-semibold">Chapter</th>
-                  <th className="text-left py-3 px-4 text-xs uppercase text-slate-500 font-semibold">Coverage</th>
-                  <th className="text-left py-3 px-4 text-xs uppercase text-slate-500 font-semibold">Exam Ready</th>
+                <tr className="border-b border-black-200">
+                  <th className="text-left py-3 px-4 text-xs uppercase text-black-500 font-semibold">Section</th>
+                  <th className="text-left py-3 px-4 text-xs uppercase text-black-500 font-semibold">Chapter</th>
+                  <th className="text-left py-3 px-4 text-xs uppercase text-black-500 font-semibold">Coverage</th>
+                  <th className="text-left py-3 px-4 text-xs uppercase text-black-500 font-semibold">Exam Ready</th>
                 </tr>
               </thead>
               <tbody>
@@ -484,11 +484,11 @@ export default function HODDashboard() {
                   section.chapterBreakdown?.map((chapter, cIdx) => (
                     <tr 
                       key={`${section.sectionId}-${chapter.chapterIndex}`} 
-                      className="border-b border-slate-50 hover:bg-slate-50"
+                      className="border-b border-black-50 hover:bg-black-50"
                     >
                       {cIdx === 0 && (
                         <td 
-                          className="py-3 px-4 font-medium text-slate-700"
+                          className="py-3 px-4 font-medium text-black-700"
                           rowSpan={section.chapterBreakdown.length}
                         >
                           <span 
@@ -498,10 +498,10 @@ export default function HODDashboard() {
                           {section.sectionId}
                         </td>
                       )}
-                      <td className="py-3 px-4 text-slate-600">{chapter.chapterTitle}</td>
+                      <td className="py-3 px-4 text-black-600">{chapter.chapterTitle}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-20 h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="w-20 h-2 bg-black-100 rounded-full overflow-hidden">
                             <div 
                               className="h-full rounded-full"
                               style={{ 
@@ -510,17 +510,17 @@ export default function HODDashboard() {
                               }}
                             />
                           </div>
-                          <span className="text-xs text-slate-500">{chapter.percent}%</span>
+                          <span className="text-xs text-black-500">{chapter.percent}%</span>
                         </div>
                       </td>
                       <td className="py-3 px-4">
                         {chapter.percent >= 60 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
                             <CheckCircle2 className="w-3 h-3" />
                             Ready
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
                             <AlertTriangle className="w-3 h-3" />
                             Not Ready
                           </span>
@@ -541,24 +541,24 @@ export default function HODDashboard() {
 function MetricCard({ icon: Icon, label, value, subtext, color, alert }) {
   const colorClasses = {
     indigo: 'bg-indigo-50 text-indigo-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    rose: 'bg-rose-50 text-rose-600',
-    amber: 'bg-amber-50 text-amber-600',
-    sky: 'bg-sky-50 text-sky-600',
+    green: 'bg-green-50 text-green-600',
+    red: 'bg-red-50 text-red-600',
+    yellow: 'bg-yellow-50 text-yellow-600',
+    blue: 'bg-blue-50 text-blue-600',
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`p-4 rounded-2xl border ${alert ? 'border-rose-200 bg-rose-50/50' : 'border-slate-200 bg-white'}`}
+      className={`p-4 rounded-2xl border ${alert ? 'border-red-200 bg-red-50/50' : 'border-black-200 bg-white'}`}
     >
       <div className={`w-10 h-10 rounded-xl ${colorClasses[color]} flex items-center justify-center mb-3`}>
         <Icon className="w-5 h-5" />
       </div>
-      <p className="text-2xl font-bold text-slate-800">{value}</p>
-      <p className="text-xs text-slate-500 mt-1">{label}</p>
-      {subtext && <p className="text-[10px] text-slate-400">{subtext}</p>}
+      <p className="text-2xl font-bold text-black-800">{value}</p>
+      <p className="text-xs text-black-500 mt-1">{label}</p>
+      {subtext && <p className="text-[10px] text-black-400">{subtext}</p>}
     </motion.div>
   );
 }
@@ -566,9 +566,9 @@ function MetricCard({ icon: Icon, label, value, subtext, color, alert }) {
 function InsightRow({ label, value }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-slate-600">{label}</span>
+      <span className="text-sm text-black-600">{label}</span>
       <div className="flex items-center gap-2">
-        <div className="w-24 h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div className="w-24 h-2 bg-black-100 rounded-full overflow-hidden">
           <div 
             className="h-full rounded-full transition-all"
             style={{ 
@@ -577,7 +577,7 @@ function InsightRow({ label, value }) {
             }}
           />
         </div>
-        <span className="text-xs font-medium text-slate-700 w-10 text-right">{value}%</span>
+        <span className="text-xs font-medium text-black-700 w-10 text-right">{value}%</span>
       </div>
     </div>
   );

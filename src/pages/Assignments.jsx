@@ -90,15 +90,15 @@ export default function Assignments() {
   const getTypeColor = (type) => {
     switch (type) {
       case 'quiz': return 'bg-purple-100 text-purple-700';
-      case 'project': return 'bg-emerald-100 text-emerald-700';
-      case 'homework': return 'bg-sky-100 text-sky-700';
-      default: return 'bg-slate-100 text-slate-700';
+      case 'project': return 'bg-green-100 text-green-700';
+      case 'homework': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-black-100 text-black-700';
     }
   };
 
   const getPriorityBadge = (priority) => {
     if (priority === 'high') {
-      return <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs font-medium rounded-full">Urgent</span>;
+      return <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs font-medium rounded-full">Urgent</span>;
     }
     return null;
   };
@@ -108,8 +108,8 @@ export default function Assignments() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Assignments</h1>
-          <p className="text-sm text-slate-500 mt-1">Manage and track student assignments</p>
+          <h1 className="text-2xl font-bold text-black-800">Assignments</h1>
+          <p className="text-sm text-black-500 mt-1">Manage and track student assignments</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -125,22 +125,22 @@ export default function Assignments() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Total Assignments', value: stats.total, icon: FileText, color: 'indigo' },
-          { label: 'Active', value: stats.active, icon: Clock, color: 'emerald' },
-          { label: 'Needs Grading', value: stats.needsGrading, icon: Edit, color: 'amber' },
-          { label: 'Overdue', value: stats.overdue, icon: AlertTriangle, color: 'rose' },
+          { label: 'Active', value: stats.active, icon: Clock, color: 'green' },
+          { label: 'Needs Grading', value: stats.needsGrading, icon: Edit, color: 'yellow' },
+          { label: 'Overdue', value: stats.overdue, icon: AlertTriangle, color: 'red' },
         ].map((stat, idx) => (
           <motion.div
             key={idx}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className={`bg-white rounded-2xl border border-slate-200 p-4 shadow-sm`}
+            className={`bg-white rounded-2xl border border-black-200 p-4 shadow-sm`}
           >
             <div className={`inline-flex p-2 rounded-xl bg-${stat.color}-100 mb-3`}>
               <stat.icon className={`w-5 h-5 text-${stat.color}-600`} />
             </div>
-            <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
-            <p className="text-sm text-slate-500">{stat.label}</p>
+            <p className="text-2xl font-bold text-black-800">{stat.value}</p>
+            <p className="text-sm text-black-500">{stat.label}</p>
           </motion.div>
         ))}
       </div>
@@ -157,14 +157,14 @@ export default function Assignments() {
                 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all
                 ${activeFilter === filter.id
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                  : 'bg-white text-black-600 border border-black-200 hover:bg-black-50'
                 }
               `}
             >
               {filter.label}
               <span className={`
                 px-1.5 py-0.5 rounded-full text-xs
-                ${activeFilter === filter.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}
+                ${activeFilter === filter.id ? 'bg-white/20 text-white' : 'bg-black-100 text-black-500'}
               `}>
                 {filter.count}
               </span>
@@ -174,13 +174,13 @@ export default function Assignments() {
 
         {/* Search */}
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
           <input
             type="text"
             placeholder="Search assignments..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+            className="w-full pl-10 pr-4 py-2 bg-white border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
           />
         </div>
       </div>
@@ -196,7 +196,7 @@ export default function Assignments() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ delay: idx * 0.05 }}
-              className="bg-white rounded-2xl border border-slate-200 p-4 hover:shadow-md hover:border-indigo-200 transition-all group"
+              className="bg-white rounded-2xl border border-black-200 p-4 hover:shadow-md hover:border-indigo-200 transition-all group"
             >
               <div className="flex flex-col md:flex-row md:items-center gap-4">
                 {/* Left: Info */}
@@ -207,15 +207,15 @@ export default function Assignments() {
                     </span>
                     {getPriorityBadge(assignment.priority)}
                     {assignment.status === 'completed' && (
-                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full flex items-center gap-1">
+                      <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Completed
                       </span>
                     )}
                   </div>
-                  <h3 className="font-semibold text-slate-800 truncate group-hover:text-indigo-600 transition-colors">
+                  <h3 className="font-semibold text-black-800 truncate group-hover:text-indigo-600 transition-colors">
                     {assignment.title}
                   </h3>
-                  <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
+                  <div className="flex items-center gap-4 mt-1 text-sm text-black-500">
                     <span className="flex items-center gap-1">
                       <GraduationCap className="w-4 h-4" />
                       {assignment.course} - {assignment.section}
@@ -230,18 +230,18 @@ export default function Assignments() {
                 {/* Middle: Progress */}
                 <div className="flex items-center gap-6">
                   <div className="text-center">
-                    <p className="text-sm text-slate-500">Submitted</p>
-                    <p className="text-lg font-bold text-slate-800">
+                    <p className="text-sm text-black-500">Submitted</p>
+                    <p className="text-lg font-bold text-black-800">
                       {assignment.submitted}/{assignment.totalStudents}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-slate-500">Graded</p>
-                    <p className="text-lg font-bold text-emerald-600">
+                    <p className="text-sm text-black-500">Graded</p>
+                    <p className="text-lg font-bold text-green-600">
                       {assignment.graded}/{assignment.submitted}
                     </p>
                   </div>
-                  <div className="w-20 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-20 h-2 bg-black-100 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-indigo-600 rounded-full transition-all"
                       style={{ width: `${(assignment.submitted / assignment.totalStudents) * 100}%` }}
@@ -251,13 +251,13 @@ export default function Assignments() {
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-2">
-                  <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                  <button className="p-2 text-black-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                     <Eye className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                  <button className="p-2 text-black-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
                     <Edit className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                  <button className="p-2 text-black-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
@@ -267,12 +267,12 @@ export default function Assignments() {
         </AnimatePresence>
 
         {filteredAssignments.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-            <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
-              <FileText className="w-8 h-8 text-slate-400" />
+          <div className="text-center py-12 bg-white rounded-2xl border border-black-200">
+            <div className="w-16 h-16 mx-auto bg-black-100 rounded-full flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 text-black-400" />
             </div>
-            <p className="text-slate-600 font-medium">No assignments found</p>
-            <p className="text-sm text-slate-500 mt-1">Try adjusting your filters or create a new assignment</p>
+            <p className="text-black-600 font-medium">No assignments found</p>
+            <p className="text-sm text-black-500 mt-1">Try adjusting your filters or create a new assignment</p>
           </div>
         )}
       </div>

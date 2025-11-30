@@ -18,7 +18,7 @@ export default function ChatFAB({ onClick, hasUnread }) {
       <Sparkles className="w-6 h-6" />
       
       {hasUnread && (
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 rounded-full border-2 border-white" />
+        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white" />
       )}
       
       {/* Pulse animation */}

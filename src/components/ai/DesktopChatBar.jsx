@@ -139,7 +139,7 @@ export default function DesktopChatBar({ className = '' }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="bg-white rounded-t-3xl shadow-2xl border border-slate-200 border-b-0 overflow-hidden mb-0"
+              className="bg-white rounded-t-3xl shadow-2xl border border-black-200 border-b-0 overflow-hidden mb-0"
               style={{ height: '500px' }}
             >
               {/* Header */}
@@ -162,7 +162,7 @@ export default function DesktopChatBar({ className = '' }) {
               </div>
 
               {/* Tab Bar */}
-              <div className="flex items-center gap-1.5 px-4 py-2 border-b border-slate-100 bg-white">
+              <div className="flex items-center gap-1.5 px-4 py-2 border-b border-black-100 bg-white">
                 {tabs.map(tab => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -175,7 +175,7 @@ export default function DesktopChatBar({ className = '' }) {
                         flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all
                         ${isActive 
                           ? 'bg-indigo-600 text-white shadow-md' 
-                          : 'text-slate-500 hover:bg-slate-100'
+                          : 'text-black-500 hover:bg-black-100'
                         }
                       `}
                     >
@@ -187,7 +187,7 @@ export default function DesktopChatBar({ className = '' }) {
               </div>
 
               {/* Content Area */}
-              <div className="flex-1 overflow-y-auto bg-slate-50" style={{ height: '290px' }}>
+              <div className="flex-1 overflow-y-auto bg-black-50" style={{ height: '290px' }}>
                 {/* Chat Tab */}
                 {activeTab === 'chat' && (
                   <div className="p-4 space-y-3">
@@ -201,8 +201,8 @@ export default function DesktopChatBar({ className = '' }) {
                         >
                           <Sparkles className="w-8 h-8 text-indigo-600" />
                         </motion.div>
-                        <p className="text-base font-semibold text-slate-800 mb-1">How can I help today?</p>
-                        <p className="text-sm text-slate-500 mb-6">Ask me anything about your classes</p>
+                        <p className="text-base font-semibold text-black-800 mb-1">How can I help today?</p>
+                        <p className="text-sm text-black-500 mb-6">Ask me anything about your classes</p>
                         
                         {/* Quick Suggestions */}
                         <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
@@ -213,7 +213,7 @@ export default function DesktopChatBar({ className = '' }) {
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: i * 0.1 }}
                               onClick={() => handleSend(suggestion)}
-                              className="px-4 py-2 bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 rounded-full text-sm transition-all shadow-sm"
+                              className="px-4 py-2 bg-white border border-black-200 hover:border-indigo-300 hover:bg-indigo-50 rounded-full text-sm transition-all shadow-sm"
                             >
                               {suggestion}
                             </motion.button>
@@ -245,7 +245,7 @@ export default function DesktopChatBar({ className = '' }) {
                                 />
                               ))}
                             </div>
-                            <span className="text-xs text-slate-500 ml-1">Thinking...</span>
+                            <span className="text-xs text-black-500 ml-1">Thinking...</span>
                           </motion.div>
                         )}
                         <div ref={messagesEndRef} />
@@ -270,21 +270,21 @@ export default function DesktopChatBar({ className = '' }) {
                       return [
                         { icon: FileText, label: 'Generate Quiz', desc: 'Create questions for any topic', color: 'from-blue-500 to-indigo-500' },
                         { icon: BookOpen, label: 'Create Assignment', desc: 'Generate homework with rubric', color: 'from-purple-500 to-pink-500' },
-                        { icon: Lightbulb, label: 'Suggest Topic', desc: 'AI-powered recommendations', color: 'from-amber-500 to-orange-500' },
+                        { icon: Lightbulb, label: 'Suggest Topic', desc: 'AI-powered recommendations', color: 'from-yellow-500 to-orange-500' },
                       ].map((tool, i) => (
                         <motion.button
                           key={i}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.1 }}
-                          className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all text-left"
+                          className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl border border-black-200 hover:border-indigo-300 hover:shadow-md transition-all text-left"
                         >
                           <div className={`p-3 rounded-xl bg-gradient-to-br ${tool.color}`}>
                             <tool.icon className="w-5 h-5 text-white" />
                           </div>
                           <div className="flex-1">
-                            <p className="font-semibold text-slate-800">{tool.label}</p>
-                            <p className="text-sm text-slate-500">{tool.desc}</p>
+                            <p className="font-semibold text-black-800">{tool.label}</p>
+                            <p className="text-sm text-black-500">{tool.desc}</p>
                           </div>
                         </motion.button>
                       ));
@@ -294,12 +294,12 @@ export default function DesktopChatBar({ className = '' }) {
               </div>
 
               {/* Input Area */}
-              <div className="p-4 bg-white border-t border-slate-100">
+              <div className="p-4 bg-white border-t border-black-100">
                 <div className="flex items-center gap-3">
                   {/* Attach */}
                   <motion.button
                     whileTap={{ scale: 0.9 }}
-                    className="p-2.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                    className="p-2.5 text-black-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
                   >
                     <Paperclip className="w-5 h-5" />
                   </motion.button>
@@ -312,7 +312,7 @@ export default function DesktopChatBar({ className = '' }) {
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={handleKeyDown}
                       placeholder="Type a message..."
-                      className="w-full px-4 py-3 bg-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white transition-all"
+                      className="w-full px-4 py-3 bg-black-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:bg-white transition-all"
                     />
                   </div>
 
@@ -327,7 +327,7 @@ export default function DesktopChatBar({ className = '' }) {
                         ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
                         : isRecording
                           ? 'bg-red-500 text-white'
-                          : 'bg-slate-100 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50'
+                          : 'bg-black-100 text-black-500 hover:text-indigo-600 hover:bg-indigo-50'
                       }
                       disabled:opacity-50
                     `}
@@ -363,22 +363,22 @@ export default function DesktopChatBar({ className = '' }) {
               transition={{ type: 'spring', stiffness: 300, damping: 25 }}
               className="mb-4"
             >
-              <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-2xl shadow-lg border border-slate-200">
+              <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-2xl shadow-lg border border-black-200">
                 {/* Attach Button */}
                 <motion.button
                   whileTap={{ scale: 0.9 }}
-                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                  className="p-2 text-black-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
                 >
                   <Paperclip className="w-5 h-5" />
                 </motion.button>
                 
                 {/* Input Field - Click to expand */}
                 <div 
-                  className="flex-1 flex items-center gap-3 px-4 py-2.5 bg-slate-100 rounded-xl cursor-text hover:bg-slate-50 transition-colors"
+                  className="flex-1 flex items-center gap-3 px-4 py-2.5 bg-black-100 rounded-xl cursor-text hover:bg-black-50 transition-colors"
                   onClick={() => setIsExpanded(true)}
                 >
                   <Sparkles className="w-4 h-4 text-indigo-500" />
-                  <span className="text-sm text-slate-500">Ask Staffroom AI anything...</span>
+                  <span className="text-sm text-black-500">Ask Staffroom AI anything...</span>
                 </div>
 
                 {/* Mic Button */}
@@ -389,7 +389,7 @@ export default function DesktopChatBar({ className = '' }) {
                     p-2.5 rounded-xl transition-all
                     ${isRecording
                       ? 'bg-red-500 text-white animate-pulse'
-                      : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
+                      : 'text-black-400 hover:text-indigo-600 hover:bg-indigo-50'
                     }
                   `}
                 >
@@ -400,7 +400,7 @@ export default function DesktopChatBar({ className = '' }) {
                 <motion.button
                   whileTap={{ scale: 0.9 }}
                   onClick={() => setIsExpanded(true)}
-                  className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
+                  className="p-2 text-black-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors"
                 >
                   <ChevronUp className="w-5 h-5" />
                 </motion.button>

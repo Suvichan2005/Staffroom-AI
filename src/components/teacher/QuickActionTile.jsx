@@ -20,10 +20,10 @@ export function QuickActionTile({
   const variants = {
     default: {
       bg: 'bg-white',
-      iconBg: 'bg-slate-100',
-      iconColor: 'text-slate-600',
-      border: 'border-slate-200',
-      hoverBorder: 'hover:border-slate-300',
+      iconBg: 'bg-black-100',
+      iconColor: 'text-black-600',
+      border: 'border-black-200',
+      hoverBorder: 'hover:border-black-300',
     },
     primary: {
       bg: 'bg-gradient-to-br from-indigo-500 to-indigo-600',
@@ -35,31 +35,31 @@ export function QuickActionTile({
       descColor: 'text-indigo-100',
     },
     success: {
-      bg: 'bg-gradient-to-br from-emerald-500 to-emerald-600',
+      bg: 'bg-gradient-to-br from-green-500 to-green-600',
       iconBg: 'bg-white/20',
       iconColor: 'text-white',
       border: 'border-transparent',
       hoverBorder: '',
       textColor: 'text-white',
-      descColor: 'text-emerald-100',
+      descColor: 'text-green-100',
     },
     warning: {
-      bg: 'bg-gradient-to-br from-amber-500 to-orange-500',
+      bg: 'bg-gradient-to-br from-yellow-500 to-orange-500',
       iconBg: 'bg-white/20',
       iconColor: 'text-white',
       border: 'border-transparent',
       hoverBorder: '',
       textColor: 'text-white',
-      descColor: 'text-amber-100',
+      descColor: 'text-yellow-100',
     },
     danger: {
-      bg: 'bg-gradient-to-br from-rose-500 to-red-600',
+      bg: 'bg-gradient-to-br from-red-500 to-red-600',
       iconBg: 'bg-white/20',
       iconColor: 'text-white',
       border: 'border-transparent',
       hoverBorder: '',
       textColor: 'text-white',
-      descColor: 'text-rose-100',
+      descColor: 'text-red-100',
     },
   };
 
@@ -116,13 +116,13 @@ export function QuickActionTile({
       </div>
 
       {/* Label */}
-      <span className={`text-sm font-semibold ${v.textColor || 'text-slate-800'}`}>
+      <span className={`text-sm font-semibold ${v.textColor || 'text-black-800'}`}>
         {label}
       </span>
 
       {/* Description */}
       {description && (
-        <span className={`text-xs mt-0.5 ${v.descColor || 'text-slate-500'}`}>
+        <span className={`text-xs mt-0.5 ${v.descColor || 'text-black-500'}`}>
           {description}
         </span>
       )}
@@ -177,7 +177,7 @@ export function QuickActionChip({
         transition-all duration-200
         ${active
           ? 'bg-indigo-600 text-white shadow-md'
-          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          : 'bg-black-100 text-black-700 hover:bg-black-200'
         }
         ${className}
       `}

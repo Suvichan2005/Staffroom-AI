@@ -38,7 +38,7 @@ export default function DesktopLayout({ children, hideNav, hideChatbox }) {
   // Full-width layout for landing/auth
   if (shouldHideNav) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="min-h-screen bg-black-50">
         <main>
           <motion.div
             key={location.pathname}
@@ -54,7 +54,7 @@ export default function DesktopLayout({ children, hideNav, hideChatbox }) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-black-50">
       {/* Top Navigation */}
       <TopNav />
 

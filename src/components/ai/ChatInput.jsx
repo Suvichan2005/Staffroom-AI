@@ -22,14 +22,14 @@ export default function ChatInput({ value, onChange, onSend, isLoading }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 bg-white border-t border-slate-100">
+    <form onSubmit={handleSubmit} className="p-3 bg-white border-t border-black-100">
       <div className={`
         flex items-center gap-2 p-2 rounded-xl border transition-all
-        ${isFocused ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-slate-200'}
+        ${isFocused ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-black-200'}
       `}>
         <button
           type="button"
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          className="p-2 text-black-400 hover:text-black-600 hover:bg-black-100 rounded-lg transition-colors"
         >
           <Paperclip className="w-4 h-4" />
         </button>
@@ -43,12 +43,12 @@ export default function ChatInput({ value, onChange, onSend, isLoading }) {
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything..."
           disabled={isLoading}
-          className="flex-1 text-sm bg-transparent outline-none placeholder-slate-400 disabled:opacity-50"
+          className="flex-1 text-sm bg-transparent outline-none placeholder-black-400 disabled:opacity-50"
         />
 
         <button
           type="button"
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          className="p-2 text-black-400 hover:text-black-600 hover:bg-black-100 rounded-lg transition-colors"
         >
           <Mic className="w-4 h-4" />
         </button>
@@ -60,7 +60,7 @@ export default function ChatInput({ value, onChange, onSend, isLoading }) {
             p-2 rounded-lg transition-all
             ${value.trim() && !isLoading
               ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              : 'bg-black-100 text-black-400 cursor-not-allowed'
             }
           `}
         >
@@ -68,7 +68,7 @@ export default function ChatInput({ value, onChange, onSend, isLoading }) {
         </button>
       </div>
 
-      <p className="text-[10px] text-slate-400 text-center mt-2">
+      <p className="text-[10px] text-black-400 text-center mt-2">
         Press Enter to send • Shift+Enter for new line
       </p>
     </form>

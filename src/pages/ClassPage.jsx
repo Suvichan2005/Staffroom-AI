@@ -41,10 +41,10 @@ export default function ClassPage() {
   if (!course) return (
     <PageShell width="6xl">
       <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
-          <BookOpen className="w-8 h-8 text-slate-400" />
+        <div className="w-16 h-16 mx-auto bg-black-100 rounded-full flex items-center justify-center mb-4">
+          <BookOpen className="w-8 h-8 text-black-400" />
         </div>
-        <h2 className="text-lg font-semibold text-slate-800 mb-2">Class not found</h2>
+        <h2 className="text-lg font-semibold text-black-800 mb-2">Class not found</h2>
         <button 
           onClick={() => navigate("/dashboard")}
           className="text-indigo-600 text-sm font-medium hover:underline"
@@ -279,7 +279,7 @@ export default function ClassPage() {
                   Section {classId}
                 </span>
                 {isWithinWindow && (
-                  <span className="px-2 py-0.5 bg-emerald-500/80 backdrop-blur-sm rounded-full text-[10px] sm:text-xs flex items-center gap-1 whitespace-nowrap" style={{ color: '#ffffff' }}>
+                  <span className="px-2 py-0.5 bg-green-500/80 backdrop-blur-sm rounded-full text-[10px] sm:text-xs flex items-center gap-1 whitespace-nowrap" style={{ color: '#ffffff' }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
                     Active
                   </span>
@@ -319,10 +319,10 @@ export default function ClassPage() {
           <div className="flex flex-col gap-2">
             <div>
                   <h1 className="text-lg text-white truncate">{course.title}</h1>
-              <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-600">
+              <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-black-600">
                 <span className="px-2 py-0.5 text-white">Section {classId}</span>
                 {isWithinWindow && (
-                  <span className="px-2 py-0.5 bg-emerald-100 rounded-full text-emerald-700">Active</span>
+                  <span className="px-2 py-0.5 bg-green-100 rounded-full text-green-700">Active</span>
                 )}
               </div>
             </div>
@@ -366,7 +366,7 @@ export default function ClassPage() {
             flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all
             ${isWithinWindow 
               ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700' 
-              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              : 'bg-black-100 text-black-400 cursor-not-allowed'
             }
           `}
           title={isWithinWindow ? 'Take attendance' : `Available during ${schedules.join(', ')} ±15min`}
@@ -401,7 +401,7 @@ export default function ClassPage() {
                 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all
                 ${isActive 
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 hover:bg-indigo-700' 
-                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                  : 'bg-white text-black-600 hover:bg-black-50 border border-black-200'
                 }
               `}
             >
@@ -425,58 +425,58 @@ export default function ClassPage() {
             {/* Main Content */}
             <div className="md:col-span-8 space-y-6">
               {/* Progress Overview */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                <h3 className="font-semibold text-slate-800 mb-4">Progress Overview</h3>
+              <div className="bg-white rounded-2xl border border-black-200 p-5">
+                <h3 className="font-semibold text-black-800 mb-4">Progress Overview</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {/* Syllabus Progress */}
                   <div className="p-4 rounded-xl bg-indigo-50">
                     <BookOpen className="w-5 h-5 text-indigo-600 mb-2" />
                     <p className="text-2xl font-bold text-indigo-700">{progressPercent}%</p>
-                    <p className="text-xs text-slate-600">Syllabus</p>
+                    <p className="text-xs text-black-600">Syllabus</p>
                   </div>
                   {/* Attendance */}
-                  <div className="p-4 rounded-xl bg-emerald-50">
-                    <Users className="w-5 h-5 text-emerald-600 mb-2" />
-                    <p className="text-2xl font-bold text-emerald-700">{attendanceMetrics.avgPercent}%</p>
-                    <p className="text-xs text-slate-600">Attendance</p>
+                  <div className="p-4 rounded-xl bg-green-50">
+                    <Users className="w-5 h-5 text-green-600 mb-2" />
+                    <p className="text-2xl font-bold text-green-700">{attendanceMetrics.avgPercent}%</p>
+                    <p className="text-xs text-black-600">Attendance</p>
                   </div>
                   {/* Days Recorded */}
-                  <div className="p-4 rounded-xl bg-amber-50">
-                    <Calendar className="w-5 h-5 text-amber-600 mb-2" />
-                    <p className="text-2xl font-bold text-amber-700">{attendanceMetrics.totalDays}</p>
-                    <p className="text-xs text-slate-600">Days Recorded</p>
+                  <div className="p-4 rounded-xl bg-yellow-50">
+                    <Calendar className="w-5 h-5 text-yellow-600 mb-2" />
+                    <p className="text-2xl font-bold text-yellow-700">{attendanceMetrics.totalDays}</p>
+                    <p className="text-xs text-black-600">Days Recorded</p>
                   </div>
                   {/* Best Attendance */}
-                  <div className="p-4 rounded-xl bg-sky-50">
-                    <Award className="w-5 h-5 text-sky-600 mb-2" />
-                    <p className="text-2xl font-bold text-sky-700">{attendanceMetrics.bestPercent}%</p>
-                    <p className="text-xs text-slate-600">Best Attendance</p>
+                  <div className="p-4 rounded-xl bg-blue-50">
+                    <Award className="w-5 h-5 text-blue-600 mb-2" />
+                    <p className="text-2xl font-bold text-blue-700">{attendanceMetrics.bestPercent}%</p>
+                    <p className="text-xs text-black-600">Best Attendance</p>
                   </div>
                 </div>
               </div>
 
               {/* Upcoming Exams */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                <h3 className="font-semibold text-slate-800 mb-4">Upcoming Exams</h3>
+              <div className="bg-white rounded-2xl border border-black-200 p-5">
+                <h3 className="font-semibold text-black-800 mb-4">Upcoming Exams</h3>
                 {upcomingExams.length === 0 ? (
                   <div className="text-center py-6">
-                    <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500">No exams scheduled</p>
+                    <Calendar className="w-10 h-10 text-black-300 mx-auto mb-2" />
+                    <p className="text-sm text-black-500">No exams scheduled</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {upcomingExams.map((ex, i) => (
                       <div 
                         key={i}
-                        className="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 transition-colors"
+                        className="flex items-center justify-between p-3 rounded-xl bg-black-50 hover:bg-indigo-50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center">
                             <FileText className="w-5 h-5 text-indigo-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-slate-800">{ex.type}</p>
-                            <p className="text-xs text-slate-500">{ex.date}</p>
+                            <p className="font-medium text-black-800">{ex.type}</p>
+                            <p className="text-xs text-black-500">{ex.date}</p>
                           </div>
                         </div>
                         <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
@@ -518,8 +518,8 @@ export default function ClassPage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5">
-                <h3 className="font-semibold text-slate-800 mb-4">Quick Actions</h3>
+              <div className="bg-white rounded-2xl border border-black-200 p-5">
+                <h3 className="font-semibold text-black-800 mb-4">Quick Actions</h3>
                 <div className="space-y-2">
                   {[
                     { label: 'Generate Quiz', icon: Sparkles, onClick: () => {} },
@@ -531,13 +531,13 @@ export default function ClassPage() {
                       <button
                         key={i}
                         onClick={action.onClick}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors text-left"
+                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-black-50 transition-colors text-left"
                       >
-                        <div className="p-2 rounded-lg bg-slate-100">
-                          <Icon className="w-4 h-4 text-slate-600" />
+                        <div className="p-2 rounded-lg bg-black-100">
+                          <Icon className="w-4 h-4 text-black-600" />
                         </div>
-                        <span className="text-sm font-medium text-slate-700">{action.label}</span>
-                        <ChevronRight className="w-4 h-4 text-slate-400 ml-auto" />
+                        <span className="text-sm font-medium text-black-700">{action.label}</span>
+                        <ChevronRight className="w-4 h-4 text-black-400 ml-auto" />
                       </button>
                     );
                   })}
@@ -587,16 +587,16 @@ export default function ClassPage() {
             className="space-y-6"
           >
             {/* Attendance Quick Actions Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <div className="bg-white rounded-2xl border border-black-200 p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-semibold text-slate-800">Attendance Overview</h3>
-                  <p className="text-sm text-slate-500">{attendanceMetrics.totalDays} days recorded</p>
+                  <h3 className="font-semibold text-black-800">Attendance Overview</h3>
+                  <p className="text-sm text-black-500">{attendanceMetrics.totalDays} days recorded</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowHistory(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-black-100 text-black-700 hover:bg-black-200 transition-all"
                   >
                     <Calendar className="w-4 h-4" />
                     View History
@@ -608,7 +608,7 @@ export default function ClassPage() {
                       flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all
                       ${isWithinWindow 
                         ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
-                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        : 'bg-black-100 text-black-400 cursor-not-allowed'
                       }
                     `}
                   >
@@ -651,7 +651,7 @@ export default function ClassPage() {
 
       {/* Voice Log Modal */}
       {showVoiceLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/60 backdrop-blur-sm p-4">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -660,13 +660,13 @@ export default function ClassPage() {
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <div className="flex items-center gap-2">
                 <Mic className="w-5 h-5 text-indigo-600" />
-                <h4 className="font-semibold text-slate-800">Voice Log</h4>
+                <h4 className="font-semibold text-black-800">Voice Log</h4>
               </div>
               <button
                 onClick={() => setShowVoiceLog(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-black-100 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-5 h-5 text-black-500" />
               </button>
             </div>
             <div className="p-5 space-y-3">
@@ -676,14 +676,14 @@ export default function ClassPage() {
                   className={`p-3 rounded-xl ${
                     entry.speaker === 'Teacher' 
                       ? 'bg-indigo-50 border border-indigo-100' 
-                      : 'bg-slate-50 border border-slate-100'
+                      : 'bg-black-50 border border-black-100'
                   }`}
                 >
-                  <p className="text-xs uppercase tracking-wide text-slate-500 mb-1">{entry.speaker}</p>
-                  <p className="text-sm text-slate-700">{entry.text}</p>
+                  <p className="text-xs uppercase tracking-wide text-black-500 mb-1">{entry.speaker}</p>
+                  <p className="text-sm text-black-700">{entry.text}</p>
                 </div>
               ))}
-              <p className="text-xs text-slate-400 text-center pt-2">
+              <p className="text-xs text-black-400 text-center pt-2">
                 Audio capture is simulated. Integrate speech-to-text for real sessions.
               </p>
             </div>
@@ -693,7 +693,7 @@ export default function ClassPage() {
 
       {/* Attendance Editor Modal */}
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -702,16 +702,16 @@ export default function ClassPage() {
             <div className="flex items-center justify-between px-5 py-4 border-b">
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-indigo-600" />
-                <h4 className="font-semibold text-slate-800">Take Attendance</h4>
-                <span className="px-2 py-0.5 bg-slate-100 rounded-full text-xs text-slate-600">
+                <h4 className="font-semibold text-black-800">Take Attendance</h4>
+                <span className="px-2 py-0.5 bg-black-100 rounded-full text-xs text-black-600">
                   {today}
                 </span>
               </div>
               <button
                 onClick={() => setEditing(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-black-100 rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-5 h-5 text-black-500" />
               </button>
             </div>
             <div className="px-5 py-4 overflow-y-auto max-h-[70vh]">

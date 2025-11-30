@@ -39,19 +39,19 @@ export default function Dashboard() {
         <div className="lg:col-span-8 xl:col-span-8 space-y-6">
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="sc-card">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Attendance Pending</p>
-              <p className="text-2xl font-semibold text-slate-800">{todayActions.pendingAttendance}</p>
-              <p className="text-xs text-slate-500 mt-1">Classes awaiting submission today</p>
+              <p className="text-xs uppercase tracking-wide text-black-500">Attendance Pending</p>
+              <p className="text-2xl font-semibold text-black-800">{todayActions.pendingAttendance}</p>
+              <p className="text-xs text-black-500 mt-1">Classes awaiting submission today</p>
             </div>
             <div className="sc-card">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Chapters Remaining</p>
-              <p className="text-2xl font-semibold text-slate-800">{todayActions.chaptersLeft}</p>
-              <p className="text-xs text-slate-500 mt-1">Aggregated gap across sections</p>
+              <p className="text-xs uppercase tracking-wide text-black-500">Chapters Remaining</p>
+              <p className="text-2xl font-semibold text-black-800">{todayActions.chaptersLeft}</p>
+              <p className="text-xs text-black-500 mt-1">Aggregated gap across sections</p>
             </div>
             <div className="sc-card">
-              <p className="text-xs uppercase tracking-wide text-slate-500">Assignments Due</p>
-              <p className="text-2xl font-semibold text-slate-800">{todayActions.assignmentsDue}</p>
-              <p className="text-xs text-slate-500 mt-1">Due {todayActions.date}</p>
+              <p className="text-xs uppercase tracking-wide text-black-500">Assignments Due</p>
+              <p className="text-2xl font-semibold text-black-800">{todayActions.assignmentsDue}</p>
+              <p className="text-xs text-black-500 mt-1">Due {todayActions.date}</p>
             </div>
           </div>
           <div className={courseGridClasses}>
@@ -72,13 +72,13 @@ export default function Dashboard() {
           <div className="sc-card mt-6">
             <h3 className="sc-heading text-base mb-2">AI Suggestions</h3>
             <ul className="space-y-2 text-sm">
-              <li className="border border-slate-200 rounded-lg p-2 bg-white/60">
+              <li className="border border-black-200 rounded-lg p-2 bg-white/60">
                 Quiz prompt ready for Chapter 3 - schedule during Friday&apos;s class.
               </li>
-              <li className="border border-slate-200 rounded-lg p-2 bg-white/60">
+              <li className="border border-black-200 rounded-lg p-2 bg-white/60">
                 Section 8A needs a recap: 3 students below 75% attendance.
               </li>
-              <li className="border border-slate-200 rounded-lg p-2 bg-white/60">
+              <li className="border border-black-200 rounded-lg p-2 bg-white/60">
                 Share new climate change article with 6C to reinforce discussion.
               </li>
             </ul>
@@ -106,7 +106,7 @@ export default function Dashboard() {
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
-                <p className="text-xs text-slate-500 text-center mt-1">Overall completion blend</p>
+                <p className="text-xs text-black-500 text-center mt-1">Overall completion blend</p>
               </div>
               <div className="lg:col-span-2 space-y-4">
                 <div className="h-28">
@@ -140,25 +140,25 @@ export default function Dashboard() {
           <div className="sc-card">
             <h3 className="sc-heading text-base mb-2">At a Glance</h3>
             <div className="grid gap-3 sm:grid-cols-2 text-sm">
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
-                <p className="text-xs uppercase text-slate-500">Overall Progress</p>
-                <p className="text-2xl font-semibold text-slate-800">{analyticsSnapshot.overallProgress}%</p>
-                <p className="text-xs text-slate-500 mt-1">Average across courses</p>
+              <div className="rounded-xl bg-black-50 border border-black-200 p-3">
+                <p className="text-xs uppercase text-black-500">Overall Progress</p>
+                <p className="text-2xl font-semibold text-black-800">{analyticsSnapshot.overallProgress}%</p>
+                <p className="text-xs text-black-500 mt-1">Average across courses</p>
               </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
-                <p className="text-xs uppercase text-slate-500">Attendance</p>
-                <p className="text-2xl font-semibold text-slate-800">{analyticsSnapshot.attendancePercent}%</p>
-                <p className="text-xs text-slate-500 mt-1">Across sections 6A, 6C, 8A, 8B</p>
+              <div className="rounded-xl bg-black-50 border border-black-200 p-3">
+                <p className="text-xs uppercase text-black-500">Attendance</p>
+                <p className="text-2xl font-semibold text-black-800">{analyticsSnapshot.attendancePercent}%</p>
+                <p className="text-xs text-black-500 mt-1">Across sections 6A, 6C, 8A, 8B</p>
               </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
-                <p className="text-xs uppercase text-slate-500">Average Grade</p>
-                <p className="text-2xl font-semibold text-slate-800">{analyticsSnapshot.averageGrade}</p>
-                <p className="text-xs text-slate-500 mt-1">Derived from recent assignments</p>
+              <div className="rounded-xl bg-black-50 border border-black-200 p-3">
+                <p className="text-xs uppercase text-black-500">Average Grade</p>
+                <p className="text-2xl font-semibold text-black-800">{analyticsSnapshot.averageGrade}</p>
+                <p className="text-xs text-black-500 mt-1">Derived from recent assignments</p>
               </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
-                <p className="text-xs uppercase text-slate-500">Courses</p>
-                <p className="text-2xl font-semibold text-slate-800">{analyticsSnapshot.courses.length}</p>
-                <p className="text-xs text-slate-500 mt-1">Active this term</p>
+              <div className="rounded-xl bg-black-50 border border-black-200 p-3">
+                <p className="text-xs uppercase text-black-500">Courses</p>
+                <p className="text-2xl font-semibold text-black-800">{analyticsSnapshot.courses.length}</p>
+                <p className="text-xs text-black-500 mt-1">Active this term</p>
               </div>
             </div>
           </div>

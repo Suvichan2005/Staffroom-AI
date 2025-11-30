@@ -22,17 +22,17 @@ export function StudentCard({
   className = '',
 }) {
   const getAttendanceColor = (pct) => {
-    if (pct >= 90) return 'text-emerald-600 bg-emerald-50';
-    if (pct >= 75) return 'text-amber-600 bg-amber-50';
+    if (pct >= 90) return 'text-green-600 bg-green-50';
+    if (pct >= 75) return 'text-yellow-600 bg-yellow-50';
     return 'text-red-600 bg-red-50';
   };
 
   const getGradeColor = (grade) => {
-    if (!grade) return 'text-slate-500 bg-slate-50';
+    if (!grade) return 'text-black-500 bg-black-50';
     const gradeUpper = grade.toUpperCase();
-    if (gradeUpper.startsWith('A')) return 'text-emerald-600 bg-emerald-50';
+    if (gradeUpper.startsWith('A')) return 'text-green-600 bg-green-50';
     if (gradeUpper.startsWith('B')) return 'text-blue-600 bg-blue-50';
-    if (gradeUpper.startsWith('C')) return 'text-amber-600 bg-amber-50';
+    if (gradeUpper.startsWith('C')) return 'text-yellow-600 bg-yellow-50';
     return 'text-red-600 bg-red-50';
   };
 
@@ -52,15 +52,15 @@ export function StudentCard({
         relative bg-white rounded-2xl border overflow-hidden
         transition-all duration-200 cursor-pointer
         ${isAtRisk
-          ? 'border-amber-300 shadow-md shadow-amber-50'
-          : 'border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-md'
+          ? 'border-yellow-300 shadow-md shadow-yellow-50'
+          : 'border-black-200 hover:border-black-300 shadow-sm hover:shadow-md'
         }
         ${className}
       `}
     >
       {/* At-risk indicator */}
       {isAtRisk && (
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-red-400" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 to-red-400" />
       )}
 
       <div className="p-4">
@@ -82,13 +82,13 @@ export function StudentCard({
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-slate-800 truncate">{name}</h3>
+              <h3 className="font-semibold text-black-800 truncate">{name}</h3>
               {isAtRisk && (
-                <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
               )}
             </div>
             {rollNumber && (
-              <p className="text-sm text-slate-500">Roll #{rollNumber}</p>
+              <p className="text-sm text-black-500">Roll #{rollNumber}</p>
             )}
           </div>
 
@@ -97,9 +97,9 @@ export function StudentCard({
             onClick={(e) => {
               e.stopPropagation();
             }}
-            className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-black-100 rounded-lg transition-colors"
           >
-            <MoreHorizontal className="w-4 h-4 text-slate-400" />
+            <MoreHorizontal className="w-4 h-4 text-black-400" />
           </button>
         </div>
 
@@ -123,11 +123,11 @@ export function StudentCard({
             {alerts.slice(0, 2).map((alert, idx) => (
               <div
                 key={idx}
-                className="flex items-center gap-2 px-2 py-1.5 bg-amber-50 rounded-lg text-xs text-amber-700"
+                className="flex items-center gap-2 px-2 py-1.5 bg-yellow-50 rounded-lg text-xs text-yellow-700"
               >
                 {alert.type === 'attendance' && <TrendingDown className="w-3 h-3" />}
                 {alert.type === 'grade' && <TrendingDown className="w-3 h-3" />}
-                {alert.type === 'improvement' && <TrendingUp className="w-3 h-3 text-emerald-600" />}
+                {alert.type === 'improvement' && <TrendingUp className="w-3 h-3 text-green-600" />}
                 <span className="truncate">{alert.message}</span>
               </div>
             ))}
@@ -136,7 +136,7 @@ export function StudentCard({
 
         {/* Quick actions */}
         {(onMessage || email || phone) && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-black-100">
             {onMessage && (
               <button
                 onClick={(e) => {
@@ -153,7 +153,7 @@ export function StudentCard({
               <a
                 href={`tel:${phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 text-xs font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-black-100 text-black-600 text-xs font-medium rounded-lg hover:bg-black-200 transition-colors"
               >
                 <Phone className="w-3 h-3" />
                 Call
@@ -194,7 +194,7 @@ export function StudentCardCompact({
         w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left
         ${selected
           ? 'bg-indigo-50 border-indigo-300'
-          : 'bg-white border-slate-200 hover:border-slate-300'
+          : 'bg-white border-black-200 hover:border-black-300'
         }
         ${className}
       `}
@@ -215,12 +215,12 @@ export function StudentCardCompact({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-slate-800 truncate">{name}</span>
+          <span className="font-medium text-black-800 truncate">{name}</span>
           {isAtRisk && (
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+            <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500">
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-black-500">
           {rollNumber && <span>#{rollNumber}</span>}
           {attendance !== undefined && (
             <span className={attendance < 75 ? 'text-red-500' : ''}>

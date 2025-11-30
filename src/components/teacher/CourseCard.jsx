@@ -28,7 +28,7 @@ export default function CourseCard({ course, syllabus, onSelectCourse, onSelectS
             <button
               key={sec.id}
               onClick={() => onSelectSection(sec.id)}
-              className="flex flex-col gap-1 items-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 py-2 px-2 text-xs font-medium text-slate-700"
+              className="flex flex-col gap-1 items-center rounded-xl border border-black-200 bg-black-50 hover:bg-indigo-50 py-2 px-2 text-xs font-medium text-black-700"
             >
               <span>{sec.id}</span>
               <ProgressBar value={pct} />

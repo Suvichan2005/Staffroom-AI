@@ -40,7 +40,7 @@ export function Skeleton({
       initial="initial"
       animate="animate"
       className={`
-        bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200
+        bg-gradient-to-r from-black-200 via-black-100 to-black-200
         bg-[length:200%_100%]
         ${variants[variant]}
         ${className}
@@ -75,7 +75,7 @@ export function SkeletonText({ lines = 3, className = '' }) {
  */
 export function SkeletonCard({ className = '' }) {
   return (
-    <div className={`bg-white rounded-2xl p-4 border border-slate-100 ${className}`}>
+    <div className={`bg-white rounded-2xl p-4 border border-black-100 ${className}`}>
       <div className="flex items-start gap-3">
         <Skeleton variant="avatar" />
         <div className="flex-1 space-y-2">
@@ -111,7 +111,7 @@ export function SkeletonListItem({ className = '' }) {
  */
 export function SkeletonStatCard({ className = '' }) {
   return (
-    <div className={`bg-white rounded-2xl p-4 border border-slate-100 ${className}`}>
+    <div className={`bg-white rounded-2xl p-4 border border-black-100 ${className}`}>
       <Skeleton variant="text" className="w-1/3 h-3 mb-2" />
       <Skeleton variant="title" className="w-1/2 h-8 mb-3" />
       <Skeleton variant="button" className="w-16 h-5" />

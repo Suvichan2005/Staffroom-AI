@@ -137,10 +137,10 @@ export default function CoursePage() {
   if (!course) return (
     <PageShell width="5xl">
       <div className="text-center py-12">
-        <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
-          <BookOpen className="w-8 h-8 text-slate-400" />
+        <div className="w-16 h-16 mx-auto bg-black-100 rounded-full flex items-center justify-center mb-4">
+          <BookOpen className="w-8 h-8 text-black-400" />
         </div>
-        <h2 className="text-lg font-semibold text-slate-800 mb-2">Course not found</h2>
+        <h2 className="text-lg font-semibold text-black-800 mb-2">Course not found</h2>
         <button 
           onClick={() => navigate("/dashboard")}
           className="text-indigo-600 text-sm font-medium hover:underline"
@@ -234,7 +234,7 @@ export default function CoursePage() {
       </motion.div>
 
       {/* Simple Underline Tab Navigation */}
-      <div className="border-b border-slate-200 mb-6">
+      <div className="border-b border-black-200 mb-6">
         <nav className="flex gap-8">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
@@ -244,7 +244,7 @@ export default function CoursePage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`
                   relative pb-3 text-sm font-medium transition-colors
-                  ${isActive ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'}
+                  ${isActive ? 'text-indigo-600' : 'text-black-500 hover:text-black-700'}
                 `}
               >
                 {tab.label}
@@ -272,7 +272,7 @@ export default function CoursePage() {
           >
             {/* Sections Grid - First */}
             <div>
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">Sections</h2>
+              <h2 className="text-lg font-semibold text-black-800 mb-4">Sections</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {course.sections.map((sec, idx) => {
                   const baseProgress = normalizeSectionProgress(syllabus, sec.progress);
@@ -287,7 +287,7 @@ export default function CoursePage() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                       onClick={() => navigate(`/course/${courseId}/class/${sec.id}`)}
-                      className="group bg-white rounded-2xl border border-slate-200 p-5 hover:shadow-lg hover:border-indigo-300 transition-all cursor-pointer"
+                      className="group bg-white rounded-2xl border border-black-200 p-5 hover:shadow-lg hover:border-indigo-300 transition-all cursor-pointer"
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -295,31 +295,31 @@ export default function CoursePage() {
                             <span className="text-indigo-600 font-bold text-lg">{sec.id}</span>
                           </div>
                           <div>
-                            <h3 className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">
+                            <h3 className="font-semibold text-black-800 group-hover:text-indigo-600 transition-colors">
                               Section {sec.id}
                             </h3>
-                            <p className="text-xs text-slate-500">{schedules[0] || 'No schedule'}</p>
+                            <p className="text-xs text-black-500">{schedules[0] || 'No schedule'}</p>
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                        <ChevronRight className="w-5 h-5 text-black-300 group-hover:text-indigo-500 transition-colors" />
                       </div>
 
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-slate-500">Progress</span>
-                          <span className={`font-semibold ${pct >= 70 ? 'text-emerald-600' : pct >= 40 ? 'text-amber-600' : 'text-slate-600'}`}>
+                          <span className="text-black-500">Progress</span>
+                          <span className={`font-semibold ${pct >= 70 ? 'text-green-600' : pct >= 40 ? 'text-yellow-600' : 'text-black-600'}`}>
                             {pct}%
                           </span>
                         </div>
                         <ProgressBar value={pct} className="h-2" />
                         
-                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                          <div className="flex items-center gap-1 text-xs text-slate-500">
+                        <div className="flex items-center justify-between pt-2 border-t border-black-100">
+                          <div className="flex items-center gap-1 text-xs text-black-500">
                             <Users className="w-3.5 h-3.5" />
                             <span>{sec.studentCount || 30} students</span>
                           </div>
                           {sec.exams?.[0] && (
-                            <div className="flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                            <div className="flex items-center gap-1 text-xs text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full">
                               <Calendar className="w-3 h-3" />
                               <span>{sec.exams[0].type}</span>
                             </div>
@@ -333,8 +333,8 @@ export default function CoursePage() {
             </div>
 
             {/* Quick Actions */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">Quick Actions</h2>
+            <div className="bg-white rounded-2xl border border-black-200 p-5">
+              <h2 className="text-lg font-semibold text-black-800 mb-4">Quick Actions</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { label: 'View Syllabus', icon: BookOpen, action: () => setActiveTab('syllabus') },
@@ -347,7 +347,7 @@ export default function CoursePage() {
                     <button
                       key={i}
                       onClick={item.action}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-slate-600"
+                      className="flex flex-col items-center gap-2 p-4 rounded-xl bg-black-50 hover:bg-indigo-50 hover:text-indigo-600 transition-colors text-black-600"
                     >
                       <Icon className="w-5 h-5" />
                       <span className="text-sm font-medium">{item.label}</span>
@@ -367,14 +367,14 @@ export default function CoursePage() {
               ].map((item, i) => {
                 const Icon = item.icon;
                 return (
-                  <div key={i} className="bg-white rounded-xl border border-slate-200 p-4">
+                  <div key={i} className="bg-white rounded-xl border border-black-200 p-4">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-100 rounded-lg">
-                        <Icon className="w-4 h-4 text-slate-600" />
+                      <div className="p-2 bg-black-100 rounded-lg">
+                        <Icon className="w-4 h-4 text-black-600" />
                       </div>
                       <div>
-                        <p className="text-lg font-bold text-slate-800">{item.value}</p>
-                        <p className="text-xs text-slate-500">{item.label}</p>
+                        <p className="text-lg font-bold text-black-800">{item.value}</p>
+                        <p className="text-xs text-black-500">{item.label}</p>
                       </div>
                     </div>
                   </div>
@@ -390,22 +390,22 @@ export default function CoursePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6"
+            className="bg-white rounded-2xl border border-black-200 p-4 md:p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-lg font-bold text-slate-800">Syllabus Tracker</h2>
-                <p className="text-sm text-slate-500">{syllabus?.chapters?.length || 0} chapters to cover</p>
+                <h2 className="text-lg font-bold text-black-800">Syllabus Tracker</h2>
+                <p className="text-sm text-black-500">{syllabus?.chapters?.length || 0} chapters to cover</p>
               </div>
               <div className="flex items-center gap-3 text-xs">
                 <span className="flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-500" /> Done
+                  <CheckCircle2 className="w-3 h-3 text-green-500" /> Done
                 </span>
                 <span className="flex items-center gap-1">
-                  <Circle className="w-3 h-3 text-amber-500" /> In Progress
+                  <Circle className="w-3 h-3 text-yellow-500" /> In Progress
                 </span>
                 <span className="flex items-center gap-1">
-                  <Circle className="w-3 h-3 text-slate-300" /> Pending
+                  <Circle className="w-3 h-3 text-black-300" /> Pending
                 </span>
               </div>
             </div>
@@ -419,26 +419,26 @@ export default function CoursePage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.05 }}
-                    className="border border-slate-200 rounded-xl overflow-hidden"
+                    className="border border-black-200 rounded-xl overflow-hidden"
                   >
                     <button
                       type="button"
                       onClick={() => toggleChapter(ch.index)}
-                      className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 hover:bg-slate-100 transition-colors"
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-black-50 hover:bg-black-100 transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <span className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-sm">
                           {ch.index}
                         </span>
                         <div className="text-left">
-                          <p className="font-medium text-slate-800">{ch.title}</p>
-                          <p className="text-xs text-slate-500">{(ch.subTopics || []).length} topics</p>
+                          <p className="font-medium text-black-800">{ch.title}</p>
+                          <p className="text-xs text-black-500">{(ch.subTopics || []).length} topics</p>
                         </div>
                       </div>
                       {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-slate-400" />
+                        <ChevronUp className="w-5 h-5 text-black-400" />
                       ) : (
-                        <ChevronDown className="w-5 h-5 text-slate-400" />
+                        <ChevronDown className="w-5 h-5 text-black-400" />
                       )}
                     </button>
 
@@ -454,14 +454,14 @@ export default function CoursePage() {
                             {(ch.subTopics || []).map((st) => (
                               <div 
                                 key={st.index}
-                                className="flex items-center gap-2 p-2 border border-slate-100 rounded-lg hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors"
+                                className="flex items-center gap-2 p-2 border border-black-100 rounded-lg hover:border-indigo-200 hover:bg-indigo-50/50 transition-colors"
                               >
-                                <Circle className="w-4 h-4 text-slate-300 flex-shrink-0" />
+                                <Circle className="w-4 h-4 text-black-300 flex-shrink-0" />
                                 <div className="min-w-0">
-                                  <p className="text-sm text-slate-700 truncate" title={st.title}>
+                                  <p className="text-sm text-black-700 truncate" title={st.title}>
                                     {st.title}
                                   </p>
-                                  <p className="text-[10px] text-slate-400">p.{st.pageFrom}-{st.pageTo}</p>
+                                  <p className="text-[10px] text-black-400">p.{st.pageFrom}-{st.pageTo}</p>
                                 </div>
                               </div>
                             ))}
@@ -484,7 +484,7 @@ export default function CoursePage() {
             exit={{ opacity: 0, y: -20 }}
           >
             <ResourceGallery 
-              className="bg-white rounded-2xl border border-slate-200 p-4 md:p-6" 
+              className="bg-white rounded-2xl border border-black-200 p-4 md:p-6" 
               title="Shared Resources" 
               courseId={course.id} 
             />
@@ -501,39 +501,39 @@ export default function CoursePage() {
           >
             {/* Quick Stats Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-xl border border-slate-200 p-4">
+              <div className="bg-white rounded-xl border border-black-200 p-4">
                 <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center mb-3">
                   <Target className="w-5 h-5 text-indigo-600" />
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{sectionAnalyticsData?.avgProgress || 0}%</p>
-                <p className="text-xs text-slate-500">Avg Progress</p>
+                <p className="text-2xl font-bold text-black-800">{sectionAnalyticsData?.avgProgress || 0}%</p>
+                <p className="text-xs text-black-500">Avg Progress</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4">
-                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center mb-3">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+              <div className="bg-white rounded-xl border border-black-200 p-4">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-3">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{sectionAnalyticsData?.bestSection?.progress || 0}%</p>
-                <p className="text-xs text-slate-500">Best Section ({sectionAnalyticsData?.bestSection?.id})</p>
+                <p className="text-2xl font-bold text-black-800">{sectionAnalyticsData?.bestSection?.progress || 0}%</p>
+                <p className="text-xs text-black-500">Best Section ({sectionAnalyticsData?.bestSection?.id})</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4">
-                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-3">
-                  <BookOpen className="w-5 h-5 text-amber-600" />
+              <div className="bg-white rounded-xl border border-black-200 p-4">
+                <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center mb-3">
+                  <BookOpen className="w-5 h-5 text-yellow-600" />
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{sectionAnalyticsData?.totalChapters || 0}</p>
-                <p className="text-xs text-slate-500">Chapters</p>
+                <p className="text-2xl font-bold text-black-800">{sectionAnalyticsData?.totalChapters || 0}</p>
+                <p className="text-xs text-black-500">Chapters</p>
               </div>
-              <div className="bg-white rounded-xl border border-slate-200 p-4">
+              <div className="bg-white rounded-xl border border-black-200 p-4">
                 <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center mb-3">
                   <Layers className="w-5 h-5 text-purple-600" />
                 </div>
-                <p className="text-2xl font-bold text-slate-800">{sectionAnalyticsData?.totalTopics || 0}</p>
-                <p className="text-xs text-slate-500">Topics</p>
+                <p className="text-2xl font-bold text-black-800">{sectionAnalyticsData?.totalTopics || 0}</p>
+                <p className="text-xs text-black-500">Topics</p>
               </div>
             </div>
 
             {/* Section Comparison Bar Chart */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold text-slate-800 mb-4">Section Progress Comparison</h3>
+            <div className="bg-white rounded-2xl border border-black-200 p-5">
+              <h3 className="font-semibold text-black-800 mb-4">Section Progress Comparison</h3>
               <div className="h-48">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={sectionAnalyticsData?.sections || []} layout="vertical">
@@ -544,10 +544,10 @@ export default function CoursePage() {
                         if (!active || !payload?.[0]) return null;
                         const data = payload[0].payload;
                         return (
-                          <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-lg text-sm">
-                            <p className="font-semibold text-slate-800">{data.name}</p>
+                          <div className="bg-white p-3 rounded-xl border border-black-200 shadow-lg text-sm">
+                            <p className="font-semibold text-black-800">{data.name}</p>
                             <p className="text-indigo-600 font-bold">{data.progress}% Complete</p>
-                            <p className="text-slate-500 text-xs">{data.studentCount} students • {data.schedule}</p>
+                            <p className="text-black-500 text-xs">{data.studentCount} students • {data.schedule}</p>
                           </div>
                         );
                       }}
@@ -566,65 +566,65 @@ export default function CoursePage() {
             </div>
 
             {/* Heatmap Section */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
+            <div className="bg-white rounded-2xl border border-black-200 p-5">
               <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-6">
                 <div>
-                  <h3 className="font-semibold text-slate-800">Chapter Completion Heatmap</h3>
-                  <p className="text-sm text-slate-500">
+                  <h3 className="font-semibold text-black-800">Chapter Completion Heatmap</h3>
+                  <p className="text-sm text-black-500">
                     Visualize chapter progress across all sections
                   </p>
                 </div>
-                <div className="p-3 bg-slate-50 rounded-xl min-w-[200px]">
+                <div className="p-3 bg-black-50 rounded-xl min-w-[200px]">
                   {highlightedCell ? (
                     <div className="text-sm">
-                      <p className="font-medium text-slate-700">{highlightedCell.sectionId}</p>
-                      <p className="text-slate-500">{highlightedCell.chapterTitle}</p>
+                      <p className="font-medium text-black-700">{highlightedCell.sectionId}</p>
+                      <p className="text-black-500">{highlightedCell.chapterTitle}</p>
                       <p className="text-indigo-600 font-bold text-lg">{highlightedCell.percent}%</p>
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500">Hover a cell to see details</p>
+                    <p className="text-sm text-black-500">Hover a cell to see details</p>
                   )}
                 </div>
               </div>
               {heatmapMatrix ? (
                 <HeatmapGrid matrix={heatmapMatrix} onHover={setHighlightedCell} />
               ) : (
-                <p className="text-sm text-slate-500 text-center py-8">No analytics data available</p>
+                <p className="text-sm text-black-500 text-center py-8">No analytics data available</p>
               )}
               {/* Legend */}
-              <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-center gap-6 mt-4 pt-4 border-t border-black-100">
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-emerald-500" />
-                  <span className="text-xs text-slate-500">80%+</span>
+                  <div className="w-4 h-4 rounded bg-green-500" />
+                  <span className="text-xs text-black-500">80%+</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-amber-400" />
-                  <span className="text-xs text-slate-500">50-79%</span>
+                  <div className="w-4 h-4 rounded bg-yellow-400" />
+                  <span className="text-xs text-black-500">50-79%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-slate-200" />
-                  <span className="text-xs text-slate-500">&lt;50%</span>
+                  <div className="w-4 h-4 rounded bg-black-200" />
+                  <span className="text-xs text-black-500">&lt;50%</span>
                 </div>
               </div>
             </div>
 
             {/* Chapters Needing Attention */}
             {sectionAnalyticsData?.chaptersNeedingAttention?.length > 0 && (
-              <div className="bg-amber-50 rounded-2xl border border-amber-200 p-5">
+              <div className="bg-yellow-50 rounded-2xl border border-yellow-200 p-5">
                 <div className="flex items-center gap-2 mb-4">
-                  <AlertTriangle className="w-5 h-5 text-amber-600" />
-                  <h3 className="font-semibold text-amber-800">Chapters Needing Attention</h3>
+                  <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                  <h3 className="font-semibold text-yellow-800">Chapters Needing Attention</h3>
                 </div>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {sectionAnalyticsData.chaptersNeedingAttention.map(chapter => (
-                    <div key={chapter.index} className="bg-white rounded-xl border border-amber-200 p-4">
+                    <div key={chapter.index} className="bg-white rounded-xl border border-yellow-200 p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <span className="font-bold text-amber-600">{chapter.index}</span>
+                        <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+                          <span className="font-bold text-yellow-600">{chapter.index}</span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-800 truncate">{chapter.title}</p>
-                          <p className="text-xs text-amber-600">
+                          <p className="text-sm font-medium text-black-800 truncate">{chapter.title}</p>
+                          <p className="text-xs text-yellow-600">
                             {chapter.avgCompletion}% avg • {chapter.topicsCount} topics
                           </p>
                         </div>
@@ -636,23 +636,23 @@ export default function CoursePage() {
             )}
 
             {/* Chapter Progress Details */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5">
-              <h3 className="font-semibold text-slate-800 mb-4">Chapter Progress by Section</h3>
+            <div className="bg-white rounded-2xl border border-black-200 p-5">
+              <h3 className="font-semibold text-black-800 mb-4">Chapter Progress by Section</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="text-left py-2 px-3 font-medium text-slate-600">Chapter</th>
+                    <tr className="border-b border-black-200">
+                      <th className="text-left py-2 px-3 font-medium text-black-600">Chapter</th>
                       {sectionAnalyticsData?.sections?.map(sec => (
-                        <th key={sec.id} className="text-center py-2 px-3 font-medium text-slate-600">{sec.id}</th>
+                        <th key={sec.id} className="text-center py-2 px-3 font-medium text-black-600">{sec.id}</th>
                       ))}
-                      <th className="text-center py-2 px-3 font-medium text-slate-600">Avg</th>
+                      <th className="text-center py-2 px-3 font-medium text-black-600">Avg</th>
                     </tr>
                   </thead>
                   <tbody>
                     {sectionAnalyticsData?.chapterStats?.map(chapter => (
-                      <tr key={chapter.index} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="py-2 px-3 font-medium text-slate-700">
+                      <tr key={chapter.index} className="border-b border-black-100 hover:bg-black-50">
+                        <td className="py-2 px-3 font-medium text-black-700">
                           Ch {chapter.index}: {chapter.title}
                         </td>
                         {sectionAnalyticsData?.sections?.map(sec => {
@@ -662,9 +662,9 @@ export default function CoursePage() {
                             <td key={sec.id} className="text-center py-2 px-3">
                               <span className={`
                                 px-2 py-0.5 rounded-full text-xs font-medium
-                                ${pct >= 80 ? 'bg-emerald-100 text-emerald-700' : 
-                                  pct >= 50 ? 'bg-amber-100 text-amber-700' : 
-                                  'bg-slate-100 text-slate-600'}
+                                ${pct >= 80 ? 'bg-green-100 text-green-700' : 
+                                  pct >= 50 ? 'bg-yellow-100 text-yellow-700' : 
+                                  'bg-black-100 text-black-600'}
                               `}>
                                 {pct}%
                               </span>
@@ -674,9 +674,9 @@ export default function CoursePage() {
                         <td className="text-center py-2 px-3">
                           <span className={`
                             px-2 py-0.5 rounded-full text-xs font-semibold
-                            ${chapter.avgCompletion >= 80 ? 'bg-emerald-100 text-emerald-700' : 
-                              chapter.avgCompletion >= 50 ? 'bg-amber-100 text-amber-700' : 
-                              'bg-slate-100 text-slate-600'}
+                            ${chapter.avgCompletion >= 80 ? 'bg-green-100 text-green-700' : 
+                              chapter.avgCompletion >= 50 ? 'bg-yellow-100 text-yellow-700' : 
+                              'bg-black-100 text-black-600'}
                           `}>
                             {chapter.avgCompletion}%
                           </span>

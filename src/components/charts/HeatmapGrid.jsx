@@ -17,7 +17,7 @@ const getCellVisuals = (value = 0) => {
   const opacity = Math.min(0.95, Math.max(0.18, safeValue / 120 + 0.12));
   const backgroundColor = `rgba(${r}, ${g}, ${b}, ${opacity.toFixed(2)})`;
   const borderColor = `rgba(${r}, ${g}, ${b}, ${(opacity + 0.1).toFixed(2)})`;
-  const textClass = safeValue >= 55 ? "text-white" : "text-slate-900";
+  const textClass = safeValue >= 55 ? "text-white" : "text-black-900";
   return { bucket, backgroundColor, borderColor, textClass };
 };
 
@@ -33,9 +33,9 @@ export default function HeatmapGrid({ matrix, onHover }) {
       <table className="min-w-[640px] border-collapse">
         <thead>
           <tr>
-            <th className="text-left text-xs uppercase text-slate-500 tracking-wide pb-2 pr-4" />
+            <th className="text-left text-xs uppercase text-black-500 tracking-wide pb-2 pr-4" />
             {chapters.map((chapter) => (
-              <th key={chapter} className="text-xs text-slate-500 font-semibold pb-2 pr-2">
+              <th key={chapter} className="text-xs text-black-500 font-semibold pb-2 pr-2">
                 Chapter {chapter}
               </th>
             ))}
@@ -44,7 +44,7 @@ export default function HeatmapGrid({ matrix, onHover }) {
         <tbody>
           {sections.map((section) => (
             <tr key={section} className="h-14">
-              <td className="text-sm font-medium text-slate-700 pr-4">{section}</td>
+              <td className="text-sm font-medium text-black-700 pr-4">{section}</td>
               {chapters.map((chapter) => {
                 const record = lookup.get(`${section}-${chapter}`) || {};
                 const percent = Number(record.percent ?? record.completion ?? 0);
@@ -75,9 +75,9 @@ export default function HeatmapGrid({ matrix, onHover }) {
                           {percent}%
                         </span>
                       </motion.div>
-                      <div className="pointer-events-none absolute left-1/2 top-full z-20 hidden w-64 -translate-x-1/2 translate-y-3 rounded-md bg-slate-900/95 px-3 py-2 text-xs text-white shadow-xl group-focus-visible:block group-hover:block">
+                      <div className="pointer-events-none absolute left-1/2 top-full z-20 hidden w-64 -translate-x-1/2 translate-y-3 rounded-md bg-black-900/95 px-3 py-2 text-xs text-white shadow-xl group-focus-visible:block group-hover:block">
                         <p className="font-semibold">{record.chapterTitle || `Chapter ${chapter}`}</p>
-                        <p className="mt-1 text-[11px] text-slate-200">
+                        <p className="mt-1 text-[11px] text-black-200">
                           Section {section} · {percent}% complete · {pagesDone} / {pages} pages
                         </p>
                       </div>
@@ -89,7 +89,7 @@ export default function HeatmapGrid({ matrix, onHover }) {
           ))}
         </tbody>
       </table>
-      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-600">
+      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-black-600">
         {Object.entries(CATEGORY_VISUALS).map(([key, meta]) => {
           const bg = getCellVisuals(key === "ahead" ? 95 : key === "track" ? 70 : key === "catchup" ? 45 : 20);
           return (

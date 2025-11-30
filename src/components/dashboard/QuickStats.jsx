@@ -19,8 +19,8 @@ export default function QuickStats({ stats }) {
       label: 'Attendance Pending',
       value: pendingAttendance,
       icon: Users,
-      color: 'text-amber-600',
-      bg: 'bg-amber-50',
+      color: 'text-yellow-600',
+      bg: 'bg-yellow-50',
       description: 'Classes awaiting submission',
     },
     {
@@ -35,8 +35,8 @@ export default function QuickStats({ stats }) {
       label: 'Assignments Due',
       value: assignmentsDue,
       icon: CheckCircle,
-      color: 'text-emerald-600',
-      bg: 'bg-emerald-50',
+      color: 'text-green-600',
+      bg: 'bg-green-50',
       description: 'Pending review',
     },
     {
@@ -59,16 +59,16 @@ export default function QuickStats({ stats }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-3xl border border-slate-200 p-4 hover:shadow-md transition-shadow h-full min-h-[120px]"
+            className="bg-white rounded-3xl border border-black-200 p-4 hover:shadow-md transition-shadow h-full min-h-[120px]"
           >
             <div className="flex items-start justify-between mb-2">
               <div className={`p-2 rounded-xl ${stat.bg}`}>
                 <Icon className={`w-5 h-5 ${stat.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
-            <p className="text-xs font-medium text-slate-500 mt-1">{stat.label}</p>
-            <p className="text-[10px] text-slate-400 mt-0.5">{stat.description}</p>
+            <p className="text-2xl font-bold text-black-800">{stat.value}</p>
+            <p className="text-xs font-medium text-black-500 mt-1">{stat.label}</p>
+            <p className="text-[10px] text-black-400 mt-0.5">{stat.description}</p>
           </motion.div>
         );
       })}

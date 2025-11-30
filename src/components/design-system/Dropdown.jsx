@@ -77,13 +77,13 @@ export function Dropdown({
               absolute top-full mt-2 z-50
               ${alignments[align]}
               min-w-[180px] py-1
-              bg-white rounded-xl shadow-lg border border-slate-200
+              bg-white rounded-xl shadow-lg border border-black-200
             `}
           >
             {items.map((item, index) => (
               <React.Fragment key={index}>
                 {item.divider ? (
-                  <div className="h-px bg-slate-100 my-1" />
+                  <div className="h-px bg-black-100 my-1" />
                 ) : (
                   <button
                     onClick={() => {
@@ -96,10 +96,10 @@ export function Dropdown({
                       flex items-center gap-3
                       transition-colors
                       ${item.disabled
-                        ? 'text-slate-300 cursor-not-allowed'
+                        ? 'text-black-300 cursor-not-allowed'
                         : item.destructive
                           ? 'text-red-600 hover:bg-red-50'
-                          : 'text-slate-700 hover:bg-slate-50'
+                          : 'text-black-700 hover:bg-black-50'
                       }
                     `}
                   >
@@ -108,7 +108,7 @@ export function Dropdown({
                     )}
                     <span className="flex-1">{item.label}</span>
                     {item.shortcut && (
-                      <span className="text-xs text-slate-400">{item.shortcut}</span>
+                      <span className="text-xs text-black-400">{item.shortcut}</span>
                     )}
                   </button>
                 )}
@@ -166,7 +166,7 @@ export function Select({
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-slate-700 mb-1.5">
+        <label className="block text-sm font-medium text-black-700 mb-1.5">
           {label}
         </label>
       )}
@@ -183,22 +183,22 @@ export function Select({
             focus:outline-none focus:ring-2 focus:ring-offset-0
             ${sizes[size]}
             ${disabled
-              ? 'bg-slate-50 text-slate-500 cursor-not-allowed'
-              : 'text-slate-900'
+              ? 'bg-black-50 text-black-500 cursor-not-allowed'
+              : 'text-black-900'
             }
             ${error
               ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
               : isOpen
                 ? 'border-indigo-500 ring-2 ring-indigo-100'
-                : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-100'
+                : 'border-black-200 focus:border-indigo-500 focus:ring-indigo-100'
             }
           `}
         >
-          <span className={selectedOption ? 'text-slate-900' : 'text-slate-400'}>
+          <span className={selectedOption ? 'text-black-900' : 'text-black-400'}>
             {selectedOption?.label || placeholder}
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-black-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           />
         </button>
 
@@ -212,7 +212,7 @@ export function Select({
               className="
                 absolute top-full left-0 right-0 mt-1 z-50
                 max-h-60 overflow-y-auto
-                bg-white rounded-xl shadow-lg border border-slate-200
+                bg-white rounded-xl shadow-lg border border-black-200
                 py-1
               "
             >
@@ -230,10 +230,10 @@ export function Select({
                     flex items-center justify-between
                     transition-colors
                     ${option.disabled
-                      ? 'text-slate-300 cursor-not-allowed'
+                      ? 'text-black-300 cursor-not-allowed'
                       : option.value === value
                         ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        : 'text-black-700 hover:bg-black-50'
                     }
                   `}
                 >

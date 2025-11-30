@@ -91,7 +91,7 @@ export default function Drawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeDrawer}
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black-900/60 backdrop-blur-sm"
           />
 
           {/* Drawer Panel */}
@@ -143,7 +143,7 @@ export default function Drawer() {
             <div className="flex-1 overflow-y-auto">
               {/* Primary Navigation */}
               <div className="p-3">
-                <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <p className="px-3 py-2 text-xs font-semibold text-black-400 uppercase tracking-wider">
                   Navigation
                 </p>
                 <div className="space-y-1">
@@ -155,20 +155,20 @@ export default function Drawer() {
                         w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all
                         ${isActive(item.path)
                           ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-slate-700 hover:bg-slate-50'
+                          : 'text-black-700 hover:bg-black-50'
                         }
                       `}
                     >
                       <div className={`
                         p-2 rounded-lg
-                        ${isActive(item.path) ? 'bg-indigo-100' : 'bg-slate-100'}
+                        ${isActive(item.path) ? 'bg-indigo-100' : 'bg-black-100'}
                       `}>
-                        <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-indigo-600' : 'text-slate-500'}`} />
+                        <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-indigo-600' : 'text-black-500'}`} />
                       </div>
                       <div className="flex-1 text-left">
                         <p className="font-medium">{item.label}</p>
                         {item.description && (
-                          <p className="text-xs text-slate-500">{item.description}</p>
+                          <p className="text-xs text-black-500">{item.description}</p>
                         )}
                       </div>
                     </button>
@@ -177,7 +177,7 @@ export default function Drawer() {
               </div>
 
               {/* Secondary Navigation */}
-              <div className="p-3 border-t border-slate-100">
+              <div className="p-3 border-t border-black-100">
                 <div className="space-y-0.5">
                   {secondaryMenuItems.map((item) => (
                     <button
@@ -187,11 +187,11 @@ export default function Drawer() {
                         w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                         ${isActive(item.path)
                           ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-slate-600 hover:bg-slate-50'
+                          : 'text-black-600 hover:bg-black-50'
                         }
                       `}
                     >
-                      <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-indigo-600' : 'text-slate-400'}`} />
+                      <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-indigo-600' : 'text-black-400'}`} />
                       <span className="font-medium">{item.label}</span>
                     </button>
                   ))}
@@ -199,11 +199,11 @@ export default function Drawer() {
               </div>
 
               {/* Role Switcher */}
-              <div className="p-3 border-t border-slate-100">
-                <p className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="p-3 border-t border-black-100">
+                <p className="px-3 py-2 text-xs font-semibold text-black-400 uppercase tracking-wider">
                   Switch Role
                 </p>
-                <div className="bg-slate-50 rounded-xl p-2 space-y-1">
+                <div className="bg-black-50 rounded-xl p-2 space-y-1">
                   {roleOptions.map((role) => (
                     <button
                       key={role.id}
@@ -212,7 +212,7 @@ export default function Drawer() {
                         w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium
                         ${teacherCtx?.persona === role.id
                           ? 'bg-white text-indigo-700 shadow-sm'
-                          : 'text-slate-600 hover:bg-white/50'
+                          : 'text-black-600 hover:bg-white/50'
                         }
                         transition-all
                       `}
@@ -228,7 +228,7 @@ export default function Drawer() {
             </div>
 
             {/* Bottom Menu */}
-            <div className="border-t border-slate-100 p-3 bg-slate-50/50">
+            <div className="border-t border-black-100 p-3 bg-black-50/50">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-medium"

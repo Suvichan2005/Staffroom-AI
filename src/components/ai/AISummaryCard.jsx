@@ -21,9 +21,9 @@ export default function AISummaryCard({ insights = [], className = "" }) {
       <h3 className="sc-heading text-base mb-2">AI Summary</h3>
       <ul className="space-y-2 text-sm">
         {defaultInsights.map((item, idx) => (
-          <li key={idx} className="border border-slate-200 rounded-lg p-2 bg-white/60">
+          <li key={idx} className="border border-black-200 rounded-lg p-2 bg-white/60">
             <p className="font-medium">{item.title}</p>
-            <p className="text-slate-600 text-xs leading-relaxed">{item.detail}</p>
+            <p className="text-black-600 text-xs leading-relaxed">{item.detail}</p>
           </li>
         ))}
       </ul>
