@@ -8,7 +8,7 @@ import { AuthProvider } from "./context/AuthContext";
 
 // Demo recording: force global date to 24 November 2025
 // Toggle this to `false` after recording.
-const DEMO_FORCE_DATE = true;
+const DEMO_FORCE_DATE = false;
 if (DEMO_FORCE_DATE) {
   // 24 Nov 2025, 09:00 local time (construct using local Date constructor so it matches user's timezone)
   const DEMO_YEAR = 2025;
