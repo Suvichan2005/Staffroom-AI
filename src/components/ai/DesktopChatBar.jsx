@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Mic, Send, Sparkles, ChevronDown, ChevronUp, Paperclip,
+  Mic, MicOff, Send, Sparkles, ChevronDown, ChevronUp, Paperclip,
   Loader2, MessageSquare, X, Maximize2, Minimize2,
-  FileText, BookOpen, Lightbulb
+  FileText, BookOpen, Lightbulb, Square
 } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import { useLayout } from '../../context/LayoutContext';
@@ -19,14 +19,17 @@ import { getChatPlugins } from '../../plugins';
  * - Single real input that's always interactive
  * - Properly centered accounting for sidebar width
  */
-export default function DesktopChatBar({ className = '' }) {
+function DesktopChatBarContent({ className = '' }) {
   const {
     messages,
     inputValue,
     setInputValue,
     isLoading,
     isRecording,
-    toggleRecording,
+    liveStatus,
+    liveTranscript,
+    startRecording,
+    stopRecording,
     sendMessage,
     aiContext,
     getPluginAPI,
@@ -77,19 +80,23 @@ export default function DesktopChatBar({ className = '' }) {
     }
   }, [handleSend]);
 
-  // Handle mic button
+  // Handle mic button - start recording or send text
   const handleMicClick = useCallback(() => {
     if (hasText) {
+      // If there's text, send it
       handleSend();
     } else {
-      // Expand when starting to record
-      if (!isRecording) {
-        setIsExpanded(true);
-        setActiveTab('chat');
-      }
-      toggleRecording();
+      // Start voice recording
+      setIsExpanded(true);
+      setActiveTab('chat');
+      startRecording();
     }
-  }, [hasText, handleSend, isRecording, toggleRecording]);
+  }, [hasText, handleSend, startRecording]);
+
+  // Handle stop recording
+  const handleStopRecording = useCallback(() => {
+    stopRecording();
+  }, [stopRecording]);
 
   // Handle input focus - expand chat
   const handleInputFocus = useCallback(() => {
@@ -291,58 +298,146 @@ export default function DesktopChatBar({ className = '' }) {
         </AnimatePresence>
 
         {/* Always-Visible Input Bar */}
-        <div className={`bg-white ${isExpanded ? 'rounded-b-2xl border-x border-b' : 'rounded-2xl shadow-lg border'} border-slate-200 px-4 py-3`}>
+        <div className={`bg-white ${isExpanded ? 'rounded-b-2xl border-x border-b' : 'rounded-2xl shadow-lg border'} border-slate-200 overflow-hidden`}>
+          <div className="px-4 py-3">
           <div className="flex items-center gap-3">
-            {/* Attach Button */}
-            <button
-              className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors flex-shrink-0"
-            >
-              <Paperclip className="w-5 h-5" />
-            </button>
+            {/* Attach Button - hide when recording */}
+            {!isRecording && (
+              <button
+                className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors flex-shrink-0"
+              >
+                <Paperclip className="w-5 h-5" />
+              </button>
+            )}
             
-            {/* Input Field - Always real and interactive */}
-            <div className="flex-1 relative">
-              <div className="absolute left-3 top-1/3 -translate-y-1/2 pointer-events-none">
-                <Sparkles className="w-4 h-4 text-indigo-500" />
+            {/* Input Field - hidden when recording, shown otherwise */}
+            {!isRecording ? (
+              <div className="flex-1 relative">
+                <div className="absolute left-3 top-1/3 -translate-y-1/2 pointer-events-none">
+                  <Sparkles className="w-4 h-4 text-indigo-500" />
+                </div>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onFocus={handleInputFocus}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask Staffroom AI anything..."
+                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition-all"
+                  disabled={isRecording}
+                />
               </div>
-              <input
-                ref={inputRef}
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onFocus={handleInputFocus}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask Staffroom AI anything..."
-                className="w-full pl-9 pr-4 py-2.5 bg-black-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:bg-white transition-all"
-              />
-            </div>
+            ) : (
+              /* Live transcript display when recording - with wrapping */
+              <div className="flex-1 flex items-start gap-2 px-3 py-2 bg-red-50 rounded-xl border border-red-200 min-h-[2.5rem]">
+                <div className="flex gap-0.5 flex-shrink-0 mt-0.5">
+                  {[0, 1, 2, 3].map(i => (
+                    <motion.div
+                      key={i}
+                      className="w-1 h-4 bg-red-500 rounded-full"
+                      animate={{ scaleY: [0.4, 1, 0.4] }}
+                      transition={{
+                        duration: 0.8,
+                        repeat: Infinity,
+                        delay: i * 0.15,
+                      }}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-red-700 flex-1 break-words">
+                  {liveTranscript || 'Listening...'}
+                </span>
+                <span className="text-xs text-red-500 px-2 py-0.5 bg-red-100 rounded-full flex-shrink-0 self-start">
+                  {liveStatus === 'streaming' ? '🔴 Live' : liveStatus}
+                </span>
+              </div>
+            )}
 
-            {/* Mic/Send Button */}
-            <button
-              onClick={handleMicClick}
-              disabled={isLoading}
-              className={`
-                p-2.5 rounded-xl transition-all flex-shrink-0
-                ${hasText 
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
-                  : isRecording
-                    ? 'bg-red-500 text-white animate-pulse'
+            {/* Expand Button - show when chat is collapsed (also during recording!) */}
+            {!isExpanded && (
+              <button
+                onClick={() => setIsExpanded(true)}
+                className="p-2.5 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex-shrink-0"
+                title="Expand chat"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* Action Button - Mic/Send/Stop */}
+            {isRecording ? (
+              /* Stop button when recording */
+              <button
+                onClick={handleStopRecording}
+                className="p-2.5 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-all flex-shrink-0 shadow-lg"
+              >
+                <Square className="w-5 h-5 fill-current" />
+              </button>
+            ) : (
+              /* Mic/Send button */
+              <button
+                onClick={handleMicClick}
+                disabled={isLoading}
+                className={`
+                  p-2.5 rounded-xl transition-all flex-shrink-0
+                  ${hasText 
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
                     : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
-                }
-                disabled:opacity-50
-              `}
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : hasText ? (
-                <Send className="w-5 h-5" />
-              ) : (
-                <Mic className="w-5 h-5" />
-              )}
-            </button>
+                  }
+                  disabled:opacity-50
+                `}
+              >
+                {isLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : hasText ? (
+                  <Send className="w-5 h-5" />
+                ) : (
+                  <Mic className="w-5 h-5" />
+                )}
+              </button>
+            )}
+          </div>
           </div>
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * Error Boundary Class Component
+ * Catches hook errors during hot-reload
+ */
+class DesktopChatBarErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn('[DesktopChatBar] Error caught:', error.message);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
+
+/**
+ * Exported component wrapped in error boundary
+ */
+export default function DesktopChatBar(props) {
+  return (
+    <DesktopChatBarErrorBoundary>
+      <DesktopChatBarContent {...props} />
+    </DesktopChatBarErrorBoundary>
   );
 }

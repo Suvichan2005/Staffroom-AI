@@ -14,6 +14,7 @@ import {
   normalizeSectionProgress,
   loadStoredProgress,
   persistProgress,
+  getNextTopic,
 } from "../data/dummyData";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
@@ -24,6 +25,8 @@ import { SectionAnalytics, AttendanceAnalytics, SyllabusAnalytics } from "../com
 import { getExamsForClass } from "../data/dummyData";
 import { useClassTimer } from "../hooks/useClassTimer";
 import { PageShell } from "../components/layout";
+import { GlobalAssistant } from "../components/ai";
+import SmartAISuggestions from "../components/ai/SmartAISuggestions";
 import { AssessmentManager } from "../components/shared";
 import { loadState, saveState } from "../utils/storage";
 import { useTeacher } from "../context/TeacherContext";
@@ -68,7 +71,9 @@ export default function ClassPage() {
   const [showVoiceLog, setShowVoiceLog] = useState(false);
   const [attendanceVersion, setAttendanceVersion] = useState(0);
   const progressCardRef = useRef(null);
+  const attendanceEditorRef = useRef(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [attendanceExpanded, setAttendanceExpanded] = useState(false);
   
   const clearSaveMessage = () => {
     if (saveMessageTimeout.current) {
@@ -128,7 +133,6 @@ export default function ClassPage() {
   const schedules = section?.schedules || (section?.schedule ? [section.schedule] : []);
   const isWithinWindow = useClassTimer(schedules, 15);
 
-  const [editing, setEditing] = useState(search.get('take') === '1');
   const [showHistory, setShowHistory] = useState(false);
 
   // Calculate progress percentage
@@ -192,6 +196,36 @@ export default function ClassPage() {
     }
   };
 
+  const quickScrollToAttendance = () => {
+    // If not on attendance tab, switch first then scroll after animation
+    if (activeTab !== "attendance") {
+      setActiveTab("attendance");
+      // Expand the section and scroll after animation
+      setTimeout(() => {
+        setAttendanceExpanded(true);
+        if (attendanceEditorRef.current) {
+          attendanceEditorRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 350);
+    } else {
+      // Already on attendance tab, expand and scroll
+      setAttendanceExpanded(true);
+      setTimeout(() => {
+        if (attendanceEditorRef.current) {
+          attendanceEditorRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 100);
+    }
+  };
+  
+  // Handle deep link to take attendance
+  useEffect(() => {
+    if (search.get('take') === '1' && isWithinWindow) {
+      setTimeout(() => quickScrollToAttendance(), 500);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, isWithinWindow]);
+
   const classStudents = students.filter((s) => s.classId === classId);
   
   const handleProgressSave = (updated) => {
@@ -220,7 +254,6 @@ export default function ClassPage() {
     const payload = { classId, date: today, presentMap };
     saveState(`attendance:final:${classId}:${today}`, payload);
     toast.success("Attendance recorded.");
-    setEditing(false);
     setAttendanceVersion((prev) => prev + 1);
   };
 
@@ -360,7 +393,7 @@ export default function ClassPage() {
         className="flex flex-wrap items-center gap-2 mb-6"
       >
         <button
-          onClick={() => setEditing(true)}
+          onClick={quickScrollToAttendance}
           disabled={!isWithinWindow}
           className={`
             flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all
@@ -384,7 +417,7 @@ export default function ClassPage() {
       </motion.div>
 
       {/* Tab Navigation */}
-      <motion.div
+      <motion.div data-syllabus-progress
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
@@ -496,25 +529,34 @@ export default function ClassPage() {
             <div className="md:col-span-4 space-y-6">
               {/* AI Suggestions */}
               <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-5 text-white">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="w-5 h-5" />
-                  <h3 className="font-semibold">AI Suggestions</h3>
-                </div>
-                <ul className="space-y-3">
-                  {[
-                    "Remind Riya about yesterday's absence.",
-                    "Plan recap of Chapter 3 next week.",
-                    "Schedule short quiz for Chapter 2.",
-                  ].map((suggestion, i) => (
-                    <li 
-                      key={i}
-                      className="flex items-start gap-2 p-3 bg-white/10 rounded-xl text-sm"
-                    >
-                      <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      {suggestion}
-                    </li>
-                  ))}
-                </ul>
+                <SmartAISuggestions
+                  contextKey={`class_${classId}`}
+                  generateSuggestions={() => {
+                    const suggestions = [];
+                    
+                    // Syllabus-based suggestions
+                    try {
+                      const nextTopic = getNextTopic(classId);
+                      if (nextTopic) {
+                        if (nextTopic.status === 'ongoing') {
+                          suggestions.push(`Continue: ${nextTopic.title} (Page ${nextTopic.currentPage})`);
+                        } else {
+                          suggestions.push(`Ready to start: ${nextTopic.title} (Chapter ${nextTopic.chapterIndex})`);
+                        }
+                      }
+                    } catch (e) {
+                      console.error('Error getting next topic:', e);
+                    }
+                    
+                    // Assessment suggestion
+                    suggestions.push('Generate quick quiz using AI for recent topics');
+                    suggestions.push('Review attendance patterns for early intervention');
+                    
+                    return suggestions;
+                  }}
+                  title="AI Suggestions"
+                  variant="purple"
+                />
               </div>
 
               {/* Quick Actions */}
@@ -556,16 +598,8 @@ export default function ClassPage() {
             ref={progressCardRef}
             className="space-y-6"
           >
-            {/* Syllabus Analytics Section */}
-            <SyllabusAnalytics
-              syllabus={syllabus}
-              topicProgress={topicProgress}
-              progressPercent={progressPercent}
-              compact
-            />
-            
-            {/* Syllabus Progress Editor */}
-            <div data-syllabus-progress>
+            {/* Syllabus Progress Editor - MOVED TO TOP */}
+            <div>
               <SyllabusProgress
                 syllabus={syllabus}
                 progressMap={topicProgress}
@@ -575,6 +609,14 @@ export default function ClassPage() {
                 statusMessage={saveMessage}
               />
             </div>
+
+            {/* Syllabus Analytics Section */}
+            <SyllabusAnalytics
+              syllabus={syllabus}
+              topicProgress={topicProgress}
+              progressPercent={progressPercent}
+              compact
+            />
           </motion.div>
         )}
 
@@ -587,7 +629,8 @@ export default function ClassPage() {
             className="space-y-6"
           >
             {/* Attendance Quick Actions Card */}
-            <div className="bg-white rounded-2xl border border-black-200 p-5">
+            <div className="bg-white rounded-2xl border border-black-200 p-5"
+                ref={attendanceEditorRef}>
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold text-black-800">Attendance Overview</h3>
@@ -602,7 +645,7 @@ export default function ClassPage() {
                     View History
                   </button>
                   <button
-                    onClick={() => setEditing(true)}
+                    onClick={quickScrollToAttendance}
                     disabled={!isWithinWindow}
                     className={`
                       flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all
@@ -618,6 +661,58 @@ export default function ClassPage() {
                 </div>
               </div>
             </div>
+
+            {/* Take Attendance Expandable Section */}
+            {isWithinWindow && (
+              <div 
+                className="bg-white rounded-2xl border border-black-200 overflow-hidden"
+              >
+                <button
+                  onClick={() => setAttendanceExpanded(!attendanceExpanded)}
+                  className="w-full flex items-center justify-between p-5 hover:bg-black-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+                      <Users className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-black-800">Take Attendance</h3>
+                      <p className="text-sm text-black-500">{today} • {classStudents.length} students</p>
+                    </div>
+                  </div>
+                  <ChevronRight 
+                    className={`w-5 h-5 text-black-400 transition-transform ${
+                      attendanceExpanded ? 'rotate-90' : ''
+                    }`}
+                  />
+                </button>
+                
+                <AnimatePresence>
+                  {attendanceExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="border-t border-black-200"
+                    >
+                      <div className="p-5">
+                        <AttendanceEditor
+                          classId={classId}
+                          date={today}
+                          students={classStudents}
+                          initialPresent={initialPresent}
+                          onSave={(presentMap) => {
+                            handleSaveAttendance(presentMap);
+                            setAttendanceExpanded(false);
+                          }}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* Attendance Analytics */}
             <AttendanceAnalytics
@@ -691,41 +786,7 @@ export default function ClassPage() {
         </div>
       )}
 
-      {/* Attendance Editor Modal */}
-      {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-xl"
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-indigo-600" />
-                <h4 className="font-semibold text-black-800">Take Attendance</h4>
-                <span className="px-2 py-0.5 bg-black-100 rounded-full text-xs text-black-600">
-                  {today}
-                </span>
-              </div>
-              <button
-                onClick={() => setEditing(false)}
-                className="p-2 hover:bg-black-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-black-500" />
-              </button>
-            </div>
-            <div className="px-5 py-4 overflow-y-auto max-h-[70vh]">
-              <AttendanceEditor
-                classId={classId}
-                date={today}
-                students={classStudents}
-                initialPresent={initialPresent}
-                onSave={handleSaveAttendance}
-              />
-            </div>
-          </motion.div>
-        </div>
-      )}
+
     </PageShell>
   );
 }

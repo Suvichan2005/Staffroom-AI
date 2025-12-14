@@ -62,7 +62,11 @@ export default function CoursePage() {
       // Calculate chapter-by-chapter progress
       const chapterProgress = syllabus.chapters?.map(chapter => {
         const topics = chapter.subTopics || [];
-        const done = topics.filter(t => effective?.[chapter.index]?.topics?.[t.index] === 'done').length;
+        const done = topics.filter(t => {
+          const topicData = effective?.[chapter.index]?.topics?.[t.index];
+          const status = typeof topicData === 'object' ? topicData.status : topicData;
+          return status === 'done';
+        }).length;
         return {
           chapterIndex: chapter.index,
           chapterTitle: chapter.title,

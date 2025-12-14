@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { User, Sparkles } from 'lucide-react';
+import { User, Sparkles, CheckCircle, Mic } from 'lucide-react';
 
 /**
  * Render simple markdown: bold, italic, code, and line breaks
@@ -27,9 +27,28 @@ function renderMarkdown(text) {
 
 /**
  * ChatMessage - Individual chat message bubble
+ * Supports: text messages, tool actions, live updates
  */
 export default function ChatMessage({ message }) {
   const isUser = message.role === 'user';
+  const isToolAction = message.type === 'tool-action';
+  const isVoice = message.isVoice;
+
+  // Tool action message (special formatting)
+  if (isToolAction) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="flex gap-2 items-center px-2"
+      >
+        <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+        <div className="text-xs text-green-700 bg-green-50 rounded px-3 py-1.5 flex-1">
+          {message.content}
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -41,12 +60,14 @@ export default function ChatMessage({ message }) {
       <div className={`
         w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
         ${isUser 
-          ? 'bg-indigo-600 text-white' 
+          ? isVoice 
+            ? 'bg-red-500 text-white' 
+            : 'bg-indigo-600 text-white' 
           : 'bg-gradient-to-br from-purple-500 to-indigo-500 text-white'
         }
       `}>
         {isUser ? (
-          <User className="w-4 h-4" />
+          isVoice ? <Mic className="w-4 h-4" /> : <User className="w-4 h-4" />
         ) : (
           <Sparkles className="w-4 h-4" />
         )}

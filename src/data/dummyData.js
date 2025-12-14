@@ -87,9 +87,21 @@ export const teacherData = {
           id: "6A",
           schedules: ["Sat 0:00–23:45","Mon 09:00–09:45", "Thu 11:00–11:45"],
           progress: {
-            1: { topics: { 1: "done", 2: "done", 3: "done" } },
-            2: { topics: { 1: "done", 2: "ongoing", 3: "not-started" } },
-            3: { topics: { 1: "not-started", 2: "not-started", 3: "not-started" } }
+            1: { topics: { 
+              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-01T10:00:00Z" },
+              2: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-03T10:00:00Z" },
+              3: { status: "done", currentPage: null, notes: "Students understood well", lastCoveredAt: "2025-11-05T10:00:00Z" }
+            } },
+            2: { topics: { 
+              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-07T10:00:00Z" },
+              2: { status: "ongoing", currentPage: 45, notes: "Need to revisit deltas concept", lastCoveredAt: "2025-11-10T10:00:00Z" },
+              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+            } },
+            3: { topics: { 
+              1: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+            } }
           },
           exams: [ { date: "2025-11-20", type: "Unit Test", syllabusUpTo: 2 } ]
         },
@@ -97,9 +109,21 @@ export const teacherData = {
           id: "6C",
           schedules: ["Tue 10:00–10:45", "Fri 09:00–09:45"],
           progress: {
-            1: { topics: { 1: "done", 2: "done", 3: "done" } },
-            2: { topics: { 1: "done", 2: "done", 3: "done" } },
-            3: { topics: { 1: "ongoing", 2: "not-started", 3: "not-started" } }
+            1: { topics: { 
+              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-01T10:00:00Z" },
+              2: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-03T10:00:00Z" },
+              3: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-05T10:00:00Z" }
+            } },
+            2: { topics: { 
+              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-07T10:00:00Z" },
+              2: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-08T10:00:00Z" },
+              3: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-09T10:00:00Z" }
+            } },
+            3: { topics: { 
+              1: { status: "ongoing", currentPage: 62, notes: "Starting climate zones", lastCoveredAt: "2025-11-11T10:00:00Z" },
+              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+            } }
           },
           exams: [ { date: "2025-11-22", type: "Unit Test", syllabusUpTo: 3 } ]
         },
@@ -115,9 +139,21 @@ export const teacherData = {
           id: "8A",
           schedules: ["Mon 12:00–12:45", "Wed 09:00–09:45"],
           progress: {
-            1: { topics: { 1: "ongoing", 2: "not-started", 3: "not-started" } },
-            2: { topics: { 1: "not-started", 2: "not-started", 3: "not-started" } },
-            3: { topics: { 1: "not-started", 2: "not-started", 3: "not-started" } }
+            1: { topics: { 
+              1: { status: "ongoing", currentPage: 18, notes: "Covering pre-colonial era", lastCoveredAt: "2025-11-10T12:00:00Z" },
+              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+            } },
+            2: { topics: { 
+              1: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+            } },
+            3: { topics: { 
+              1: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+            } }
           },
           exams: [ { date: "2025-11-25", type: "Mid Term", syllabusUpTo: 1 } ]
         },
@@ -125,9 +161,21 @@ export const teacherData = {
           id: "8B",
           schedules: ["Tue 11:00–11:45", "Thu 10:00–10:45"],
           progress: {
-            1: { topics: { 1: "done", 2: "done", 3: "done" } },
-            2: { topics: { 1: "done", 2: "done", 3: "done" } },
-            3: { topics: { 1: "ongoing", 2: "not-started", 3: "not-started" } }
+            1: { topics: { 
+              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-01T11:00:00Z" },
+              2: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-03T11:00:00Z" },
+              3: { status: "done", currentPage: null, notes: "Good discussion on reforms", lastCoveredAt: "2025-11-05T11:00:00Z" }
+            } },
+            2: { topics: { 
+              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-07T11:00:00Z" },
+              2: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-08T11:00:00Z" },
+              3: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-09T11:00:00Z" }
+            } },
+            3: { topics: { 
+              1: { status: "ongoing", currentPage: 95, notes: "Enlightenment philosophers", lastCoveredAt: "2025-11-11T11:00:00Z" },
+              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+            } }
           },
           exams: [ { date: "2025-11-26", type: "Mid Term", syllabusUpTo: 2 } ]
         },
@@ -317,20 +365,43 @@ export const getCourseById = (teacher, courseId) =>
 
 const DEFAULT_TOPIC_STATUS = "not-started";
 
+// Default topic object for new schema
+const DEFAULT_TOPIC_DATA = { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null };
+
+// Normalize a single topic to new object format
+const normalizeTopicData = (rawTopic) => {
+  if (!rawTopic) return { ...DEFAULT_TOPIC_DATA };
+  // Handle old string format (e.g., "done", "ongoing")
+  if (typeof rawTopic === 'string') {
+    return { status: rawTopic, currentPage: null, notes: null, lastCoveredAt: null };
+  }
+  // Handle new object format
+  if (typeof rawTopic === 'object') {
+    return {
+      status: rawTopic.status || DEFAULT_TOPIC_STATUS,
+      currentPage: rawTopic.currentPage ?? null,
+      notes: rawTopic.notes ?? null,
+      lastCoveredAt: rawTopic.lastCoveredAt ?? null
+    };
+  }
+  return { ...DEFAULT_TOPIC_DATA };
+};
+
 const normalizeChapterProgress = (chapter, chapterProgress) => {
   const topics = {};
   const subTopics = chapter?.subTopics || [];
   if (chapterProgress && typeof chapterProgress === "object" && chapterProgress.topics) {
     subTopics.forEach((st) => {
-      topics[st.index] = chapterProgress.topics[st.index] || DEFAULT_TOPIC_STATUS;
+      topics[st.index] = normalizeTopicData(chapterProgress.topics[st.index]);
     });
   } else if (typeof chapterProgress === "string") {
+    // Legacy: entire chapter has single status string
     subTopics.forEach((st) => {
-      topics[st.index] = chapterProgress;
+      topics[st.index] = { status: chapterProgress, currentPage: null, notes: null, lastCoveredAt: null };
     });
   } else {
     subTopics.forEach((st) => {
-      topics[st.index] = DEFAULT_TOPIC_STATUS;
+      topics[st.index] = { ...DEFAULT_TOPIC_DATA };
     });
   }
   return { topics };
@@ -475,7 +546,9 @@ const computeChapterCompletion = (syllabus, progressMap = {}) => {
       0
     );
     const completedPages = subTopics.reduce((sum, topic) => {
-      const status = progressMap?.[chapter.index]?.topics?.[topic.index] || DEFAULT_TOPIC_STATUS;
+      const topicData = progressMap?.[chapter.index]?.topics?.[topic.index] || DEFAULT_TOPIC_STATUS;
+      // Handle both object schema { status: "done" } and legacy string "done"
+      const status = typeof topicData === 'object' ? topicData.status : topicData;
       const pages = Math.max(0, (topic.pageTo ?? 0) - (topic.pageFrom ?? 0) + 1);
       return sum + (status === "done" ? pages : 0);
     }, 0);
@@ -692,6 +765,20 @@ export const formatNotificationTime = (timestamp) => {
 };
 
 // Progress utilities
+// Helper to extract status from either string format or object format
+const getTopicStatusValue = (topicData) => {
+  if (!topicData) return DEFAULT_TOPIC_STATUS;
+  if (typeof topicData === 'string') return topicData;
+  if (typeof topicData === 'object' && topicData.status) return topicData.status;
+  return DEFAULT_TOPIC_STATUS;
+};
+
+// Helper to extract currentPage from object format
+const getTopicCurrentPage = (topicData) => {
+  if (!topicData || typeof topicData !== 'object') return null;
+  return topicData.currentPage ?? null;
+};
+
 export const calculateTopicProgressPercent = (syllabus, progressMap = {}) => {
   let totalPages = 0;
   let completedPages = 0;
@@ -699,10 +786,21 @@ export const calculateTopicProgressPercent = (syllabus, progressMap = {}) => {
     const subTopics = chapter?.subTopics || [];
     const chapterProgress = progressMap[chapter.index]?.topics || {};
     subTopics.forEach((st) => {
-      const pages = Math.max(0, (st.pageTo ?? 0) - (st.pageFrom ?? 0) + 1);
-      totalPages += pages;
-      if ((chapterProgress[st.index] || DEFAULT_TOPIC_STATUS) === "done") {
-        completedPages += pages;
+      const topicPages = Math.max(0, (st.pageTo ?? 0) - (st.pageFrom ?? 0) + 1);
+      totalPages += topicPages;
+      
+      const topicData = chapterProgress[st.index];
+      const status = getTopicStatusValue(topicData);
+      
+      if (status === "done") {
+        completedPages += topicPages;
+      } else if (status === "ongoing") {
+        // Calculate partial progress for ongoing topics
+        const currentPage = getTopicCurrentPage(topicData);
+        if (currentPage != null && st.pageFrom != null) {
+          const pagesCovered = Math.max(0, currentPage - st.pageFrom);
+          completedPages += Math.min(pagesCovered, topicPages); // Cap at topic's max pages
+        }
       }
     });
   });
@@ -921,6 +1019,63 @@ export const tests = [
 export const getAllAssessments = () => [...assignments, ...tests];
 export const getAssessmentsForClass = (classId) => getAllAssessments().filter(a => a.classId === classId);
 export const getTestsForClass = (classId) => tests.filter(t => t.classId === classId);
+
+/**
+ * Get the next topic to teach for a section
+ * Finds the first "not-started" or "ongoing" topic
+ */
+export const getNextTopic = (sectionId) => {
+  const section = teacherData.courses
+    .flatMap(c => c.sections)
+    .find(s => s.id === sectionId);
+  
+  if (!section) return null;
+  
+  const course = teacherData.courses.find(c => 
+    c.sections.some(s => s.id === sectionId)
+  );
+  
+  if (!course) return null;
+  
+  const syllabus = getSyllabusByRef(course.syllabusRef);
+  if (!syllabus) return null;
+  
+  const baseProgress = normalizeSectionProgress(syllabus, section.progress);
+  const effective = normalizeSectionProgress(syllabus, loadStoredProgress(sectionId, baseProgress));
+  
+  // Find first non-completed topic
+  for (const chapter of syllabus.chapters || []) {
+    for (const topic of chapter.subTopics || []) {
+      const topicData = effective?.[chapter.index]?.topics?.[topic.index];
+      const status = typeof topicData === 'object' ? topicData?.status : topicData;
+      
+      if (status === 'ongoing') {
+        return {
+          title: topic.title,
+          chapterIndex: chapter.index,
+          chapterTitle: chapter.title,
+          topicIndex: topic.index,
+          status: 'ongoing',
+          currentPage: topicData?.currentPage || topic.pageFrom,
+        };
+      }
+      
+      if (status === 'not-started' || !status) {
+        return {
+          title: topic.title,
+          chapterIndex: chapter.index,
+          chapterTitle: chapter.title,
+          topicIndex: topic.index,
+          status: 'not-started',
+          pageFrom: topic.pageFrom,
+          pageTo: topic.pageTo,
+        };
+      }
+    }
+  }
+  
+  return null; // All topics completed
+};
 
 export const resetDemoState = () => {
   resetNamespace();

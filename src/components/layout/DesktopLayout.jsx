@@ -82,7 +82,7 @@ export default function DesktopLayout({ children, hideNav, hideChatbox }) {
       </main>
 
       {/* Persistent Chat Bar - Centered at bottom */}
-      {!hideChatbox && <DesktopChatBar />}
+      {!hideChatbox && !shouldHideNav && <DesktopChatBar />}
     </div>
   );
 }

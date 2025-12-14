@@ -18,8 +18,17 @@ export default function SyllabusAnalytics({
 
     const chapters = syllabus.chapters.map(chapter => {
       const topics = chapter.subTopics || [];
-      const done = topics.filter(t => topicProgress?.[chapter.index]?.topics?.[t.index] === 'done').length;
-      const inProgress = topics.filter(t => topicProgress?.[chapter.index]?.topics?.[t.index] === 'in-progress').length;
+      const done = topics.filter(t => {
+        const topicData = topicProgress?.[chapter.index]?.topics?.[t.index];
+        // Handle both old format (string) and new format (object)
+        const status = typeof topicData === 'string' ? topicData : topicData?.status;
+        return status === 'done';
+      }).length;
+      const inProgress = topics.filter(t => {
+        const topicData = topicProgress?.[chapter.index]?.topics?.[t.index];
+        const status = typeof topicData === 'string' ? topicData : topicData?.status;
+        return status === 'ongoing';
+      }).length;
       const notStarted = topics.length - done - inProgress;
       const percent = topics.length ? Math.round((done / topics.length) * 100) : 0;
       
