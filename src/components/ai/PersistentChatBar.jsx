@@ -357,6 +357,19 @@ export default function PersistentChatBar({ className = '' }) {
             </div>
 
 
+            {/* Expand Button - visible when recording and collapsed */}
+            {isRecording && !isExpanded && (
+              <button
+                onClick={() => {
+                  setIsExpanded(true);
+                  setActiveTab('chat');
+                }}
+                className="p-2.5 rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all flex-shrink-0"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
+            )}
+
             {/* Mic/Send Button */}
             <button
               onClick={handleMicClick}

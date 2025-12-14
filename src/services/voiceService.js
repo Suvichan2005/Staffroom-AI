@@ -18,13 +18,18 @@ export function isSpeechRecognitionSupported() {
 /**
  * Transcribe using Browser's Web Speech API (free!)
  * 
- * @param {function} onResult - Callback when transcript is ready
- * @param {function} onError - Error callback
+ * @param {object} options - { onResult, onError, onInterim, manualStop }
  * @returns {object} - Recognition instance with start/stop methods
  */
-export function startBrowserTranscription(onResult, onError) {
+export function startBrowserTranscription(options = {}) {
+  const { onResult, onError, onInterim, manualStop = true } = options;
+  
+  // Support legacy signature: (onResult, onError)
+  const resultCallback = typeof options === 'function' ? options : onResult;
+  const errorCallback = typeof arguments[1] === 'function' ? arguments[1] : onError;
+  
   if (!isSpeechRecognitionSupported()) {
-    onError(new Error('Speech recognition not supported in this browser'));
+    errorCallback?.(new Error('Speech recognition not supported in this browser'));
     return null;
   }
 
@@ -39,12 +44,7 @@ export function startBrowserTranscription(onResult, onError) {
   let finalTranscript = '';
   let interimTranscript = '';
   let stopped = false;
-  // Safety timeout to auto-stop after 8 seconds
-  let autoStopTimer = setTimeout(() => {
-    if (!stopped) {
-      try { recognition.stop(); } catch (_) {}
-    }
-  }, 8000);
+  let restartOnEnd = false; // For handling browser auto-restarts
 
   recognition.onresult = (event) => {
     interimTranscript = '';
@@ -56,27 +56,78 @@ export function startBrowserTranscription(onResult, onError) {
         interimTranscript += res[0].transcript;
       }
     }
+    
+    // Callback for live interim results
+    if (onInterim) {
+      onInterim({
+        interim: interimTranscript,
+        final: finalTranscript.trim(),
+        combined: (finalTranscript + interimTranscript).trim()
+      });
+    }
   };
 
   recognition.onerror = (event) => {
-    onError(new Error(event.error));
+    // Handle 'no-speech' gracefully in manual mode - just restart
+    if (event.error === 'no-speech' && manualStop && !stopped) {
+      restartOnEnd = true;
+      return;
+    }
+    // Handle 'aborted' when manually stopped
+    if (event.error === 'aborted' && stopped) {
+      return;
+    }
+    errorCallback?.(new Error(event.error));
   };
 
+  // Don't auto-stop when user pauses speaking in manual mode
   recognition.onspeechend = () => {
-    // Stop when user stops speaking
-    try { recognition.stop(); } catch (_) {}
+    if (!manualStop) {
+      try { recognition.stop(); } catch (_) {}
+    }
+    // In manual mode, let it continue listening
   };
 
   recognition.onend = () => {
+    // If we should restart (browser auto-stopped but user didn't press stop)
+    if (restartOnEnd && !stopped) {
+      restartOnEnd = false;
+      try { 
+        recognition.start(); 
+      } catch (_) {
+        // If restart fails, finalize
+        stopped = true;
+        finalize();
+      }
+      return;
+    }
+    
     stopped = true;
-    clearTimeout(autoStopTimer);
+    finalize();
+  };
+  
+  function finalize() {
     const combined = (finalTranscript || interimTranscript).trim();
     if (combined) {
-      onResult({ transcript: combined, confidence: 0.9, method: 'browser' });
+      resultCallback?.({ transcript: combined, confidence: 0.9, method: 'browser' });
     } else {
-      onError(new Error('No speech detected'));
+      errorCallback?.(new Error('No speech detected'));
     }
+  }
+  
+  // Add a manual stop method that properly finalizes
+  recognition.manualStop = () => {
+    stopped = true;
+    restartOnEnd = false;
+    try { recognition.stop(); } catch (_) {}
   };
+  
+  // Expose transcript getter for live access
+  recognition.getTranscript = () => ({
+    interim: interimTranscript,
+    final: finalTranscript.trim(),
+    combined: (finalTranscript + interimTranscript).trim()
+  });
 
   return recognition;
 }

@@ -5,11 +5,12 @@ import {
   MessageCircle, Send, Sparkles, ArrowLeft, Trash2, 
   User, Bot, Mic, MicOff, Loader2, BookOpen, Users, 
   Calendar, ClipboardList, TrendingUp, AlertCircle,
-  ChevronRight, X, FileText, BarChart2, Clock, Zap
+  ChevronRight, X, FileText, BarChart2, Clock, Zap, History
 } from 'lucide-react';
 import { useAI } from '../context/AIContext';
 import { teacherData, getSyllabusByRef, calculateTopicProgressPercent, normalizeSectionProgress, loadStoredProgress } from '../data/dummyData';
 import { PageShell } from '../components/layout';
+import ChatHistory from '../components/ai/ChatHistory';
 
 // Simple markdown renderer for chat messages
 const renderMarkdown = (text) => {
@@ -123,6 +124,7 @@ export default function ChatPage() {
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showHistory, setShowHistory] = useState(false);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -286,6 +288,49 @@ export default function ChatPage() {
   return (
     <PageShell width="7xl">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 h-[calc(100vh-7rem)] lg:h-[calc(100vh-8rem)]">
+        {/* Chat History Sidebar - Desktop */}
+        <AnimatePresence>
+          {showHistory && (
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: '320px', opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              className="hidden lg:block flex-shrink-0 overflow-hidden"
+            >
+              <div className="h-full overflow-y-auto bg-white rounded-2xl border border-black-200 p-4">
+                <ChatHistory />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Chat History Modal - Mobile */}
+        <AnimatePresence>
+          {showHistory && (
+            <div className="lg:hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
+              <motion.div
+                initial={{ y: '100%', opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: '100%', opacity: 0 }}
+                className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-xl max-h-[80vh] overflow-hidden flex flex-col"
+              >
+                <div className="flex items-center justify-between p-4 border-b border-black-100">
+                  <h3 className="text-lg font-semibold">Chat History</h3>
+                  <button
+                    onClick={() => setShowHistory(false)}
+                    className="p-2 hover:bg-black-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                  <ChatHistory />
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* Mobile/Tablet Quick Suggestions (horizontal scroll) */}
         <div className="lg:hidden flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
           {currentSuggestions.slice(0, 4).map((suggestion, i) => (
@@ -335,6 +380,17 @@ export default function ChatPage() {
             </div>
             
             <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className={`p-2.5 rounded-xl transition-colors ${
+                  showHistory 
+                    ? 'bg-white/20 text-white' 
+                    : 'hover:bg-white/10 text-white/80 hover:text-white'
+                }`}
+                title="Chat history"
+              >
+                <History className="w-5 h-5" />
+              </button>
               <button
                 onClick={() => setShowClearConfirm(true)}
                 className="p-2.5 hover:bg-white/10 rounded-xl transition-colors text-white/80 hover:text-white"

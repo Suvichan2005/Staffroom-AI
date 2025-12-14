@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, Plus, Search, Clock, Users, CheckCircle2, 
   AlertTriangle, Calendar, Edit, Trash2, Eye, GraduationCap,
-  ClipboardList, BookOpen, Award, X, Save, ChevronDown
+  ClipboardList, BookOpen, Award, X, Save, ChevronDown, Sparkles, RefreshCw
 } from "lucide-react";
 import { PageShell } from "../components/layout";
 import { 
@@ -12,8 +12,17 @@ import {
   getAllAssessments, 
   getAssignmentStats 
 } from "../data/dummyData";
+import { 
+  createAssessment,
+  updateAssessment,
+  deleteAssessment,
+  batchGradeSubmissions,
+  getAllAssessmentsWithStored,
+  getAssessmentStats as getStoredStats
+} from "../utils/assessmentStorage";
 import { useTeacher } from "../context/TeacherContext";
 import { toast } from "react-hot-toast";
+import { generateQuiz } from "../services/aiService";
 
 export default function Assessments() {
   const teacherCtx = useTeacher();
@@ -26,6 +35,25 @@ export default function Assessments() {
   const [showGradingModal, setShowGradingModal] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState(null);
   const [grades, setGrades] = useState({});
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    courseId: '',
+    classId: '',
+    type: 'assignment',
+    dueDate: '',
+    maxPoints: 100,
+    chapterRef: '',
+  });
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [assessmentsList, setAssessmentsList] = useState([]);
+
+  // Load assessments on mount and merge with dummy data
+  useEffect(() => {
+    const dummyAssessments = getAllAssessments();
+    const allAssessments = getAllAssessmentsWithStored(dummyAssessments);
+    setAssessmentsList(allAssessments);
+  }, []);
 
   // Get all unique classes from teacher's courses
   const allClasses = useMemo(() => {
@@ -43,7 +71,7 @@ export default function Assessments() {
 
   // Transform assessments data
   const assessments = useMemo(() => {
-    return getAllAssessments().map(assessment => {
+    return assessmentsList.map(assessment => {
       const course = teacher.courses?.find(c => 
         c.sections?.some(s => s.id === assessment.classId)
       );
@@ -77,7 +105,7 @@ export default function Assessments() {
         submissions: assessment.submissions,
       };
     });
-  }, [teacher]);
+  }, [teacher, assessmentsList]);
 
   // Filter assessments
   const filteredAssessments = useMemo(() => {
@@ -174,6 +202,92 @@ export default function Assessments() {
     }
   };
 
+  // Create Assessment Handler
+  const handleCreateAssessment = async () => {
+    if (!formData.title || !formData.courseId || !formData.classId || !formData.dueDate) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const newAssessment = createAssessment(formData);
+      setAssessmentsList(prev => [...prev, newAssessment]);
+      toast.success(`${formData.title} created successfully!`);
+      setShowCreateModal(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error creating assessment:', error);
+      toast.error('Failed to create assessment');
+    }
+  };
+
+  // Generate Quiz with AI
+  const handleGenerateQuiz = async () => {
+    if (!formData.classId || !formData.chapterRef) {
+      toast.error('Please select a class and chapter first');
+      return;
+    }
+
+    setIsGeneratingQuiz(true);
+    try {
+      const course = teacher.courses?.find(c => 
+        c.sections?.some(s => s.id === formData.classId)
+      );
+      
+      const quizData = await generateQuiz({
+        courseId: formData.courseId || course?.id,
+        sectionId: formData.classId,
+        chapterNumber: parseInt(formData.chapterRef) || 1,
+        questionCount: 10,
+      });
+
+      // Auto-fill form with generated quiz
+      setFormData(prev => ({
+        ...prev,
+        title: quizData.title || `Quiz - Chapter ${formData.chapterRef}`,
+        description: quizData.description || '',
+        type: 'quiz',
+        maxPoints: quizData.questions?.length * 10 || 100,
+      }));
+
+      toast.success('Quiz generated! Review and create when ready.');
+    } catch (error) {
+      console.error('Error generating quiz:', error);
+      toast.error('Failed to generate quiz');
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  };
+
+  // Delete Assessment
+  const handleDeleteAssessment = (assessmentId) => {
+    if (!confirm('Are you sure you want to delete this assessment?')) return;
+
+    try {
+      deleteAssessment(assessmentId);
+      setAssessmentsList(prev => prev.filter(a => a.id !== assessmentId));
+      toast.success('Assessment deleted');
+    } catch (error) {
+      // If not in storage, just remove from list (dummy data)
+      setAssessmentsList(prev => prev.filter(a => a.id !== assessmentId));
+      toast.success('Assessment removed');
+    }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      courseId: '',
+      classId: '',
+      type: 'assignment',
+      dueDate: '',
+      maxPoints: 100,
+      chapterRef: '',
+    });
+  };
+
   const openGradingModal = (assessment) => {
     setSelectedAssessment(assessment);
     // Initialize grades from existing submissions
@@ -186,10 +300,41 @@ export default function Assessments() {
   };
 
   const handleSaveGrades = () => {
-    toast.success(`Grades saved for ${selectedAssessment.title}`);
-    setShowGradingModal(false);
-    setSelectedAssessment(null);
-    setGrades({});
+    try {
+      // Prepare grades map
+      const gradesMap = {};
+      Object.entries(grades).forEach(([studentId, grade]) => {
+        if (grade !== '' && grade !== undefined) {
+          gradesMap[studentId] = { grade: Number(grade), feedback: '' };
+        }
+      });
+
+      // Save grades
+      batchGradeSubmissions(selectedAssessment.id, gradesMap);
+      
+      // Update local state
+      const updated = assessmentsList.map(a => {
+        if (a.id === selectedAssessment.id) {
+          const updatedSubmissions = a.submissions.map(sub => {
+            if (gradesMap[sub.studentId]) {
+              return { ...sub, ...gradesMap[sub.studentId], gradedDate: new Date().toISOString() };
+            }
+            return sub;
+          });
+          return { ...a, submissions: updatedSubmissions };
+        }
+        return a;
+      });
+      
+      setAssessmentsList(updated);
+      toast.success(`Grades saved for ${selectedAssessment.title}`);
+      setShowGradingModal(false);
+      setSelectedAssessment(null);
+      setGrades({});
+    } catch (error) {
+      console.error('Error saving grades:', error);
+      toast.error('Failed to save grades');
+    }
   };
 
   const classStudents = useMemo(() => {
@@ -399,7 +544,10 @@ export default function Assessments() {
                   <button className="p-2 text-black-400 hover:text-black-600 hover:bg-black-100 rounded-lg transition-colors">
                     <Eye className="w-5 h-5" />
                   </button>
-                  <button className="p-2 text-black-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                  <button 
+                    onClick={() => handleDeleteAssessment(assessment.id)}
+                    className="p-2 text-black-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
@@ -441,32 +589,75 @@ export default function Assessments() {
                   <X className="w-5 h-5 text-black-500" />
                 </button>
               </div>
-              <div className="p-6 space-y-4">
+              <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                {/* Type Selection */}
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="p-4 rounded-xl border-2 border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-400 transition-all">
+                  <button
+                    onClick={() => setFormData(prev => ({ ...prev, type: 'assignment' }))}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      formData.type === 'assignment'
+                        ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                        : 'border-black-200 hover:border-indigo-300 hover:bg-indigo-50'
+                    }`}
+                  >
                     <FileText className="w-6 h-6 mx-auto mb-2" />
                     <p className="font-medium">Assignment</p>
-                    <p className="text-xs text-indigo-500">Homework, Project</p>
+                    <p className="text-xs text-black-500">Homework, Project</p>
                   </button>
-                  <button className="p-4 rounded-xl border-2 border-black-200 hover:border-purple-300 hover:bg-purple-50 transition-all">
-                    <BookOpen className="w-6 h-6 mx-auto mb-2 text-black-400" />
-                    <p className="font-medium text-black-600">Test</p>
-                    <p className="text-xs text-black-400">Quiz, Unit Test</p>
+                  <button
+                    onClick={() => setFormData(prev => ({ ...prev, type: 'quiz' }))}
+                    className={`p-4 rounded-xl border-2 transition-all ${
+                      formData.type === 'quiz'
+                        ? 'border-purple-400 bg-purple-50 text-purple-700'
+                        : 'border-black-200 hover:border-purple-300 hover:bg-purple-50'
+                    }`}
+                  >
+                    <BookOpen className="w-6 h-6 mx-auto mb-2" />
+                    <p className="font-medium">Test/Quiz</p>
+                    <p className="text-xs text-black-500">Quiz, Unit Test</p>
                   </button>
                 </div>
+
+                {/* Form Fields */}
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-black-700 mb-1">Title</label>
+                    <label className="block text-sm font-medium text-black-700 mb-1">Title *</label>
                     <input
                       type="text"
                       placeholder="e.g., Chapter 3 Quiz"
+                      value={formData.title}
+                      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                       className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-black-700 mb-1">Description</label>
+                    <textarea
+                      placeholder="Optional description or instructions"
+                      value={formData.description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      rows={2}
+                      className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-black-700 mb-1">Class</label>
-                      <select className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200">
+                      <label className="block text-sm font-medium text-black-700 mb-1">Class *</label>
+                      <select
+                        value={formData.classId}
+                        onChange={(e) => {
+                          const classId = e.target.value;
+                          const course = teacher.courses?.find(c =>
+                            c.sections?.some(s => s.id === classId)
+                          );
+                          setFormData(prev => ({
+                            ...prev,
+                            classId,
+                            courseId: course?.id || '',
+                          }));
+                        }}
+                        className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      >
                         <option value="">Select class</option>
                         {allClasses.map(cls => (
                           <option key={cls.id} value={cls.id}>{cls.name}</option>
@@ -474,39 +665,84 @@ export default function Assessments() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-black-700 mb-1">Due Date</label>
+                      <label className="block text-sm font-medium text-black-700 mb-1">Due Date *</label>
                       <input
                         type="date"
+                        value={formData.dueDate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
                         className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-black-700 mb-1">Max Points</label>
-                    <input
-                      type="number"
-                      placeholder="100"
-                      className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-black-700 mb-1">Max Points</label>
+                      <input
+                        type="number"
+                        placeholder="100"
+                        value={formData.maxPoints}
+                        onChange={(e) => setFormData(prev => ({ ...prev, maxPoints: Number(e.target.value) }))}
+                        className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-black-700 mb-1">Chapter</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., 3"
+                        value={formData.chapterRef}
+                        onChange={(e) => setFormData(prev => ({ ...prev, chapterRef: e.target.value }))}
+                        className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                    </div>
                   </div>
+
+                  {/* AI Quiz Generation */}
+                  {formData.type === 'quiz' && formData.classId && formData.chapterRef && (
+                    <div className="p-3 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
+                      <button
+                        onClick={handleGenerateQuiz}
+                        disabled={isGeneratingQuiz}
+                        className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                      >
+                        {isGeneratingQuiz ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            Generating Quiz...
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-4 h-4" />
+                            Generate Quiz with AI
+                          </>
+                        )}
+                      </button>
+                      <p className="text-xs text-indigo-600 text-center mt-2">
+                        AI will create questions based on Chapter {formData.chapterRef}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-              <div className="flex justify-end gap-3 px-6 py-4 border-t border-black-100 bg-black-50">
-                <button
-                  onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-black-600 hover:bg-black-200 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    toast.success('Assessment created!');
-                    setShowCreateModal(false);
-                  }}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium"
-                >
-                  Create
-                </button>
+              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-black-100 bg-black-50">
+                <p className="text-xs text-black-500">* Required fields</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      resetForm();
+                    }}
+                    className="px-4 py-2 text-black-600 hover:bg-black-200 rounded-xl transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleCreateAssessment}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium"
+                  >
+                    Create Assessment
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>

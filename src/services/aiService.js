@@ -283,7 +283,11 @@ function tool_getProgress(sectionId = null) {
       
       const chapters = syllabus.chapters.map(chapter => {
         const chapterProgress = storedProgress[chapter.index]?.topics || {};
-        const done = Object.values(chapterProgress).filter(s => s === 'done').length;
+        // Handle new object format: { status, currentPage, notes }
+        const done = Object.values(chapterProgress).filter(t => {
+          const status = typeof t === 'string' ? t : (t?.status || 'not-started');
+          return status === 'done';
+        }).length;
         const total = chapter.subTopics.length;
         return {
           index: chapter.index,
@@ -350,7 +354,9 @@ function tool_getNextTopic(sectionId) {
     const chapterProgress = storedProgress[chapter.index]?.topics || {};
     
     for (const topic of chapter.subTopics || []) {
-      const status = chapterProgress[topic.index] || 'not-started';
+      const topicData = chapterProgress[topic.index];
+      // Handle both string and object format
+      const status = typeof topicData === 'string' ? topicData : (topicData?.status || 'not-started');
       
       if (status === 'done') {
         lastCompletedTopic = topic.title;
@@ -505,9 +511,9 @@ function tool_getStudentsAtRisk() {
 }
 
 /**
- * Update progress for a topic
+ * Update progress for a topic - now supports new object schema with currentPage and notes
  */
-function tool_updateProgress(sectionId, chapterIndex, topicIndex, status) {
+function tool_updateProgress(sectionId, chapterIndex, topicIndex, status, options = {}) {
   // Find course and section
   let targetCourse = null;
   let targetSection = null;
@@ -535,14 +541,34 @@ function tool_updateProgress(sectionId, chapterIndex, topicIndex, status) {
     return { success: false, error: `Chapter ${chapterIndex} Topic ${topicIndex} not found` };
   }
   
-  // Update progress
-  if (!targetSection.progress[chapterIndex]) {
-    targetSection.progress[chapterIndex] = { topics: {} };
+  // Load current progress from localStorage
+  const baseProgress = normalizeSectionProgress(syllabus, targetSection.progress);
+  const currentProgress = loadStoredProgress(targetSection.id, baseProgress);
+  
+  // Ensure chapter exists
+  if (!currentProgress[chapterIndex]) {
+    currentProgress[chapterIndex] = { topics: {} };
   }
   
   const statusMap = { 'complete': 'done', 'done': 'done', 'ongoing': 'ongoing', 'pending': 'not-started', 'not-started': 'not-started' };
-  targetSection.progress[chapterIndex].topics[topicIndex] = statusMap[status] || 'done';
-  persistProgress(targetSection.id, targetSection.progress);
+  const newStatus = statusMap[status] || 'done';
+  
+  // Get existing topic data or create new
+  const existingData = currentProgress[chapterIndex].topics[topicIndex] || {};
+  const existingObj = typeof existingData === 'string' 
+    ? { status: existingData, currentPage: null, notes: null, lastCoveredAt: null }
+    : existingData;
+  
+  // Build new topic data object
+  const newTopicData = {
+    status: newStatus,
+    currentPage: newStatus === 'ongoing' ? (options.currentPage ?? existingObj.currentPage) : null,
+    notes: options.notes ?? existingObj.notes,
+    lastCoveredAt: (newStatus === 'ongoing' || newStatus === 'done') ? new Date().toISOString() : existingObj.lastCoveredAt
+  };
+  
+  currentProgress[chapterIndex].topics[topicIndex] = newTopicData;
+  persistProgress(targetSection.id, currentProgress);
   
   return {
     success: true,
@@ -550,7 +576,210 @@ function tool_updateProgress(sectionId, chapterIndex, topicIndex, status) {
     courseTitle: targetCourse.title,
     chapterTitle: chapter.title,
     topicTitle: topic.title,
-    newStatus: statusMap[status] || 'done'
+    chapterIndex: chapterIndex,
+    topicIndex: topicIndex,
+    newStatus: newStatus,
+    currentPage: newTopicData.currentPage,
+    notes: newTopicData.notes
+  };
+}
+
+/**
+ * Find topic by page number - returns the topic whose page range contains the given page
+ */
+function tool_findTopicByPage(sectionId, pageNumber) {
+  if (!sectionId || !pageNumber) {
+    return { error: 'sectionId and pageNumber are required' };
+  }
+  
+  // Find course and section
+  let targetCourse = null;
+  let targetSection = null;
+  
+  for (const course of teacherData.courses) {
+    const section = course.sections.find(s => s.id.toUpperCase() === sectionId.toUpperCase());
+    if (section) {
+      targetCourse = course;
+      targetSection = section;
+      break;
+    }
+  }
+  
+  if (!targetCourse || !targetSection) {
+    return { error: `Section ${sectionId} not found` };
+  }
+  
+  const syllabus = getSyllabusByRef(targetCourse.syllabusRef);
+  if (!syllabus) return { error: 'Syllabus not found' };
+  
+  // Find the topic whose page range contains the given page
+  for (const chapter of syllabus.chapters) {
+    for (const topic of chapter.subTopics || []) {
+      const pageFrom = topic.pageFrom || 0;
+      const pageTo = topic.pageTo || 0;
+      
+      if (pageNumber >= pageFrom && pageNumber <= pageTo) {
+        return {
+          found: true,
+          sectionId: targetSection.id,
+          courseId: targetCourse.id,
+          courseTitle: targetCourse.title,
+          chapterIndex: chapter.index,
+          chapterTitle: chapter.title,
+          topicIndex: topic.index,
+          topicTitle: topic.title,
+          pageFrom: pageFrom,
+          pageTo: pageTo,
+          pageNumber: pageNumber
+        };
+      }
+    }
+  }
+  
+  return { 
+    found: false, 
+    error: `No topic found containing page ${pageNumber} in ${sectionId}`,
+    message: `Page ${pageNumber} is not in any topic's page range for ${targetCourse.title}`
+  };
+}
+
+/**
+ * Tool wrapper for attendance parsing in chat
+ */
+function tool_parseAttendance(transcript, classId, studentNames) {
+  // In chat context, we just return the raw intent for now
+  // A real implementation might call the complex parsing logic
+  return {
+    transcript,
+    classId,
+    action: "attendance_log",
+    status: "processing_required",
+    message: "I can help mark attendance. Please use the dedicated 'Voice Mode' in the Attendance tab for best results."
+  };
+}
+
+/**
+ * Navigation tool - returns navigation intent for the UI to execute
+ * Uses actual course/section data instead of heuristic matching
+ * The actual navigation is handled by the UI layer (AIContext)
+ */
+function tool_navigateTo(destination, options = {}) {
+  const { courseId, sectionId } = options;
+  
+  // Map common destinations to paths
+  const routeMap = {
+    // Main pages
+    'home': '/',
+    'dashboard': '/dashboard',
+    'landing': '/',
+    'schedule': '/schedule',
+    'classes': '/classes',
+    'assessments': '/assessments',
+    'resources': '/resources',
+    'profile': '/profile',
+    'settings': '/settings',
+    'chat': '/chat',
+    
+    // Role dashboards
+    'hod': '/hod-dashboard',
+    'hod-dashboard': '/hod-dashboard',
+    'admin': '/admin-dashboard',
+    'admin-dashboard': '/admin-dashboard',
+  };
+  
+  let path = null;
+  let displayName = destination;
+  
+  // Check for direct route match
+  const normalizedDest = destination.toLowerCase().trim();
+  if (routeMap[normalizedDest]) {
+    path = routeMap[normalizedDest];
+    displayName = normalizedDest.charAt(0).toUpperCase() + normalizedDest.slice(1);
+  }
+  // Check for section/class navigation (e.g., "6A geography", "8B history")
+  else if (sectionId || /\d+[a-z]/i.test(destination)) {
+    const sectionMatch = destination.match(/(\d+[a-z])/i);
+    const targetSection = sectionId || (sectionMatch ? sectionMatch[1].toUpperCase() : null);
+    
+    if (targetSection) {
+      // Get actual available courses and sections
+      const availableCourses = tool_getAvailableCourses();
+      
+      // Find the course and section in actual data
+      for (const course of availableCourses.courses) {
+        const section = course.sections.find(s => s.id.toUpperCase() === targetSection.toUpperCase());
+        if (section) {
+          path = `/course/${course.id}/class/${section.id}`;
+          displayName = `${course.name} - Section ${section.id}`;
+          break;
+        }
+      }
+    }
+  }
+  // Check for course navigation by explicit courseId or subject/grade match
+  else {
+    // Get actual available courses
+    const availableCourses = tool_getAvailableCourses();
+    let matchedCourse = null;
+    
+    // First, try exact courseId match if provided
+    if (courseId) {
+      matchedCourse = availableCourses.courses.find(c => c.id === courseId);
+    }
+    
+    // If no courseId or no match, try to find by destination string
+    if (!matchedCourse) {
+      const destLower = destination.toLowerCase();
+      
+      // Try to find course by matching subject name and/or grade
+      matchedCourse = availableCourses.courses.find(course => {
+        const nameLower = course.name.toLowerCase();
+        const idLower = course.id.toLowerCase();
+        
+        // Check if destination contains the course ID
+        if (destLower.includes(idLower)) {
+          return true;
+        }
+        
+        // Check if destination contains the course name
+        if (destLower.includes(nameLower)) {
+          return true;
+        }
+        
+        // Check for individual words match (e.g., "geography" or "grade 6")
+        const destWords = destLower.split(/\s+/);
+        const nameWords = nameLower.split(/\s+/);
+        
+        // If at least half of the destination words are in the course name, it's a match
+        const matchingWords = destWords.filter(word => 
+          nameWords.some(nameWord => nameWord.includes(word) || word.includes(nameWord))
+        );
+        
+        return matchingWords.length >= Math.min(2, destWords.length);
+      });
+    }
+    
+    if (matchedCourse) {
+      path = `/course/${matchedCourse.id}`;
+      displayName = matchedCourse.name;
+    }
+  }
+  
+  if (path) {
+    return {
+      success: true,
+      action: 'navigate',
+      path: path,
+      displayName: displayName,
+      message: `Navigating to ${displayName}`
+    };
+  }
+  
+  return {
+    success: false,
+    error: `Could not find page for "${destination}"`,
+    message: `I couldn't find a page matching "${destination}". Try saying "dashboard", "schedule", "6A geography", or a specific class name.`,
+    availablePages: ['dashboard', 'schedule', 'classes', 'assessments', 'resources', 'profile', 'settings', ...teacherData.courses.map(c => c.title)]
   };
 }
 
@@ -565,7 +794,10 @@ const toolFunctions = {
   getAttendance: tool_getAttendance,
   getAssignments: tool_getAssignments,
   getStudentsAtRisk: tool_getStudentsAtRisk,
-  updateProgress: tool_updateProgress
+  updateProgress: tool_updateProgress,
+  findTopicByPage: tool_findTopicByPage,
+  parseAttendance: tool_parseAttendance,
+  navigateTo: tool_navigateTo
 };
 
 // Tool declarations for Gemini
@@ -621,6 +853,31 @@ const toolDeclarations = [
         }
       },
       required: ["searchQuery"]
+    }
+  },
+  {
+    name: "parseAttendance",
+    description: "Parse a voice command to mark attendance. Returns a list of students to mark as present or absent based on the transcript.",
+    parameters: {
+      type: "object",
+      properties: {
+        transcript: {
+          type: "string",
+          description: "The voice transcript text (e.g. 'Mark Rahul and Priya absent')"
+        },
+        classId: {
+          type: "string",
+          description: "The class ID (e.g. '6A')"
+        },
+        studentNames: {
+          type: "array",
+          items: {
+            type: "string"
+          },
+          description: "List of student names in the class to fuzzy match against"
+        }
+      },
+      required: ["transcript", "classId", "studentNames"]
     }
   }
 ];
@@ -709,7 +966,7 @@ const chatToolDeclarations = [
   },
   {
     name: "updateProgress",
-    description: "Update the progress status for a specific topic. Use this when the teacher says they finished/completed a topic.",
+    description: "Update the progress status for a specific topic. Use this when the teacher says they finished/completed a topic. Can also set the current page (for ongoing topics) and add notes.",
     parameters: {
       type: "object",
       properties: {
@@ -728,9 +985,57 @@ const chatToolDeclarations = [
         status: {
           type: "string",
           description: "The new status: 'complete', 'ongoing', or 'pending'. Default is 'complete'."
+        },
+        currentPage: {
+          type: "number",
+          description: "The page number where teaching left off (only for ongoing topics). E.g., if teacher says 'left at page 34', set this to 34."
+        },
+        notes: {
+          type: "string",
+          description: "Teacher's notes about the topic. E.g., 'students understand clearly' or 'need to revisit deltas'."
         }
       },
       required: ["sectionId", "chapterIndex", "topicIndex"]
+    }
+  },
+  {
+    name: "findTopicByPage",
+    description: "Find which topic contains a specific page number in a syllabus. Use this when the teacher mentions a page number to identify the topic. Returns chapter and topic indices that can be used with updateProgress.",
+    parameters: {
+      type: "object",
+      properties: {
+        sectionId: {
+          type: "string",
+          description: "The section ID (e.g., '8B', '6A'). REQUIRED."
+        },
+        pageNumber: {
+          type: "number",
+          description: "The page number to search for. REQUIRED."
+        }
+      },
+      required: ["sectionId", "pageNumber"]
+    }
+  },
+  {
+    name: "navigateTo",
+    description: "Navigate the user to a different page in the app. Use this when the teacher asks to 'open', 'show', 'go to', or 'take me to' a page. Examples: 'open 6A geography', 'show me my schedule', 'go to dashboard', 'take me to the assessments page'.",
+    parameters: {
+      type: "object",
+      properties: {
+        destination: {
+          type: "string",
+          description: "The page or destination to navigate to. Can be: 'dashboard', 'home', 'schedule', 'classes', 'assessments', 'resources', 'profile', 'settings', 'chat', 'hod-dashboard', 'admin-dashboard', or a class/section like '6A geography', '8B history', 'grade 6 geography'."
+        },
+        courseId: {
+          type: "string",
+          description: "Optional course ID if navigating to a specific course (e.g., 'geo6', 'hist8')."
+        },
+        sectionId: {
+          type: "string",
+          description: "Optional section ID if navigating to a specific class (e.g., '6A', '8B')."
+        }
+      },
+      required: ["destination"]
     }
   }
 ];
@@ -1015,6 +1320,100 @@ function simpleFallbackParse(text, currentCourseId, currentSectionId) {
   }
   
   return { action, courseId, sectionId, confidence: 'low', _source: 'fallback-none' };
+}
+
+/**
+ * Parse attendance voice command
+ * @param {string} transcript - "Mark Rahul and Priya absent, everyone else present"
+ * @param {string} classId - The class ID (e.g. "6A")
+ * @param {Array} studentList - List of student objects { studentId, name }
+ */
+export async function parseAttendanceVoice(transcript, classId, studentList) {
+  const text = (transcript || '').trim();
+
+  if (!text) {
+    return { error: 'Empty transcript' };
+  }
+
+  // If no API key, use fallback
+  if (!genAI) {
+    return {
+      error: 'AI service unavailable',
+      _fallback: true,
+      transcript
+    };
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: MODELS.TEXT,
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const studentNames = studentList.map(s => s.name).join(', ');
+
+    const prompt = `
+Parse this attendance voice command for Class ${classId}:
+"${text}"
+
+Students in class: ${studentNames}
+
+Return JSON with:
+{
+  "present": ["Student Name 1", "Student Name 2"],
+  "absent": ["Student Name 3"],
+  "late": ["Student Name 4"],
+  "unmentioned_status": "present" | "absent" | "unknown"
+}
+
+Rules:
+- Fuzzy match names from the student list.
+- If user says "everyone present except X", unmentioned_status is "present".
+- If user says "only X present", unmentioned_status is "absent".
+- If user just lists names (e.g. "Rahul, Priya"), infer status from context words like "absent", "not here".
+`;
+
+    const result = await model.generateContent(prompt);
+    const json = JSON.parse(result.response.text());
+
+    // Map names back to IDs
+    const updates = {};
+
+    // Helper to find student ID by name
+    const findId = (name) => {
+      const lower = name.toLowerCase();
+      const student = studentList.find(s => s.name.toLowerCase().includes(lower));
+      return student ? student.studentId : null;
+    };
+
+    // Process explicit lists
+    (json.present || []).forEach(name => {
+      const id = findId(name);
+      if (id) updates[id] = true;
+    });
+
+    (json.absent || []).forEach(name => {
+      const id = findId(name);
+      if (id) updates[id] = false;
+    });
+
+    // Handle unmentioned
+    if (json.unmentioned_status === 'present') {
+      studentList.forEach(s => {
+        if (updates[s.studentId] === undefined) updates[s.studentId] = true;
+      });
+    } else if (json.unmentioned_status === 'absent') {
+      studentList.forEach(s => {
+        if (updates[s.studentId] === undefined) updates[s.studentId] = false;
+      });
+    }
+
+    return { updates, confidence: 'high' };
+
+  } catch (error) {
+    console.error('Attendance parsing error:', error);
+    return { error: error.message };
+  }
 }
 
 /**
@@ -1339,7 +1738,7 @@ function getMockBriefing() {
  * @param {object} context - { currentCourseId, currentSectionId, urlContext }
  * @returns {Promise<string>} - AI response
  */
-export async function processChat(message, conversationHistory = [], context = {}) {
+export async function   processChat(message, conversationHistory = [], context = {}) {
   const text = (message || '').trim();
   
   if (!text) {
@@ -1451,6 +1850,9 @@ Current page context:
     // Send message (use enhanced message if context was added)
     let response = await chat.sendMessage(enhancedMessage);
     
+    // Track navigation intent if navigateTo is called
+    let navigationIntent = null;
+    
     // Process function calls iteratively
     let maxIterations = 5;
     let iterations = 0;
@@ -1510,7 +1912,17 @@ Current page context:
                 result = fn();
                 break;
               case 'updateProgress':
-                result = fn(args.sectionId, args.chapterIndex, args.topicIndex, args.status);
+                result = fn(args.sectionId, args.chapterIndex, args.topicIndex, args.status, { currentPage: args.currentPage, notes: args.notes });
+                break;
+              case 'findTopicByPage':
+                result = fn(args.sectionId, args.pageNumber);
+                break;
+              case 'navigateTo':
+                result = fn(args.destination, { courseId: args.courseId, sectionId: args.sectionId });
+                // Store navigation intent for caller to handle
+                if (result.success && result.path) {
+                  navigationIntent = result;
+                }
                 break;
               default:
                 result = { error: `Unknown function: ${name}` };
@@ -1537,6 +1949,14 @@ Current page context:
     // Extract final text response
     const finalText = response.response.text();
     console.log('[Chat] Final response:', finalText);
+    
+    // If navigation was requested, return object with both text and navigation
+    if (navigationIntent) {
+      return {
+        text: finalText || `Navigating to ${navigationIntent.displayName}...`,
+        navigate: navigationIntent.path
+      };
+    }
     
     return finalText || "I processed your request but couldn't generate a response. Please try again.";
     
@@ -1636,6 +2056,7 @@ function getFallbackResponse(text, context, conversationHistory = []) {
 export default {
   processChat,
   parseVoiceTranscript,
+  parseAttendanceVoice,
   generateQuiz,
   generateAssignment,
   analyzeStudentPerformance,
@@ -1643,3 +2064,123 @@ export default {
   suggestNextTopic,
   detectAttendanceRisks
 };
+
+// Export tool functions and declarations for voice agent to share
+/**
+ * Generate AI insights for dashboard
+ * Returns array of insights with color and icon
+ */
+export function generateAIInsights() {
+  const insights = [];
+  
+  // Get teacher data
+  const teacher = teacherData;
+  const courses = teacher?.courses || [];
+  
+  // Analyze attendance patterns
+  const attendanceData = attendanceLogs.filter(log => {
+    const logDate = new Date(log.date);
+    const daysDiff = (new Date() - logDate) / (1000 * 60 * 60 * 24);
+    return daysDiff <= 7; // Last 7 days
+  });
+  
+  if (attendanceData.length > 0) {
+    const avgAttendance = attendanceData.reduce((sum, log) => {
+      const present = log.students.filter(s => s.status === 'present').length;
+      return sum + (present / log.students.length) * 100;
+    }, 0) / attendanceData.length;
+    
+    if (avgAttendance < 85) {
+      insights.push({
+        title: "Attendance Alert",
+        detail: `Average attendance is ${avgAttendance.toFixed(1)}% this week - consider follow-up with absent students`,
+        color: "red",
+        icon: "alert"
+      });
+    } else if (avgAttendance >= 95) {
+      insights.push({
+        title: "Excellent Attendance",
+        detail: `${avgAttendance.toFixed(1)}% attendance this week - great engagement!`,
+        color: "green",
+        icon: "check"
+      });
+    }
+  }
+  
+  // Analyze syllabus progress
+  courses.forEach(course => {
+    const sections = course.sections || [];
+    sections.forEach(section => {
+      const syllabus = getSyllabusByRef(course.syllabusRef);
+      if (syllabus) {
+        const progress = normalizeSectionProgress(section.sectionId, syllabus);
+        const stored = loadStoredProgress(section.sectionId);
+        const effective = { ...progress, ...stored };
+        
+        const totalTopics = syllabus.chapters.reduce((sum, ch) => sum + ch.subTopics.length, 0);
+        const doneTopics = syllabus.chapters.reduce((sum, ch) => {
+          return sum + ch.subTopics.filter((t, idx) => {
+            const topicData = effective[ch.index]?.topics?.[idx];
+            const status = typeof topicData === 'object' ? topicData.status : topicData;
+            return status === 'done';
+          }).length;
+        }, 0);
+        
+        const percent = (doneTopics / totalTopics) * 100;
+        
+        if (percent < 50) {
+          insights.push({
+            title: `${section.name} Progress`,
+            detail: `Only ${percent.toFixed(0)}% syllabus completed - consider accelerating pace`,
+            color: "yellow",
+            icon: "trending"
+          });
+        } else if (percent >= 80) {
+          insights.push({
+            title: `${section.name} On Track`,
+            detail: `${percent.toFixed(0)}% syllabus completed - excellent progress!`,
+            color: "green",
+            icon: "target"
+          });
+        }
+      }
+    });
+  });
+  
+  // Check upcoming deadlines
+  const upcomingAssignments = assignments.filter(a => {
+    const dueDate = new Date(a.dueDate);
+    const daysDiff = (dueDate - new Date()) / (1000 * 60 * 60 * 24);
+    return daysDiff > 0 && daysDiff <= 3;
+  });
+  
+  if (upcomingAssignments.length > 0) {
+    insights.push({
+      title: "Upcoming Deadlines",
+      detail: `${upcomingAssignments.length} assignment${upcomingAssignments.length > 1 ? 's' : ''} due in next 3 days`,
+      color: "yellow",
+      icon: "calendar"
+    });
+  }
+  
+  // Add general tip if no insights
+  if (insights.length === 0) {
+    insights.push({
+      title: "All Clear",
+      detail: "No urgent items - consider planning ahead for upcoming lessons",
+      color: "green",
+      icon: "check"
+    });
+    insights.push({
+      title: "Pro Tip",
+      detail: "Use the AI quiz generator to create quick assessments from your syllabus",
+      color: "green",
+      icon: "book"
+    });
+  }
+  
+  // Limit to 3 most important insights
+  return insights.slice(0, 3);
+}
+
+export { toolFunctions, chatToolDeclarations, toolDeclarations };

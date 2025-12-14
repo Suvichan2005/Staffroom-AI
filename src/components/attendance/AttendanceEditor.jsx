@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { Check, X, Users, UserCheck, UserX, Save, Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Check, X, Users, UserCheck, UserX, Save, Search, Mic } from "lucide-react";
+import VoiceAttendanceLogger from "../ai/VoiceAttendanceLogger";
 
 function useLocalDraft(key, initial) {
   const [state, setState] = useState(() => {
@@ -25,6 +26,7 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
   const init = useMemo(() => initialPresent, [classId, date]);
   const [present, setPresent] = useLocalDraft(key, init);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showVoice, setShowVoice] = useState(false);
 
   const toggle = (id) => setPresent(prev => ({ ...prev, [id]: !prev[id] }));
   const markAll = (value) => {
@@ -38,6 +40,10 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
   const handleSave = () => {
     onSave?.(present);
     try { localStorage.removeItem(key); } catch {}
+  };
+
+  const handleVoiceUpdate = (updates) => {
+    setPresent(prev => ({ ...prev, ...updates }));
   };
 
   // Filter students by search
@@ -88,6 +94,19 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
           <UserX className="w-4 h-4" />
           All Absent
         </button>
+
+        <button
+          onClick={() => setShowVoice(!showVoice)}
+          className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
+            showVoice
+              ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-200'
+              : 'bg-black-100 text-black-600 hover:bg-black-200'
+          }`}
+        >
+          <Mic className="w-4 h-4" />
+          {showVoice ? 'Hide Voice' : 'Voice Mode'}
+        </button>
+
         <div className="relative flex-1 min-w-[150px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
           <input
@@ -100,8 +119,26 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
         </div>
       </div>
 
-      {/* Student List */}
-      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
+      {/* Voice Logger Panel */}
+      <AnimatePresence>
+        {showVoice && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <VoiceAttendanceLogger
+              classId={classId}
+              students={students}
+              onUpdate={handleVoiceUpdate}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Student List - Scrollable */}
+      <div className="space-y-2">
         {filteredStudents.map((s, i) => {
           const isPresent = !!present[s.studentId];
           return (
@@ -144,7 +181,7 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center justify-between pt-2 border-t border-black-100">
+      <div className="flex items-center justify-between pt-4 border-t border-black-100 bg-white">
         <p className="text-sm text-black-500">
           <span className="font-medium text-green-600">{presentCount}</span> present, 
           <span className="font-medium text-red-600 ml-1">{absentCount}</span> absent

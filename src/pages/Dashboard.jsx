@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, Tool
 import { useTeacher } from "../context/TeacherContext";
 import { LogoHeader, PageShell } from "../components/layout";
 import { GlobalAssistant, AISummaryCard } from "../components/ai";
+import SmartAISuggestions from "../components/ai/SmartAISuggestions";
 import { CourseCard } from "../components/teacher";
 import { UpcomingClasses, NoticesPanel } from "../components/dashboard";
 import { getSyllabusByRef, getTeacherTodayActions, getTeacherAnalyticsSnapshot, teacherData } from "../data/dummyData";
@@ -70,18 +71,41 @@ export default function Dashboard() {
         <div className="lg:col-span-4 xl:col-span-4">
           <UpcomingClasses className={shouldScrollCourses ? "h-full" : ""} />
           <div className="sc-card mt-6">
-            <h3 className="sc-heading text-base mb-2">AI Suggestions</h3>
-            <ul className="space-y-2 text-sm">
-              <li className="border border-black-200 rounded-lg p-2 bg-white/60">
-                Quiz prompt ready for Chapter 3 - schedule during Friday&apos;s class.
-              </li>
-              <li className="border border-black-200 rounded-lg p-2 bg-white/60">
-                Section 8A needs a recap: 3 students below 75% attendance.
-              </li>
-              <li className="border border-black-200 rounded-lg p-2 bg-white/60">
-                Share new climate change article with 6C to reinforce discussion.
-              </li>
-            </ul>
+            <SmartAISuggestions
+              contextKey="dashboard"
+              generateSuggestions={() => {
+                // Generate dashboard-level suggestions
+                const suggestions = [];
+                
+                // Check for pending actions
+                if (todayActions.pendingAttendance > 0) {
+                  suggestions.push(
+                    `${todayActions.pendingAttendance} class${todayActions.pendingAttendance > 1 ? 'es' : ''} awaiting attendance submission today`
+                  );
+                }
+                
+                // Check for syllabus gaps
+                if (todayActions.chaptersLeft > 5) {
+                  suggestions.push(
+                    `${todayActions.chaptersLeft} chapters remaining across sections - consider accelerating pace`
+                  );
+                }
+                
+                // Check assignments
+                if (todayActions.assignmentsDue > 0) {
+                  suggestions.push(
+                    `${todayActions.assignmentsDue} assignments due ${todayActions.date} - review submissions`
+                  );
+                }
+                
+                // Add general teaching tips
+                suggestions.push('Consider using AI quiz generator for quick assessments');
+                suggestions.push('Review student performance trends in analytics');
+                
+                return suggestions;
+              }}
+              title="AI Suggestions"
+            />
           </div>
         </div>
 

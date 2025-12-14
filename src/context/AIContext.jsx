@@ -1,6 +1,21 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { parseVoiceTranscript, generateDailyBriefing, generateQuiz, generateAssignment, processChat } from '../services/aiService';
+import { GeminiLiveSession } from '../services/geminiLiveService';
+import { getToolsByContext, handleChatToolCall } from '../services/chatToolsDefinition';
 import { initializeAllPlugins, getChatPlugins, createPluginAPI } from '../plugins';
+import {
+  getAllChatSessions,
+  getChatSession,
+  saveChatSession,
+  deleteChatSession,
+  createNewChatSession,
+  getCurrentSessionId,
+  setCurrentSessionId,
+  clearCurrentSession,
+  addMessageToSession,
+  updateChatTitle,
+} from '../utils/chatStorage';
 import { 
   teacherData, 
   syllabusList,
@@ -42,6 +57,12 @@ export function AIProvider({ children }) {
       timestamp: new Date(),
     },
   ]);
+
+  // Chat history and session management
+  const [currentSessionId, setCurrentSessionIdState] = useState(null);
+  const [chatHistory, setChatHistory] = useState([]);
+  const sessionInitializedRef = useRef(false);
+  const lastPathRef = useRef(null);
 
   // Input state
   const [inputValue, setInputValue] = useState('');
@@ -85,6 +106,11 @@ export function AIProvider({ children }) {
 
   // Voice recognition
   const recognitionRef = useRef(null);
+  const geminiLiveSessionRef = useRef(null);
+  const liveTranscriptRef = useRef(''); // Ref to track transcript for callbacks
+  const [useLiveAPI, setUseLiveAPI] = useState(true); // Use Gemini Live API by default
+  const [liveStatus, setLiveStatus] = useState('disconnected');
+  const [liveTranscript, setLiveTranscript] = useState('');
 
   // Context for AI (current course, class, etc.)
   const [aiContext, setAIContext] = useState({
@@ -192,32 +218,128 @@ export function AIProvider({ children }) {
     };
   }, []);
 
-  // Start voice recording
-  const startRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      setIsRecording(true);
-      recognitionRef.current.start();
-    } else {
-      console.warn('Speech recognition not supported');
+  // Initialize or restore chat session on mount
+  useEffect(() => {
+    if (!sessionInitializedRef.current) {
+      sessionInitializedRef.current = true;
+      
+      // Load chat history
+      const history = getAllChatSessions();
+      setChatHistory(history);
+      
+      // Check if there's a current session ID in storage
+      const storedSessionId = getCurrentSessionId();
+      
+      if (storedSessionId) {
+        // Load existing session
+        const session = getChatSession(storedSessionId);
+        if (session) {
+          setCurrentSessionIdState(storedSessionId);
+          // Convert stored messages to display format
+          const formattedMessages = session.messages.map(msg => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp),
+          }));
+          setMessages(formattedMessages.length > 0 ? formattedMessages : [
+            {
+              id: 'welcome',
+              role: 'assistant',
+              content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
+              timestamp: new Date(),
+            },
+          ]);
+          console.log(`[AIContext] Restored session ${storedSessionId}`);
+        } else {
+          // Session not found, start new
+          startNewChatSession();
+        }
+      } else {
+        // No current session, start new
+        startNewChatSession();
+      }
+      
+      lastPathRef.current = window.location.pathname;
     }
   }, []);
 
-  // Stop voice recording
-  const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
+  // Session management functions
+  const startNewChatSession = useCallback(() => {
+    const context = getContextFromURL();
+    const newSession = createNewChatSession(context);
+    
+    saveChatSession(newSession);
+    setCurrentSessionId(newSession.id);
+    setCurrentSessionIdState(newSession.id);
+    
+    // Reset to welcome message
+    setMessages([
+      {
+        id: 'welcome',
+        role: 'assistant',
+        content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
+        timestamp: new Date(),
+      },
+    ]);
+    
+    // Refresh history
+    setChatHistory(getAllChatSessions());
+    
+    console.log(`[AIContext] Started new session ${newSession.id}`);
+    return newSession.id;
+  }, [getContextFromURL]);
+
+  const loadChatSession = useCallback((sessionId) => {
+    const session = getChatSession(sessionId);
+    if (session) {
+      setCurrentSessionId(sessionId);
+      setCurrentSessionIdState(sessionId);
+      
+      // Load messages
+      const formattedMessages = session.messages.map(msg => ({
+        ...msg,
+        timestamp: new Date(msg.timestamp),
+      }));
+      setMessages(formattedMessages.length > 0 ? formattedMessages : [
+        {
+          id: 'welcome',
+          role: 'assistant',
+          content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
+          timestamp: new Date(),
+        },
+      ]);
+      
+      console.log(`[AIContext] Loaded session ${sessionId}`);
     }
   }, []);
 
-  // Toggle voice recording
-  const toggleRecording = useCallback(() => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
+  const deleteChatSessionById = useCallback((sessionId) => {
+    deleteChatSession(sessionId);
+    setChatHistory(getAllChatSessions());
+    
+    // If deleted session was current, start new
+    if (sessionId === currentSessionId) {
+      startNewChatSession();
     }
-  }, [isRecording, startRecording, stopRecording]);
+  }, [currentSessionId, startNewChatSession]);
+
+  const renameChatSession = useCallback((sessionId, newTitle) => {
+    updateChatTitle(sessionId, newTitle);
+    setChatHistory(getAllChatSessions());
+  }, []);
+
+  // Persist messages to current session whenever they change
+  useEffect(() => {
+    if (currentSessionId && messages.length > 0 && sessionInitializedRef.current) {
+      const session = getChatSession(currentSessionId);
+      if (session) {
+        session.messages = messages.map(msg => ({
+          ...msg,
+          timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp,
+        }));
+        saveChatSession(session);
+      }
+    }
+  }, [messages, currentSessionId]);
 
   // Add user message
   const addUserMessage = useCallback((content) => {
@@ -245,6 +367,376 @@ export function AIProvider({ children }) {
     setMessages((prev) => [...prev, message]);
     return message;
   }, []);
+
+  // Start voice recording with Gemini Live API (for global chat)
+  // Build context-aware system prompt for voice chat
+  const buildVoiceSystemPrompt = useCallback(() => {
+    // Get current context
+    const urlContext = getContextFromURL();
+    const currentCourseId = aiContext.currentCourseId || urlContext.courseId;
+    const currentSectionId = aiContext.currentSectionId || urlContext.sectionId;
+    
+    // Find current course and syllabus
+    let syllabusContext = '';
+    if (currentCourseId && teacherData) {
+      const course = teacherData.courses.find(c => c.id === currentCourseId);
+      if (course) {
+        const syllabus = getSyllabusByRef(course.syllabusRef);
+        const section = course.sections.find(s => s.id === currentSectionId) || course.sections[0];
+        
+        if (syllabus && section) {
+          const baseProgress = normalizeSectionProgress(syllabus, section.progress || {});
+          const currentProgress = loadStoredProgress(section.id, baseProgress);
+          
+          // Find ongoing and next topics based on actual syllabus structure
+          let ongoingTopic = null;
+          let nextTopic = null;
+          let foundOngoing = false;
+          
+          for (const chapter of syllabus.chapters || []) {
+            for (const subTopic of chapter.subTopics || []) {
+              const status = currentProgress[chapter.index]?.topics?.[subTopic.index];
+              
+              if (status === 'ongoing' && !foundOngoing) {
+                ongoingTopic = { name: subTopic.title, chapter: chapter.title };
+                foundOngoing = true;
+              } else if (foundOngoing && !nextTopic && status !== 'done') {
+                nextTopic = { name: subTopic.title, chapter: chapter.title };
+                break;
+              } else if (!foundOngoing && !nextTopic && status !== 'done' && status !== 'ongoing') {
+                nextTopic = { name: subTopic.title, chapter: chapter.title };
+              }
+            }
+            if (nextTopic) break;
+          }
+          
+          syllabusContext = `
+CURRENT SYLLABUS CONTEXT (${syllabus.subject} - Section ${section.id}):${ongoingTopic ? `
+- Currently Ongoing: "${ongoingTopic.name}" (Chapter: ${ongoingTopic.chapter})` : ''}${nextTopic ? `
+- Next Topic in Sequence: "${nextTopic.name}" (Chapter: ${nextTopic.chapter})` : ''}
+
+SPECIAL HANDLING FOR "NEXT TOPIC":
+- When user says "mark [topic] done and also for the next topic" or "and the next topic as ongoing":
+  1. First call searchTopic to find the topic's chapterIndex and topicIndex
+  2. Call updateProgress with sectionId="${section.id}", chapterIndex, topicIndex, status="complete"
+  3. Then call searchTopic for "${nextTopic?.name || 'the next topic'}"
+  4. Call updateProgress for the next topic with status="ongoing"
+- When user says "what's the next topic" or "mark the next topic ongoing":
+  Use searchTopic for: ${nextTopic ? `"${nextTopic.name}"` : 'ask for clarification'}
+`;
+        }
+      }
+    }
+    
+    // Get student names for attendance context
+    const studentNames = students && students.length > 0 
+      ? `\nCurrent class students: ${students.map(s => s.name || s.firstName).join(', ')}`
+      : '';
+    
+    // Include recent conversation history for context continuity
+    const recentHistory = messages
+      .slice(-10) // Last 10 messages
+      .filter(m => m.role !== 'welcome' && m.content)
+      .map(m => `${m.role === 'user' ? 'Teacher' : 'AI'}: ${m.content.slice(0, 200)}${m.content.length > 200 ? '...' : ''}`)
+      .join('\n');
+    
+    const conversationContext = recentHistory 
+      ? `\n\nRECENT CONVERSATION HISTORY (for context):\n${recentHistory}\n\nUse this context to understand references like "it", "that topic", etc.`
+      : '';
+    
+    // Available sections for tool calls
+    const availableSections = teacherData.courses.flatMap(c => c.sections.map(s => `${s.id} (${c.title})`)).join(', ');
+    
+    // Build temporal context - today's schedule, current/next class
+    const sessions = getUpcomingSessions(teacherData, 1); // Today and tomorrow
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const currentTimeStr = now.toTimeString().slice(0, 5);
+    
+    const todaysSessions = sessions.filter(s => s.date === today);
+    const currentClass = todaysSessions.find(s => {
+      const startMinutes = parseInt(s.startTime.split(':')[0]) * 60 + parseInt(s.startTime.split(':')[1] || 0);
+      const endMinutes = parseInt(s.endTime.split(':')[0]) * 60 + parseInt(s.endTime.split(':')[1] || 0);
+      const nowMinutes = parseInt(currentTimeStr.split(':')[0]) * 60 + parseInt(currentTimeStr.split(':')[1]);
+      return nowMinutes >= startMinutes && nowMinutes <= endMinutes;
+    });
+    const nextClass = todaysSessions.find(s => s.startTime > currentTimeStr);
+    
+    let temporalContext = `\nTEMPORAL CONTEXT (Current time: ${currentTimeStr}):`;
+    temporalContext += `\n- Today's classes: ${todaysSessions.length > 0 ? todaysSessions.map(s => `${s.subject} ${s.classId} at ${s.startTime}`).join(', ') : 'No classes scheduled'}`;
+    if (currentClass) {
+      temporalContext += `\n- CURRENTLY IN CLASS: ${currentClass.subject} ${currentClass.classId} (${currentClass.startTime}-${currentClass.endTime})`;
+    }
+    if (nextClass) {
+      temporalContext += `\n- Next class: ${nextClass.subject} ${nextClass.classId} at ${nextClass.startTime}`;
+    }
+    
+    // Build current URL context - explicit about what page user is viewing
+    let currentPageContext = '';
+    if (currentSectionId && currentCourseId) {
+      const course = teacherData.courses.find(c => c.id === currentCourseId);
+      currentPageContext = `\n\nCURRENT PAGE CONTEXT (from URL):
+- User is currently viewing: ${course?.title || currentCourseId} - Section ${currentSectionId}
+- DEFAULT SECTION: ${currentSectionId} (use this if teacher doesn't specify a section)
+- When teacher says "mark topic done" without specifying section, use sectionId="${currentSectionId}"`;
+    } else {
+      currentPageContext = `\n\nCURRENT PAGE CONTEXT:
+- User is on a general page (not viewing a specific class)
+- You MUST ask which section when updating syllabus progress
+- Available sections: ${availableSections}`;
+    }
+    
+    return `You are Staffroom AI, a helpful and intelligent teaching assistant.
+
+You help teachers with:
+- Lesson planning and curriculum design
+- Generating quizzes, assignments, and assessments
+- Student progress tracking and performance analysis
+- Attendance management with voice commands
+- Syllabus planning and topic tracking
+- Classroom management strategies and tips
+- Educational resource recommendations
+
+IMPORTANT CAPABILITIES:
+- You can mark student attendance using voice commands (e.g., "mark Aarav as present")
+- You can update syllabus progress and mark topics as completed
+- You can find which topic contains a specific page number
+- You can NAVIGATE to different pages (e.g., "open 6A geography", "show me my schedule", "go to dashboard")
+- You can answer general questions about teaching and education
+- You provide concise, practical advice focused on teacher needs
+${syllabusContext}${studentNames}${temporalContext}${currentPageContext}
+
+AVAILABLE SECTIONS: ${availableSections}
+
+NAVIGATION:
+- Use navigateTo tool when teacher asks to "open", "show", "go to", or "take me to" a page
+- Examples: "open 6A geography" → navigateTo("6A geography")
+- "show me my schedule" → navigateTo("schedule")
+- "go to dashboard" → navigateTo("dashboard")
+- Available pages: dashboard, schedule, classes, assessments, resources, profile, settings, and all class pages like "6A geography"
+
+TOOL USAGE - USE THE SAME MULTI-STEP APPROACH AS TEXT CHAT:
+1. When teacher mentions a topic by NAME: use searchTopic → updateProgress
+2. When teacher mentions a PAGE NUMBER (e.g., "left at page 34"): use findTopicByPage → get topic indices
+3. Then use updateProgress with the found indices to update status/currentPage/notes
+4. Always use searchTopic or findTopicByPage before updateProgress
+
+FINDING TOPICS BY PAGE NUMBER:
+- If teacher says "I stopped at page 34" or "left at page 34", use findTopicByPage(sectionId, 34)
+- This returns the topic whose page range includes that page
+- Then use updateProgress with the returned chapterIndex/topicIndex and set currentPage
+
+MULTI-STEP SYLLABUS UPDATE LOGIC:
+When teacher gives multiple pieces of info like "done with X, covered to page Y, note Z":
+
+1. FIRST: Mark the mentioned topic as DONE (complete)
+   - searchTopic("X") → get indices
+   - updateProgress(status="complete") → NO notes, NO currentPage for completed topic
+
+2. THEN: Find what topic contains page Y (this is the NEXT topic they're working on)
+   - findTopicByPage(sectionId, Y) → get the topic containing that page
+   - updateProgress(status="ongoing", currentPage=Y, notes="Z") → notes go HERE on ongoing topic
+
+EXAMPLE: "done with Plains and Valleys, covered to page 42, students understood clearly"
+- Plains and Valleys is p.29-36, page 42 is in Rivers and Deltas (p.37-44)
+- Step 1: searchTopic("Plains and Valleys") → updateProgress(status="complete")
+- Step 2: findTopicByPage(sectionId, 42) → returns Rivers and Deltas indices
+- Step 3: updateProgress(status="ongoing", currentPage=42, notes="students understood clearly")
+
+KEY INSIGHT: The note "students understood clearly about the new topic" refers to WHERE THEY LEFT OFF (the ongoing topic), not the completed topic!
+
+CRITICAL: findTopicByPage ONLY FINDS the topic - it does NOT update anything!
+- After calling findTopicByPage, you MUST call updateProgress to actually make changes
+- findTopicByPage returns chapterIndex and topicIndex - use these in updateProgress
+- Never say "I've updated" unless you actually called updateProgress!
+
+CRITICAL INSTRUCTIONS:
+- For syllabus updates: ALWAYS use tools first, then respond with confirmation
+- When user is on a specific section page, use that section by default
+- Execute tools immediately without asking for clarification when context is clear
+- Be friendly, efficient, and action-oriented
+${conversationContext}
+
+Respond helpfully and naturally to voice input. Execute relevant tools immediately when the intent is clear.`;
+  }, [aiContext, getContextFromURL, students, messages]);
+
+  const startGeminiLiveRecording = useCallback(async () => {
+    try {
+      setIsRecording(true);
+      setLiveStatus('connecting');
+      
+      // Get combined tools (attendance + syllabus)
+      const tools = getToolsByContext('combined');
+      
+      const session = new GeminiLiveSession({
+        classId: 'GlobalChat',
+        studentList: students || [],
+        systemPrompt: buildVoiceSystemPrompt(),
+        tools: tools,
+        onTranscript: (data) => {
+          if (data.type === 'input') {
+            // Show live transcription - but NOT in input box (separate from text mode)
+            setLiveTranscript(data.combined);
+            liveTranscriptRef.current = data.combined; // Track in ref for callbacks
+          } else if (data.type === 'model' && data.text) {
+            // When model starts responding, first add the user message if not added
+            const currentTranscript = liveTranscriptRef.current;
+            if (currentTranscript && currentTranscript.trim()) {
+              setMessages(prev => {
+                // Check if we already have this user message
+                const lastUserMsg = prev.filter(m => m.role === 'user').slice(-1)[0];
+                if (lastUserMsg && lastUserMsg.content === currentTranscript.trim()) {
+                  return prev; // Already added
+                }
+                // Add user message
+                return [
+                  ...prev,
+                  {
+                    id: Date.now() - 1,
+                    role: 'user',
+                    content: currentTranscript.trim(),
+                    timestamp: new Date(),
+                    isVoice: true,
+                  }
+                ];
+              });
+              // Clear ref so we don't add again
+              liveTranscriptRef.current = '';
+            }
+            
+            // Stream model response - update last assistant message or create new one
+            setMessages(prev => {
+              const lastMsg = prev[prev.length - 1];
+              if (lastMsg && lastMsg.role === 'assistant' && lastMsg.isStreaming) {
+                // Update existing streaming message
+                return [
+                  ...prev.slice(0, -1),
+                  { ...lastMsg, content: lastMsg.content + data.text }
+                ];
+              } else {
+                // Create new streaming message
+                return [
+                  ...prev,
+                  {
+                    id: Date.now(),
+                    role: 'assistant',
+                    content: data.text,
+                    timestamp: new Date(),
+                    isStreaming: true
+                  }
+                ];
+              }
+            });
+          }
+        },
+        onToolCall: (toolCall) => {
+          // Tool call already processed by geminiLiveService.handleToolCall
+          // toolCall contains: { id, name, args, display, result }
+          const displayText = toolCall.display || `${toolCall.name || 'Tool'} executed`;
+          addAssistantMessage(`✓ ${displayText}`, {
+            type: 'tool-action',
+            toolName: toolCall.name,
+            args: toolCall.args,
+            result: toolCall.result
+          });
+          
+          // Handle navigation if the tool result includes a navigate path
+          if (toolCall.result?.action === 'navigate' && toolCall.result?.path) {
+            // Small delay to let the message appear first
+            setTimeout(() => {
+              window.location.href = toolCall.result.path;
+            }, 500);
+          }
+        },
+        onTurnComplete: () => {
+          // Mark streaming message as complete
+          setMessages(prev => {
+            return prev.map(msg => 
+              msg.isStreaming ? { ...msg, isStreaming: false } : msg
+            );
+          });
+          
+          // Clear transcript display (ref already cleared when user msg added)
+          setLiveTranscript('');
+          liveTranscriptRef.current = '';
+          
+          // Auto-stop recording after turn completes to allow text input
+          // This prevents UI from being stuck in recording mode
+          if (geminiLiveSessionRef.current) {
+            setTimeout(() => {
+              if (geminiLiveSessionRef.current) {
+                geminiLiveSessionRef.current.disconnect();
+                geminiLiveSessionRef.current = null;
+              }
+              setIsRecording(false);
+              setLiveStatus('disconnected');
+            }, 500);
+          }
+        },
+        onStatusChange: (status) => {
+          console.log('[Chat Gemini Live] Status:', status);
+          setLiveStatus(status);
+        },
+        onError: (error) => {
+          console.error('Gemini Live error:', error);
+          addAssistantMessage(`⚠️ Connection error: ${error.message}`);
+          setIsRecording(false);
+          setLiveStatus('disconnected');
+        },
+      });
+      
+      await session.connect();
+      geminiLiveSessionRef.current = session;
+      await session.startStreaming();
+    } catch (error) {
+      console.error('Failed to start Gemini Live:', error);
+      addAssistantMessage(`Error: Could not start voice recording. ${error.message}`);
+      setIsRecording(false);
+      setLiveStatus('disconnected');
+    }
+  }, [addAssistantMessage, students, buildVoiceSystemPrompt]);
+
+  // Stop Gemini Live recording
+  const stopGeminiLiveRecording = useCallback(() => {
+    if (geminiLiveSessionRef.current) {
+      geminiLiveSessionRef.current.disconnect();
+      geminiLiveSessionRef.current = null;
+      setIsRecording(false);
+      setLiveStatus('disconnected');
+      setLiveTranscript('');
+    }
+  }, []);
+
+  // Start voice recording (fallback to browser)
+  const startRecording = useCallback(() => {
+    if (useLiveAPI) {
+      startGeminiLiveRecording();
+    } else if (recognitionRef.current) {
+      setIsRecording(true);
+      recognitionRef.current.start();
+    } else {
+      console.warn('Speech recognition not supported');
+    }
+  }, [useLiveAPI, startGeminiLiveRecording]);
+
+  // Stop voice recording
+  const stopRecording = useCallback(() => {
+    if (useLiveAPI) {
+      stopGeminiLiveRecording();
+    } else if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+  }, [useLiveAPI, stopGeminiLiveRecording]);
+
+  // Toggle voice recording
+  const toggleRecording = useCallback(() => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }, [isRecording, startRecording, stopRecording]);
 
   // Process user input and generate response
   const sendMessage = useCallback(async (content) => {
@@ -312,7 +804,16 @@ export function AIProvider({ children }) {
         }
       );
       
-      addAssistantMessage(response);
+      // Handle response - can be string or object with navigation
+      if (typeof response === 'object' && response.navigate) {
+        addAssistantMessage(response.text);
+        // Navigate after a short delay to show the message
+        setTimeout(() => {
+          window.location.href = response.navigate;
+        }, 500);
+      } else {
+        addAssistantMessage(response);
+      }
       
     } catch (error) {
       console.error('AI response error:', error);
@@ -775,6 +1276,14 @@ export function AIProvider({ children }) {
     sendMessage,
     clearChat,
 
+    // Chat history and sessions
+    currentSessionId,
+    chatHistory,
+    startNewChatSession,
+    loadChatSession,
+    deleteChatSessionById,
+    renameChatSession,
+
     // Input
     inputValue,
     setInputValue,
@@ -785,6 +1294,11 @@ export function AIProvider({ children }) {
     startRecording,
     stopRecording,
     toggleRecording,
+    // Gemini Live API
+    useLiveAPI,
+    setUseLiveAPI,
+    liveStatus,
+    liveTranscript,
 
     // Attachments
     attachments,
