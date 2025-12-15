@@ -127,6 +127,7 @@ export default function Drawer() {
               >
                 <Avatar
                   name={teacher.name}
+                  src={teacher.photoURL}
                   size="lg"
                 />
                 <div className="min-w-0 flex-1">

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,6 +17,8 @@ import {
   Check,
   CheckCheck,
   Menu,
+  Trash2,
+  X,
 } from 'lucide-react';
 import { useTeacher } from '../../context/TeacherContext';
 import { useAuth } from '../../context/AuthContext';
@@ -24,11 +26,9 @@ import { useLayout } from '../../context/LayoutContext';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { Avatar, CountBadge } from '../design-system';
 import { 
-  notifications, 
-  getUnreadCount, 
-  formatNotificationTime,
-  markNotificationRead,
-  markAllNotificationsRead 
+  getUserNotifications,
+  saveUserNotifications,
+  formatNotificationTime
 } from '../../data/dummyData';
 
 /**
@@ -46,11 +46,25 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   const teacher = teacherCtx?.teacher || { name: 'Teacher' };
   const isLanding = location.pathname === '/';
   const isAuth = location.pathname === '/login' || location.pathname === '/register';
-  const unreadCount = useMemo(() => getUnreadCount(), []);
+  
+  // Load notifications from user-scoped storage
+  useEffect(() => {
+    const loadNotifications = () => {
+      const userNotifs = getUserNotifications();
+      setNotifications(userNotifs || []);
+    };
+    loadNotifications();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const unreadCount = useMemo(() => notifications.filter(n => !n.read).length, [notifications]);
 
   // Get notification icon based on type
   const getNotificationIcon = (type) => {
@@ -65,19 +79,39 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
   };
 
   // Handle notification click
-  const handleNotificationClick = (notification) => {
-    markNotificationRead(notification.id);
+  const handleNotificationClick = useCallback((notification) => {
+    const updated = notifications.map(n => 
+      n.id === notification.id ? { ...n, read: true } : n
+    );
+    setNotifications(updated);
+    saveUserNotifications(updated);
     setShowNotifications(false);
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
     }
-  };
+  }, [notifications, navigate]);
 
   // Handle mark all read
-  const handleMarkAllRead = () => {
-    markAllNotificationsRead();
+  const handleMarkAllRead = useCallback(() => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updated);
+    saveUserNotifications(updated);
+  }, [notifications]);
+
+  // Handle delete notification
+  const handleDeleteNotification = useCallback((e, notifId) => {
+    e.stopPropagation();
+    const updated = notifications.filter(n => n.id !== notifId);
+    setNotifications(updated);
+    saveUserNotifications(updated);
+  }, [notifications]);
+
+  // Handle clear all notifications
+  const handleClearAll = useCallback(() => {
+    setNotifications([]);
+    saveUserNotifications([]);
     setShowNotifications(false);
-  };
+  }, []);
 
   // Don't show nav on landing or auth pages
   if (isLanding || isAuth) {
@@ -191,32 +225,44 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                     >
                       <div className="px-4 py-3 border-b border-black-100 flex items-center justify-between">
                         <p className="font-semibold text-black-800">Notifications</p>
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={handleMarkAllRead}
-                            className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
-                          >
-                            <CheckCheck className="w-3 h-3" />
-                            Mark all read
-                          </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {unreadCount > 0 && (
+                            <button
+                              onClick={handleMarkAllRead}
+                              className="text-xs text-indigo-600 hover:underline flex items-center gap-1"
+                            >
+                              <CheckCheck className="w-3 h-3" />
+                              Mark read
+                            </button>
+                          )}
+                          {notifications.length > 0 && (
+                            <button
+                              onClick={handleClearAll}
+                              className="text-xs text-red-500 hover:underline flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Clear
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="overflow-y-auto max-h-72">
                         {notifications.length === 0 ? (
                           <div className="px-4 py-8 text-center">
                             <Bell className="w-8 h-8 text-black-300 mx-auto mb-2" />
                             <p className="text-sm text-black-500">No notifications</p>
+                            <p className="text-xs text-black-400 mt-1">You're all caught up!</p>
                           </div>
                         ) : (
-                          notifications.slice(0, 5).map((notif) => {
+                          notifications.slice(0, 8).map((notif) => {
                             const Icon = getNotificationIcon(notif.type);
                             return (
-                              <button
+                              <div
                                 key={notif.id}
                                 onClick={() => handleNotificationClick(notif)}
                                 className={`
-                                  w-full px-4 py-3 text-left hover:bg-black-50 transition-colors
-                                  border-b border-black-50 last:border-b-0
+                                  w-full px-4 py-3 text-left hover:bg-black-50 transition-colors cursor-pointer
+                                  border-b border-black-50 last:border-b-0 group
                                   ${!notif.read ? 'bg-indigo-50/50' : ''}
                                 `}
                               >
@@ -232,24 +278,35 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                                       <p className={`text-sm truncate ${!notif.read ? 'font-semibold text-black-800' : 'text-black-700'}`}>
                                         {notif.title}
                                       </p>
-                                      {!notif.read && (
-                                        <span className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0 mt-1.5" />
-                                      )}
+                                      <div className="flex items-center gap-1 flex-shrink-0">
+                                        {!notif.read && (
+                                          <span className="w-2 h-2 bg-indigo-600 rounded-full mt-1.5" />
+                                        )}
+                                        <button
+                                          onClick={(e) => handleDeleteNotification(e, notif.id)}
+                                          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-black-100 rounded transition-all"
+                                          title="Delete"
+                                        >
+                                          <X className="w-3 h-3 text-black-400" />
+                                        </button>
+                                      </div>
                                     </div>
-                                    <p className="text-xs text-black-500 line-clamp-1 mt-0.5">{notif.message}</p>
+                                    <p className="text-xs text-black-500 line-clamp-2 mt-0.5">{notif.message}</p>
                                     <p className="text-[10px] text-black-400 mt-1">{formatNotificationTime(notif.timestamp)}</p>
                                   </div>
                                 </div>
-                              </button>
+                              </div>
                             );
                           })
                         )}
                       </div>
-                      <div className="px-4 py-2 border-t border-black-100 bg-black-50">
-                        <button className="w-full py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700">
-                          View all notifications
-                        </button>
-                      </div>
+                      {notifications.length > 0 && (
+                        <div className="px-4 py-2 border-t border-black-100 bg-black-50 text-center">
+                          <p className="text-xs text-black-500">
+                            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'} • {notifications.length} total
+                          </p>
+                        </div>
+                      )}
                     </motion.div>
                   </>
                 )}
@@ -319,15 +376,26 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                         <p className="font-bold text-black-800">Notifications</p>
                         <p className="text-xs text-black-500">{unreadCount} unread</p>
                       </div>
-                      {unreadCount > 0 && (
-                        <button
-                          onClick={handleMarkAllRead}
-                          className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/50 transition-colors"
-                        >
-                          <CheckCheck className="w-3.5 h-3.5" />
-                          Mark all read
-                        </button>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={handleMarkAllRead}
+                            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/50 transition-colors"
+                          >
+                            <CheckCheck className="w-3.5 h-3.5" />
+                            Mark read
+                          </button>
+                        )}
+                        {notifications.length > 0 && (
+                          <button
+                            onClick={handleClearAll}
+                            className="text-xs text-red-500 hover:text-red-600 font-medium flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-white/50 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Clear
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="overflow-y-auto max-h-80">
                       {notifications.length === 0 ? (
@@ -335,19 +403,19 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                           <div className="w-12 h-12 mx-auto bg-black-100 rounded-full flex items-center justify-center mb-3">
                             <Bell className="w-6 h-6 text-black-400" />
                           </div>
-                          <p className="text-sm text-black-500">No notifications yet</p>
-                          <p className="text-xs text-black-400 mt-1">We'll notify you when something arrives</p>
+                          <p className="text-sm text-black-500">No notifications</p>
+                          <p className="text-xs text-black-400 mt-1">You're all caught up!</p>
                         </div>
                       ) : (
                         notifications.map((notif) => {
                           const Icon = getNotificationIcon(notif.type);
                           return (
-                            <button
+                            <div
                               key={notif.id}
                               onClick={() => handleNotificationClick(notif)}
                               className={`
-                                w-full px-5 py-4 text-left hover:bg-black-50 transition-colors
-                                border-b border-black-100 last:border-b-0
+                                w-full px-5 py-4 text-left hover:bg-black-50 transition-colors cursor-pointer
+                                border-b border-black-100 last:border-b-0 group
                                 ${!notif.read ? 'bg-indigo-50/30' : ''}
                               `}
                             >
@@ -363,24 +431,35 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                                     <p className={`text-sm ${!notif.read ? 'font-semibold text-black-800' : 'text-black-700'}`}>
                                       {notif.title}
                                     </p>
-                                    {!notif.read && (
-                                      <span className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0 mt-1.5" />
-                                    )}
+                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                      {!notif.read && (
+                                        <span className="w-2 h-2 bg-indigo-600 rounded-full mt-1.5" />
+                                      )}
+                                      <button
+                                        onClick={(e) => handleDeleteNotification(e, notif.id)}
+                                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-black-100 rounded transition-all"
+                                        title="Delete"
+                                      >
+                                        <X className="w-3.5 h-3.5 text-black-400" />
+                                      </button>
+                                    </div>
                                   </div>
                                   <p className="text-xs text-black-500 line-clamp-2 mt-1">{notif.message}</p>
                                   <p className="text-[11px] text-black-400 mt-2">{formatNotificationTime(notif.timestamp)}</p>
                                 </div>
                               </div>
-                            </button>
+                            </div>
                           );
                         })
                       )}
                     </div>
-                    <div className="px-5 py-3 border-t border-black-100 bg-black-50/50">
-                      <button className="w-full py-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 hover:bg-white rounded-lg transition-colors">
-                        View all notifications
-                      </button>
-                    </div>
+                    {notifications.length > 0 && (
+                      <div className="px-5 py-3 border-t border-black-100 bg-black-50/50 text-center">
+                        <p className="text-xs text-black-500">
+                          {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'} • {notifications.length} total
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
                 </>
               )}
@@ -393,7 +472,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center gap-2 px-2 py-1.5 hover:bg-black-100 rounded-xl transition-colors"
             >
-              <Avatar name={teacher.name} size="sm" />
+              <Avatar name={teacher.name} src={teacher.photoURL} size="sm" />
               <span className="text-sm font-medium text-black-700 hidden lg:block">
                 {teacher.name || 'Teacher'}
               </span>

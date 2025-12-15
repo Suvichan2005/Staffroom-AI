@@ -134,11 +134,11 @@ export default function Landing() {
                 {/* Mini Dashboard Preview */}
                 <div className="flex items-center gap-3 pb-4 border-b border-black-100">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">MA</span>
+                    <span className="text-white font-bold text-xl">S</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-black-800">Mr. Agarwal</p>
-                    <p className="text-sm text-black-500">Geography Teacher</p>
+                    <p className="font-semibold text-black-800">Welcome, Teacher</p>
+                    <p className="text-sm text-black-500">Your personalized dashboard</p>
                   </div>
                 </div>
 

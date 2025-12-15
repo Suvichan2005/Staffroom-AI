@@ -9,7 +9,7 @@ import {
 import { PageShell } from "../components/layout";
 import { getAdminSummary, students, teacherData } from "../data/dummyData";
 import { getSchoolOverviewCharts } from "../data/analyticsData";
-import { loadState, saveState } from "../utils/storage";
+import { loadUserState, saveUserState } from "../utils/userScopedStorage";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from "recharts";
 
 const SIDEBAR_ITEMS = [
@@ -29,7 +29,7 @@ export default function AdminDashboard() {
   const [selectedFileName, setSelectedFileName] = useState("");
   const initialMapping = useMemo(
     () =>
-      loadState("admin:teacherMapping", summary.departments.map((department) => ({
+      loadUserState("admin:teacherMapping", summary.departments.map((department) => ({
         classId: department.classes[0],
         teacherId: department.teachers[0],
       }))),
@@ -49,7 +49,7 @@ export default function AdminDashboard() {
 
   const persistMapping = (nextMapping) => {
     setMapping(nextMapping);
-    saveState("admin:teacherMapping", nextMapping);
+    saveUserState("admin:teacherMapping", nextMapping);
     toast.success("Teacher mapping saved.");
   };
 

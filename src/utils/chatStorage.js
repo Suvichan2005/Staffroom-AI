@@ -1,10 +1,15 @@
 /**
  * Chat history storage and session management
  * Stores chat sessions in localStorage with metadata
+ * 
+ * NOW USER-SCOPED: All chat data is isolated per user
  */
 
-const STORAGE_KEY = 'staffroom_chat_history';
-const CURRENT_SESSION_KEY = 'staffroom_current_session';
+import { loadUserState, saveUserState, removeUserState, getStorageUserId } from './userScopedStorage';
+
+// Storage keys (now used within user-scoped namespace)
+const STORAGE_KEY = 'chat_history';
+const CURRENT_SESSION_KEY = 'current_chat_session';
 
 /**
  * Chat session structure:
@@ -19,12 +24,11 @@ const CURRENT_SESSION_KEY = 'staffroom_current_session';
  */
 
 /**
- * Get all chat sessions
+ * Get all chat sessions for the current user
  */
 export function getAllChatSessions() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    return loadUserState(STORAGE_KEY, []);
   } catch (error) {
     console.error('Error loading chat history:', error);
     return [];
@@ -40,7 +44,7 @@ export function getChatSession(sessionId) {
 }
 
 /**
- * Save or update a chat session
+ * Save or update a chat session (user-scoped)
  */
 export function saveChatSession(session) {
   try {
@@ -64,7 +68,7 @@ export function saveChatSession(session) {
     // Keep only last 50 chats to prevent storage bloat
     const trimmedSessions = sessions.slice(0, 50);
     
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedSessions));
+    saveUserState(STORAGE_KEY, trimmedSessions);
     return updatedSession;
   } catch (error) {
     console.error('Error saving chat session:', error);
@@ -73,13 +77,13 @@ export function saveChatSession(session) {
 }
 
 /**
- * Delete a chat session
+ * Delete a chat session (user-scoped)
  */
 export function deleteChatSession(sessionId) {
   try {
     const sessions = getAllChatSessions();
     const filtered = sessions.filter(s => s.id !== sessionId);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    saveUserState(STORAGE_KEY, filtered);
     
     // If deleted session was current, clear current session
     const currentId = getCurrentSessionId();
@@ -98,7 +102,8 @@ export function deleteChatSession(sessionId) {
  * Create a new chat session
  */
 export function createNewChatSession(context = {}) {
-  const sessionId = `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const userId = getStorageUserId() || 'anon';
+  const sessionId = `chat_${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
   const session = {
     id: sessionId,
@@ -117,11 +122,11 @@ export function createNewChatSession(context = {}) {
 }
 
 /**
- * Get current active session ID
+ * Get current active session ID (user-scoped)
  */
 export function getCurrentSessionId() {
   try {
-    return localStorage.getItem(CURRENT_SESSION_KEY);
+    return loadUserState(CURRENT_SESSION_KEY, null);
   } catch (error) {
     console.error('Error getting current session:', error);
     return null;
@@ -129,11 +134,11 @@ export function getCurrentSessionId() {
 }
 
 /**
- * Set current active session ID
+ * Set current active session ID (user-scoped)
  */
 export function setCurrentSessionId(sessionId) {
   try {
-    localStorage.setItem(CURRENT_SESSION_KEY, sessionId);
+    saveUserState(CURRENT_SESSION_KEY, sessionId);
   } catch (error) {
     console.error('Error setting current session:', error);
   }
@@ -144,7 +149,7 @@ export function setCurrentSessionId(sessionId) {
  */
 export function clearCurrentSession() {
   try {
-    localStorage.removeItem(CURRENT_SESSION_KEY);
+    removeUserState(CURRENT_SESSION_KEY);
   } catch (error) {
     console.error('Error clearing current session:', error);
   }
@@ -198,12 +203,12 @@ export function addMessageToSession(sessionId, message) {
 }
 
 /**
- * Clear all chat history (use with caution)
+ * Clear all chat history for current user
  */
 export function clearAllChatHistory() {
   try {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(CURRENT_SESSION_KEY);
+    removeUserState(STORAGE_KEY);
+    removeUserState(CURRENT_SESSION_KEY);
     return true;
   } catch (error) {
     console.error('Error clearing chat history:', error);

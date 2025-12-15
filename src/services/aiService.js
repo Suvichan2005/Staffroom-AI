@@ -4,6 +4,7 @@ import {
   getSyllabusByRef, 
   getCourseById,
   normalizeSectionProgress,
+  getSectionProgress,
   loadStoredProgress,
   calculateTopicProgressPercent,
   persistProgress,
@@ -145,6 +146,7 @@ function tool_getAvailableCourses() {
 
 /**
  * Get syllabus for a specific course (by courseId or by subject+section)
+ * Returns full details including page numbers, progress, notes for each topic
  */
 function tool_getSyllabus(courseId = null, subject = null, sectionId = null) {
   let course = null;
@@ -172,20 +174,145 @@ function tool_getSyllabus(courseId = null, subject = null, sectionId = null) {
     return { error: 'Syllabus not found for course', courseId: course.id };
   }
   
+  // Get progress for the specific section if provided
+  let sectionProgress = null;
+  let targetSection = null;
+  if (sectionId) {
+    targetSection = course.sections.find(s => s.id.toUpperCase() === sectionId.toUpperCase());
+    if (targetSection) {
+      sectionProgress = getSectionProgress(teacherData, course.id, targetSection.id);
+    }
+  }
+  
+  // Build detailed chapter/topic info
+  const chapters = syllabus.chapters.map(ch => {
+    const chapterProgress = sectionProgress ? sectionProgress[ch.index] : null;
+    
+    const topics = ch.subTopics.map(t => {
+      const topicProgress = chapterProgress?.topics?.[t.index];
+      const topicStatus = topicProgress?.status || 'not-started';
+      const totalTopicPages = t.pageTo - t.pageFrom + 1;
+      
+      // Calculate pages completed based on status
+      let pagesCompleted = 0;
+      let percentComplete = 0;
+      
+      if (topicStatus === 'done') {
+        // Topic is complete - all pages done
+        pagesCompleted = totalTopicPages;
+        percentComplete = 100;
+      } else if (topicStatus === 'ongoing' && topicProgress?.currentPage) {
+        // Topic in progress - use currentPage to calculate
+        pagesCompleted = Math.max(0, topicProgress.currentPage - t.pageFrom + 1);
+        percentComplete = Math.round((pagesCompleted / totalTopicPages) * 100);
+      }
+      
+      return {
+        index: t.index,
+        title: t.title,
+        pageFrom: t.pageFrom,
+        pageTo: t.pageTo,
+        totalPages: totalTopicPages,
+        // Progress info (if section specified)
+        status: topicStatus,
+        currentPage: topicProgress?.currentPage || null,
+        pagesCompleted,
+        percentComplete,
+        notes: topicProgress?.notes || null,
+        lastCoveredAt: topicProgress?.lastCoveredAt || null,
+        // For easy reference
+        continueFromPage: topicStatus === 'done' ? null : (topicProgress?.currentPage || t.pageFrom)
+      };
+    });
+    
+    // Calculate chapter-level progress - use correct status values
+    const completedTopics = topics.filter(t => t.status === 'done').length;
+    const inProgressTopics = topics.filter(t => t.status === 'ongoing').length;
+    const totalTopicPages = topics.reduce((sum, t) => sum + t.totalPages, 0);
+    const completedPages = topics.reduce((sum, t) => sum + t.pagesCompleted, 0);
+    
+    return {
+      index: ch.index,
+      title: ch.title,
+      topicsCount: topics.length,
+      completedTopics,
+      inProgressTopics,
+      totalPages: totalTopicPages,
+      completedPages,
+      percentComplete: totalTopicPages > 0 ? Math.round((completedPages / totalTopicPages) * 100) : 0,
+      topics
+    };
+  });
+  
+  // Calculate overall progress
+  const totalTopics = chapters.reduce((sum, ch) => sum + ch.topicsCount, 0);
+  const completedTopics = chapters.reduce((sum, ch) => sum + ch.completedTopics, 0);
+  const totalPages = chapters.reduce((sum, ch) => sum + ch.totalPages, 0);
+  const completedPages = chapters.reduce((sum, ch) => sum + ch.completedPages, 0);
+  
+  // Find current topic (first ongoing) and next topic (first not-started after current)
+  let currentTopic = null;
+  let nextTopic = null;
+  let lastCompletedTopic = null;
+  
+  for (const ch of chapters) {
+    for (const t of ch.topics) {
+      if (t.status === 'done') {
+        // Track last completed topic for context
+        lastCompletedTopic = {
+          chapterIndex: ch.index,
+          chapterTitle: ch.title,
+          topicIndex: t.index,
+          topicTitle: t.title,
+          pageFrom: t.pageFrom,
+          pageTo: t.pageTo
+        };
+      } else if (t.status === 'ongoing' && !currentTopic) {
+        currentTopic = {
+          chapterIndex: ch.index,
+          chapterTitle: ch.title,
+          topicIndex: t.index,
+          topicTitle: t.title,
+          currentPage: t.currentPage,
+          pageFrom: t.pageFrom,
+          pageTo: t.pageTo,
+          continueFromPage: t.currentPage || t.pageFrom,
+          notes: t.notes
+        };
+      } else if (t.status === 'not-started' && !nextTopic) {
+        nextTopic = {
+          chapterIndex: ch.index,
+          chapterTitle: ch.title,
+          topicIndex: t.index,
+          topicTitle: t.title,
+          pageFrom: t.pageFrom,
+          pageTo: t.pageTo
+        };
+      }
+    }
+  }
+  
   return {
     courseId: course.id,
     courseTitle: course.title,
     sections: course.sections.map(s => s.id),
+    currentSection: sectionId || null,
     subject: syllabus.subject,
     grade: syllabus.grade,
-    chapters: syllabus.chapters.map(ch => ({
-      index: ch.index,
-      title: ch.title,
-      topics: ch.subTopics.map(t => ({
-        index: t.index,
-        title: t.title
-      }))
-    }))
+    // Overall stats
+    totalChapters: chapters.length,
+    totalTopics,
+    completedTopics,
+    totalPages,
+    completedPages,
+    overallPercent: totalPages > 0 ? Math.round((completedPages / totalPages) * 100) : 0,
+    // Current position
+    lastCompletedTopic,
+    currentTopic,
+    nextTopic,
+    continueFromPage: currentTopic?.continueFromPage || nextTopic?.pageFrom || null,
+    // Detailed chapters
+    chapters
   };
 }
 
@@ -347,6 +474,11 @@ function tool_getNextTopic(sectionId) {
   // Find next incomplete topic
   let nextTopic = null;
   let nextChapter = null;
+  let nextTopicPages = null;
+  let currentTopic = null;
+  let currentChapter = null;
+  let currentTopicPages = null;
+  let currentPage = null;
   let lastCompletedTopic = null;
   let lastCompletedChapter = null;
   
@@ -361,14 +493,19 @@ function tool_getNextTopic(sectionId) {
       if (status === 'done') {
         lastCompletedTopic = topic.title;
         lastCompletedChapter = chapter.title;
-      } else if (!nextTopic) {
+      } else if (status === 'ongoing' && !currentTopic) {
+        // Currently in progress topic
+        currentTopic = topic.title;
+        currentChapter = chapter.title;
+        currentTopicPages = { from: topic.pageFrom, to: topic.pageTo };
+        currentPage = topicData?.currentPage || topic.pageFrom;
+      } else if (status === 'not-started' && !nextTopic) {
+        // First not-started topic
         nextTopic = topic.title;
         nextChapter = chapter.title;
-        break;
+        nextTopicPages = { from: topic.pageFrom, to: topic.pageTo };
       }
     }
-    
-    if (nextTopic) break;
   }
   
   // Check for upcoming exams
@@ -380,16 +517,92 @@ function tool_getNextTopic(sectionId) {
     courseTitle: targetCourse.title,
     subject: syllabus.subject,
     grade: syllabus.grade,
+    // Current in-progress topic (if any)
+    currentChapter,
+    currentTopic,
+    currentTopicPages,
+    currentPage,
+    // Next not-started topic
     nextChapter,
     nextTopic,
+    nextTopicPages,
+    // Last completed for context
     lastCompletedChapter,
     lastCompletedTopic,
-    allComplete: !nextTopic,
+    allComplete: !nextTopic && !currentTopic,
     upcomingExam: upcomingExam ? {
       type: upcomingExam.type,
       date: upcomingExam.date,
       syllabusUpTo: upcomingExam.syllabusUpTo
     } : null
+  };
+}
+
+/**
+ * Get temporal context - current time, day, and class status
+ * Returns information about what class teacher has now, just had, or is coming up
+ */
+function getTemporalContext() {
+  const now = new Date();
+  const today = now.toISOString().slice(0, 10);
+  const currentTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+  const currentHHMM = now.toTimeString().slice(0, 5); // "HH:MM" format for comparison
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayName = dayNames[now.getDay()];
+  const dateFormatted = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  
+  // Get today's sessions
+  const todaySessions = getUpcomingSessions(teacherData, 0).filter(s => s.date === today);
+  
+  // Sort by start time
+  todaySessions.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  
+  let currentClass = null;
+  let justHadClass = null;
+  let upcomingClass = null;
+  
+  for (const session of todaySessions) {
+    const startTime = session.startTime;
+    const endTime = session.endTime;
+    
+    if (currentHHMM >= startTime && currentHHMM <= endTime) {
+      // Currently in this class
+      currentClass = session;
+    } else if (currentHHMM > endTime) {
+      // This class has ended - track as "just had" (most recent)
+      justHadClass = session;
+    } else if (currentHHMM < startTime && !upcomingClass) {
+      // This class is coming up (first upcoming one)
+      upcomingClass = session;
+    }
+  }
+  
+  // Build class status string
+  let classStatus = '';
+  if (currentClass) {
+    classStatus = `Currently IN CLASS: ${currentClass.subject} with section ${currentClass.classId} (${currentClass.startTime}–${currentClass.endTime})`;
+  } else if (justHadClass && upcomingClass) {
+    classStatus = `Just finished: ${justHadClass.subject} (${justHadClass.classId}) at ${justHadClass.endTime}. Next up: ${upcomingClass.subject} (${upcomingClass.classId}) at ${upcomingClass.startTime}`;
+  } else if (justHadClass) {
+    classStatus = `Last class today was ${justHadClass.subject} (${justHadClass.classId}) which ended at ${justHadClass.endTime}. No more classes today.`;
+  } else if (upcomingClass) {
+    classStatus = `First class today: ${upcomingClass.subject} (${upcomingClass.classId}) at ${upcomingClass.startTime}`;
+  } else {
+    classStatus = 'No classes scheduled for today.';
+  }
+  
+  return {
+    now,
+    today,
+    currentTime,
+    dayName,
+    dateFormatted,
+    todaySessions,
+    currentClass,
+    justHadClass,
+    upcomingClass,
+    classStatus,
+    summary: `Current time: ${currentTime} on ${dateFormatted}. ${classStatus}`
   };
 }
 
@@ -702,15 +915,12 @@ function tool_navigateTo(destination, options = {}) {
     const targetSection = sectionId || (sectionMatch ? sectionMatch[1].toUpperCase() : null);
     
     if (targetSection) {
-      // Get actual available courses and sections
-      const availableCourses = tool_getAvailableCourses();
-      
       // Find the course and section in actual data
-      for (const course of availableCourses.courses) {
+      for (const course of teacherData.courses) {
         const section = course.sections.find(s => s.id.toUpperCase() === targetSection.toUpperCase());
         if (section) {
           path = `/course/${course.id}/class/${section.id}`;
-          displayName = `${course.name} - Section ${section.id}`;
+          displayName = `${course.title} - Section ${section.id}`;
           break;
         }
       }
@@ -718,13 +928,11 @@ function tool_navigateTo(destination, options = {}) {
   }
   // Check for course navigation by explicit courseId or subject/grade match
   else {
-    // Get actual available courses
-    const availableCourses = tool_getAvailableCourses();
     let matchedCourse = null;
     
     // First, try exact courseId match if provided
     if (courseId) {
-      matchedCourse = availableCourses.courses.find(c => c.id === courseId);
+      matchedCourse = teacherData.courses.find(c => c.id === courseId);
     }
     
     // If no courseId or no match, try to find by destination string
@@ -732,8 +940,8 @@ function tool_navigateTo(destination, options = {}) {
       const destLower = destination.toLowerCase();
       
       // Try to find course by matching subject name and/or grade
-      matchedCourse = availableCourses.courses.find(course => {
-        const nameLower = course.name.toLowerCase();
+      matchedCourse = teacherData.courses.find(course => {
+        const nameLower = course.title.toLowerCase();
         const idLower = course.id.toLowerCase();
         
         // Check if destination contains the course ID
@@ -761,7 +969,7 @@ function tool_navigateTo(destination, options = {}) {
     
     if (matchedCourse) {
       path = `/course/${matchedCourse.id}`;
-      displayName = matchedCourse.name;
+      displayName = matchedCourse.title;
     }
   }
   
@@ -1810,6 +2018,9 @@ export async function   processChat(message, conversationHistory = [], context =
       }
     }
 
+    // Get temporal context (current time, class status)
+    const temporal = getTemporalContext();
+
     // Create model with function calling
     const model = genAI.getGenerativeModel({
       model: MODELS.TEXT, // Using gemini-2.5-flash for best function calling support
@@ -1821,27 +2032,36 @@ export async function   processChat(message, conversationHistory = [], context =
 - Managing assignments
 - Identifying students at risk
 
-CRITICAL RULES FOR CONTEXT UNDERSTANDING:
-1. ALWAYS check conversation history for context when user uses pronouns like "it", "that", "this"
-2. If user says "mark it as done" or "mark it complete", find the LAST topic mentioned in conversation and mark THAT topic
-3. Example: If previous message mentioned "Plains and Valleys in 6A", then "mark it done" means mark "Plains and Valleys" in section "6A"
-4. When user says "and X?" (like "and 6A?"), repeat the SAME query type for the new section
+TEMPORAL CONTEXT (CURRENT TIME):
+📅 ${temporal.summary}
+${temporal.currentClass ? `🔴 You are IN CLASS right now with ${temporal.currentClass.classId}!` : ''}
+${temporal.todaySessions.length > 0 ? `Today's full schedule: ${temporal.todaySessions.map(s => `${s.classId} (${s.startTime})`).join(', ')}` : ''}
+
+CRITICAL CONTEXT RULES:
+1. The teacher is CURRENTLY VIEWING: ${context.urlContext?.sectionId ? `Section ${context.urlContext.sectionId} of ${context.urlContext?.courseId || 'a course'}` : 'the main dashboard'}
+2. When the user asks about "the page", "where I left off", "current topic", etc. WITHOUT specifying a section, USE THE CURRENT PAGE CONTEXT (${context.urlContext?.sectionId || 'unknown'})
+3. If user asks "what's next?" or "what should I teach?" - consider BOTH the current class (if in one) AND the page context
+4. ALWAYS check conversation history for context when user uses pronouns like "it", "that", "this"
+5. If user says "mark it as done" or "mark it complete", find the LAST topic mentioned in conversation and mark THAT topic
+6. When user says "and X?" (like "and 6A?"), repeat a similar query type for the new section
 
 TOOL USAGE RULES:
 1. Use the available tools to get real data - don't make up information
 2. When the user mentions a section like "8B" or "6A", use it in your tool calls
-3. For updateProgress: you need sectionId, chapterIndex, and topicIndex - get these from getSyllabus or searchTopic first
-4. If user says "mark [topic] done in [section]", first call searchTopic to find the chapter/topic indices, then call updateProgress
+3. If user asks about progress/page WITHOUT specifying section, use URL section: ${context.urlContext?.sectionId || 'ask for clarification'}
+4. For updateProgress: you need sectionId, chapterIndex, and topicIndex - get these from getSyllabus or searchTopic first
+5. If user says "mark [topic] done in [section]", first call searchTopic to find the chapter/topic indices, then call updateProgress
+6. When getting syllabus/progress info, ALWAYS include page numbers in your response
 
 RESPONSE RULES:
 1. Keep responses concise and use markdown formatting
-2. When updating progress, confirm: topic name, chapter name, section, and new status
+2. When reporting progress, ALWAYS include: topic name, chapter name, page range (pageFrom-pageTo), and current page if in progress
 3. If you're unsure about a section or topic, ask for clarification
 4. Available sections: ${teacherData.courses.flatMap(c => c.sections.map(s => `${s.id} (${c.title})`)).join(', ')}
 
-Current page context:
-- URL Course ID: ${context.urlContext?.courseId || 'not on a course page'}
-- URL Section ID: ${context.urlContext?.sectionId || 'not on a section page'}`
+EXAMPLE RESPONSES:
+- For "what page?": "In section 6A, you're currently on **Plains and Valleys** (pages 29-36). You left off at page 32."
+- For "where was I?": "Your current topic in ${context.urlContext?.sectionId || '[section]'} is **[Topic Name]** in chapter **[Chapter]**. Continue from page [X]."`
     });
 
     // Start chat with history
@@ -2345,55 +2565,69 @@ export async function generateSectionSuggestions(sectionId) {
     `"${t.topic}"(${t.date},${t.attendancePercent}%)`
   ).join('|');
   
-  const prompt = `Teacher assistant: Give 3-4 SHORT suggestions for this class.
+  const prompt = `You are a helpful teacher assistant. Analyze this class data and give 3 brief suggestions.
 
-CLASS: ${context.courseName} ${context.sectionName} | ${context.studentCount} students | ${context.progressPercent}% done
-CURRENT: ${context.currentTopic ? `"${context.currentTopic.title}" pg${context.currentTopic.currentPage}` : context.nextTopic ? `Next: "${context.nextTopic.title}"` : 'Done'}
-LOW_ATT_TOPICS: ${lowAttTopics || 'None'}
-AT_RISK: ${atRiskList || 'None'}
-OTHER_SECTIONS: ${context.otherSections.slice(0, 2).map(s => `${s.name}:${s.progressPercent}%`).join('|') || 'None'}
+Class: ${context.courseName} - ${context.sectionName}
+Students: ${context.studentCount}
+Progress: ${context.progressPercent}%
+Current topic: ${context.currentTopic?.title || context.nextTopic?.title || 'Completed'}
+${atRiskList ? `At-risk students: ${atRiskList}` : ''}
+${lowAttTopics ? `Low attendance topics: ${lowAttTopics}` : ''}
 
-Rules:
-- Each suggestion: short title + 1-sentence detail with specific names/dates
-- Use color: red (urgent), yellow (attention), green (positive)
-- Use icon: alert|users|book|calendar|trending|target|check
+Respond with exactly 3 suggestions in this JSON format:
+[
+  {"title": "short title", "detail": "brief explanation", "color": "red", "icon": "alert"},
+  {"title": "short title", "detail": "brief explanation", "color": "yellow", "icon": "users"},
+  {"title": "short title", "detail": "brief explanation", "color": "green", "icon": "check"}
+]
 
-JSON only:
-[{"title":"3-5 words","detail":"one sentence","color":"red|yellow|green","icon":"alert|users|book|calendar|trending|target"}]`;
+Colors: red=urgent, yellow=attention, green=positive
+Icons: alert, users, book, calendar, trending, target, check`;
 
   try {
     const response = await callGemini(prompt, false);
     
-    // Parse JSON from response - handle markdown code blocks
-    let jsonStr = response;
-    
-    // Remove markdown code block wrappers if present
-    if (jsonStr.includes('```json')) {
-      jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-    } else if (jsonStr.includes('```')) {
-      jsonStr = jsonStr.replace(/```\s*/g, '');
+    if (!response) {
+      console.warn('Empty response from Gemini');
+      return getFallbackSuggestions(context);
     }
     
-    // Try to extract complete JSON array
-    const jsonMatch = jsonStr.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/); 
-    if (jsonMatch) {
+    // Clean up response
+    let jsonStr = response.trim();
+    
+    // Remove markdown code blocks
+    jsonStr = jsonStr.replace(/```json\s*/gi, '').replace(/```\s*/gi, '');
+    
+    // Try to find JSON array in response
+    const startIdx = jsonStr.indexOf('[');
+    const endIdx = jsonStr.lastIndexOf(']');
+    
+    if (startIdx !== -1 && endIdx > startIdx) {
+      jsonStr = jsonStr.slice(startIdx, endIdx + 1);
+      
       try {
-        const suggestions = JSON.parse(jsonMatch[0]);
-        return Array.isArray(suggestions) ? suggestions.slice(0, 5) : [];
-      } catch (parseErr) {
-        // JSON was truncated, try to fix it
-        const fixedJson = fixTruncatedJson(jsonMatch[0]);
-        if (fixedJson) {
-          const suggestions = JSON.parse(fixedJson);
-          return Array.isArray(suggestions) ? suggestions.slice(0, 5) : [];
+        const parsed = JSON.parse(jsonStr);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Validate each suggestion has required fields
+          const valid = parsed.filter(s => s && s.title && s.detail);
+          if (valid.length > 0) {
+            return valid.slice(0, 5).map(s => ({
+              title: String(s.title).slice(0, 50),
+              detail: String(s.detail).slice(0, 200),
+              color: ['red', 'yellow', 'green'].includes(s.color) ? s.color : 'yellow',
+              icon: s.icon || 'book'
+            }));
+          }
         }
+      } catch (parseErr) {
+        console.warn('JSON parse failed, trying extraction:', parseErr.message);
       }
     }
     
-    // Try to extract partial JSON objects and construct array
-    const partialSuggestions = extractPartialSuggestions(jsonStr);
-    if (partialSuggestions.length > 0) {
-      return partialSuggestions;
+    // Fallback: try to extract individual objects with relaxed pattern
+    const extracted = extractSuggestionsFromText(jsonStr);
+    if (extracted.length > 0) {
+      return extracted;
     }
     
     console.warn('Could not parse suggestions, using fallback');
@@ -2405,80 +2639,31 @@ JSON only:
 }
 
 /**
- * Try to fix truncated JSON by closing open brackets/braces
+ * Extract suggestions from text using flexible patterns
  */
-function fixTruncatedJson(json) {
-  try {
-    // Count unclosed brackets
-    let braceCount = 0;
-    let bracketCount = 0;
-    let inString = false;
-    let escapeNext = false;
-    
-    for (const char of json) {
-      if (escapeNext) {
-        escapeNext = false;
-        continue;
-      }
-      if (char === '\\') {
-        escapeNext = true;
-        continue;
-      }
-      if (char === '"') {
-        inString = !inString;
-        continue;
-      }
-      if (!inString) {
-        if (char === '{') braceCount++;
-        else if (char === '}') braceCount--;
-        else if (char === '[') bracketCount++;
-        else if (char === ']') bracketCount--;
-      }
-    }
-    
-    // If we're in a string, close it
-    let fixed = json;
-    if (inString) {
-      fixed += '"';
-    }
-    
-    // Close any unclosed braces and brackets
-    while (braceCount > 0) {
-      fixed += '}';
-      braceCount--;
-    }
-    while (bracketCount > 0) {
-      fixed += ']';
-      bracketCount--;
-    }
-    
-    // Validate it parses
-    JSON.parse(fixed);
-    return fixed;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Extract complete suggestion objects from potentially truncated JSON
- */
-function extractPartialSuggestions(text) {
+function extractSuggestionsFromText(text) {
   const suggestions = [];
-  // Match complete objects with all required fields
-  const objectPattern = /\{\s*"title"\s*:\s*"([^"]+)"\s*,\s*"detail"\s*:\s*"([^"]+)"\s*,\s*"color"\s*:\s*"(red|yellow|green)"\s*,\s*"icon"\s*:\s*"(\w+)"\s*\}/g;
   
-  let match;
-  while ((match = objectPattern.exec(text)) !== null) {
-    suggestions.push({
-      title: match[1],
-      detail: match[2],
-      color: match[3],
-      icon: match[4]
-    });
+  // Try to match JSON-like objects with title and detail
+  const patterns = [
+    /"title"\s*:\s*"([^"]+)"[^}]*"detail"\s*:\s*"([^"]+)"[^}]*"color"\s*:\s*"([^"]+)"[^}]*"icon"\s*:\s*"([^"]+)"/gi,
+    /"title"\s*:\s*"([^"]+)"[^}]*"detail"\s*:\s*"([^"]+)"/gi
+  ];
+  
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null && suggestions.length < 5) {
+      suggestions.push({
+        title: match[1],
+        detail: match[2],
+        color: match[3] && ['red', 'yellow', 'green'].includes(match[3]) ? match[3] : 'yellow',
+        icon: match[4] || 'book'
+      });
+    }
+    if (suggestions.length > 0) break;
   }
   
-  return suggestions.slice(0, 5);
+  return suggestions;
 }
 
 /**

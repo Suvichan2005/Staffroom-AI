@@ -4,14 +4,20 @@ import {
   Bell, Moon, Sun, Globe, Lock, User, Palette, 
   Monitor, Smartphone, Volume2, VolumeX, Shield,
   ChevronRight, Check, LogOut, Trash2, HelpCircle,
-  Mail, MessageSquare
+  Mail, MessageSquare, RefreshCcw
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { PageShell } from '../components/layout';
+import { useAuth } from '../context/AuthContext';
+import { resetDemoState, seedDemoDataForUser } from '../data/dummyData';
+import { resetUserNamespace, markUserInitialized } from '../utils/userScopedStorage';
 
 /**
  * Settings Page - App preferences and configuration
  */
 export default function SettingsPage() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState({
     email: true,
@@ -20,6 +26,36 @@ export default function SettingsPage() {
     sound: true,
   });
   const [language, setLanguage] = useState('en');
+  const [resetting, setResetting] = useState(false);
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Sign out failed:', error);
+    }
+  };
+
+  const handleResetDemoData = async () => {
+    if (!window.confirm('This will reset all your demo data (chat history, syllabus progress, attendance) to the initial state. Continue?')) {
+      return;
+    }
+    setResetting(true);
+    try {
+      // Clear all user data and re-seed
+      resetUserNamespace();
+      // Small delay to ensure storage is cleared
+      await new Promise(r => setTimeout(r, 100));
+      // Re-seed demo data
+      seedDemoDataForUser();
+      // Reload the page to refresh all contexts
+      window.location.reload();
+    } catch (error) {
+      console.error('Reset failed:', error);
+      setResetting(false);
+    }
+  };
 
   const settingsSections = [
     {
@@ -234,7 +270,25 @@ export default function SettingsPage() {
             <h2 className="text-sm font-semibold text-red-600">Danger Zone</h2>
           </div>
           <div className="p-5 space-y-3">
-            <button className="w-full flex items-center justify-between p-4 rounded-xl border border-red-200 hover:bg-red-50 transition-colors">
+            {/* Reset Demo Data */}
+            <button 
+              onClick={handleResetDemoData}
+              disabled={resetting}
+              className="w-full flex items-center justify-between p-4 rounded-xl border border-amber-200 hover:bg-amber-50 transition-colors disabled:opacity-50"
+            >
+              <div className="flex items-center gap-3">
+                <RefreshCcw className={`w-5 h-5 text-amber-500 ${resetting ? 'animate-spin' : ''}`} />
+                <div className="text-left">
+                  <p className="text-sm font-medium text-amber-600">Reset Demo Data</p>
+                  <p className="text-xs text-amber-500">Clear your sandbox and start fresh with demo data</p>
+                </div>
+              </div>
+            </button>
+            {/* Sign Out */}
+            <button 
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-between p-4 rounded-xl border border-red-200 hover:bg-red-50 transition-colors"
+            >
               <div className="flex items-center gap-3">
                 <LogOut className="w-5 h-5 text-red-500" />
                 <div className="text-left">

@@ -2,12 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { FileText, Calendar, Users, Award, Plus, Edit3, ChevronRight, Clock } from "lucide-react";
 import { getAssignmentsForClass, getAssignmentStats, students } from "../../data/dummyData";
-import { loadState, saveState } from "../../utils/storage";
+import { loadUserState, saveUserState } from "../../utils/userScopedStorage";
 
 export default function AssignmentSummary({ classId }) {
   const storageKey = `class:${classId}:assignments`;
   const seeded = useMemo(() => getAssignmentsForClass(classId), [classId]);
-  const [assignments, setAssignments] = useState(() => loadState(storageKey, seeded));
+  const [assignments, setAssignments] = useState(() => loadUserState(storageKey, seeded));
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ title: "", description: "", dueDate: "", maxPoints: 10, type: "homework" });
@@ -16,7 +16,7 @@ export default function AssignmentSummary({ classId }) {
   const classStudents = useMemo(() => students.filter(s => s.classId === classId), [classId]);
 
   useEffect(() => {
-    saveState(storageKey, assignments);
+    saveUserState(storageKey, assignments);
   }, [assignments, storageKey]);
 
   const handleOpen = (assignment = null) => {

@@ -28,7 +28,7 @@ import { PageShell } from "../components/layout";
 import { GlobalAssistant } from "../components/ai";
 import SmartAISuggestions from "../components/ai/SmartAISuggestions";
 import { AssessmentManager } from "../components/shared";
-import { loadState, saveState } from "../utils/storage";
+import { loadUserState, saveUserState } from "../utils/userScopedStorage";
 import { useTeacher } from "../context/TeacherContext";
 import { ProgressBar } from "../components/charts";
 import { calculateTopicProgressPercent } from "../data/dummyData";
@@ -115,7 +115,7 @@ export default function ClassPage() {
   const attendanceByDate = useMemo(() => {
     const grouped = getAttendanceForClass(classId, null);
     const next = { ...grouped };
-    const override = loadState(`attendance:final:${classId}:${today}`, null);
+    const override = loadUserState(`attendance:final:${classId}:${today}`, null);
     if (override?.presentMap) {
       const overrideDate = override.date || today;
       const records = Object.entries(override.presentMap).map(([studentId, present]) => ({
@@ -253,7 +253,7 @@ export default function ClassPage() {
 
   const handleSaveAttendance = (presentMap) => {
     const payload = { classId, date: today, presentMap };
-    saveState(`attendance:final:${classId}:${today}`, payload);
+    saveUserState(`attendance:final:${classId}:${today}`, payload);
     toast.success("Attendance recorded.");
     setAttendanceVersion((prev) => prev + 1);
   };
@@ -719,7 +719,7 @@ export default function ClassPage() {
         <AttendanceHistoryModal
           classId={classId}
           onClose={() => setShowHistory(false)}
-          mergeTodayOverride={loadState(`attendance:final:${classId}:${today}`, null)}
+          mergeTodayOverride={loadUserState(`attendance:final:${classId}:${today}`, null)}
         />
       )}
 

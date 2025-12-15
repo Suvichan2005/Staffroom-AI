@@ -1,19 +1,18 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  User, Mail, Phone, Building, BookOpen, Calendar,
+  User, Mail, Building, BookOpen, Calendar,
   Edit2, Camera, Shield, Bell, Award, Clock,
   CheckSquare, Target, Sparkles, Users, MoreHorizontal
 } from 'lucide-react';
-import { teacherData, teacherDirectory } from '../data/dummyData';
+import { useTeacher } from '../context/TeacherContext';
 import { PageShell } from '../components/layout';
 
 /**
  * Profile Page - Teacher profile and information
  */
 export default function ProfilePage() {
-  const teacher = teacherData;
-  const teacherInfo = teacherDirectory.find(t => t.id === teacher.id) || {};
+  const { teacher } = useTeacher();
 
   const stats = [
     { label: 'Courses', value: teacher.courses?.length || 0, icon: BookOpen, color: 'indigo' },
@@ -59,9 +58,17 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12">
               {/* Avatar */}
               <div className="relative">
-                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-3xl font-bold text-white border-4 border-white shadow-lg">
-                  {teacher.name?.split(' ').map(n => n[0]).join('') || 'MA'}
-                </div>
+                {teacher.photoURL ? (
+                  <img 
+                    src={teacher.photoURL} 
+                    alt={teacher.name}
+                    className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-3xl font-bold text-white border-4 border-white shadow-lg">
+                    {teacher.name?.split(' ').map(n => n[0]).join('') || 'MA'}
+                  </div>
+                )}
                 <button className="absolute -bottom-1 -right-1 p-1.5 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-colors">
                   <Edit2 className="w-3 h-3" />
                 </button>
@@ -69,8 +76,8 @@ export default function ProfilePage() {
               
               {/* Name & Role */}
               <div className="flex-1 sm:pb-2 sm:pt-16 z-10">
-                <h1 className="text-2xl font-bold text-black-800">{teacher.name}</h1>
-                <p className="text-black-500">{teacherInfo.role || 'Teacher'} • {teacherInfo.subject}</p>
+                <h1 className="text-2xl font-bold text-black-800">{teacher?.name || 'Teacher'}</h1>
+                <p className="text-black-500">Teacher • {teacher?.subject || 'Geography'}</p>
               </div>
               
               {/* Edit Button */}
@@ -112,7 +119,7 @@ export default function ProfilePage() {
             transition={{ delay: 0.2 }}
             className="bg-white rounded-2xl border border-black-200 p-5"
           >
-            <h2 className="text-lg font-semibold text-black-800 mb-4">Contact Information</h2>
+            <h2 className="text-lg font-semibold text-black-800 mb-4">Account Details</h2>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-black-100 rounded-lg">
@@ -120,16 +127,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-xs text-black-500">Email</p>
-                  <p className="text-sm font-medium text-black-700">{teacherInfo.contact || 'teacher@school.edu'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-black-100 rounded-lg">
-                  <Phone className="w-4 h-4 text-black-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-black-500">Phone</p>
-                  <p className="text-sm font-medium text-black-700">+91 98765 43210</p>
+                  <p className="text-sm font-medium text-black-700">{teacher?.email || 'Not set'}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -137,8 +135,8 @@ export default function ProfilePage() {
                   <Building className="w-4 h-4 text-black-600" />
                 </div>
                 <div>
-                  <p className="text-xs text-black-500">Department</p>
-                  <p className="text-sm font-medium text-black-700">{teacherInfo.subject} Department</p>
+                  <p className="text-xs text-black-500">Subject</p>
+                  <p className="text-sm font-medium text-black-700">{teacher?.subject || 'Geography'}</p>
                 </div>
               </div>
             </div>

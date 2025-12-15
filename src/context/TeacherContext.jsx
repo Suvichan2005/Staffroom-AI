@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState, useEffect } from "react";
 import { teacherData as defaultTeacher, teacherDirectory } from "../data/dummyData";
-import { loadState, saveState } from "../utils/storage";
+import { loadUserState, saveUserState } from "../utils/userScopedStorage";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebase/client";
 import { dataService } from "../services/dataService";
@@ -9,8 +9,9 @@ const TeacherContext = createContext(null);
 
 export const useTeacher = () => useContext(TeacherContext);
 
-const getInitialTeacher = () => loadState("teacher:profile", defaultTeacher) || defaultTeacher;
-const getInitialPersona = () => loadState("persona:active", "teacher") || "teacher";
+// Use user-scoped storage for teacher profile
+const getInitialTeacher = () => loadUserState("teacher:profile", defaultTeacher) || defaultTeacher;
+const getInitialPersona = () => loadUserState("persona:active", "teacher") || "teacher";
 
 export function TeacherProvider({ children }) {
   const [teacher, setTeacherState] = useState(getInitialTeacher);
@@ -23,14 +24,14 @@ export function TeacherProvider({ children }) {
     setTeacherState((previous) => {
       const nextValue = typeof updater === "function" ? updater(previous) : updater;
       const normalized = nextValue || defaultTeacher;
-      saveState("teacher:profile", normalized);
+      saveUserState("teacher:profile", normalized);
       return normalized;
     });
   };
 
   const setPersona = (nextPersona) => {
     setPersonaState(nextPersona);
-    saveState("persona:active", nextPersona);
+    saveUserState("persona:active", nextPersona);
     setAttendanceVersion((value) => value + 1);
   };
 
@@ -40,6 +41,9 @@ export function TeacherProvider({ children }) {
   const mapAuthUserToTeacher = (uid, user) => {
     try {
       const email = (user && user.email) ? user.email.toLowerCase() : null;
+      const displayName = user?.displayName || null;
+      const photoURL = user?.photoURL || null;
+      
       // Try exact contact match in the directory
       let mapped = teacherDirectory.find((t) => (t.contact || "").toLowerCase() === email);
       // If not found, try a loose match by email local part (before @) matching name/id
@@ -52,20 +56,32 @@ export function TeacherProvider({ children }) {
       if (mapped) {
         // If the mapped id matches the default teacher id, use the rich `teacherData` profile
         if (mapped.id === defaultTeacher.id) {
-          finalProfile = defaultTeacher;
+          finalProfile = { ...defaultTeacher };
         } else {
-          // Try to load a saved full profile for this teacher id from storage
-          finalProfile = loadState(`teacher:profile:${mapped.id}`, null);
+          // Try to load a saved full profile for this teacher id from user-scoped storage
+          finalProfile = loadUserState(`teacher:profile:${mapped.id}`, null);
         }
       }
       // Fallbacks: use stored profile, default teacher, or the minimal mapped entry
       if (!finalProfile) {
-        // try to reuse any previously stored general profile
-        finalProfile = loadState("teacher:profile", null) || defaultTeacher;
+        // try to reuse any previously stored general profile (user-scoped)
+        finalProfile = loadUserState("teacher:profile", null) || { ...defaultTeacher };
       }
+      
+      // Override with Google profile name and photo if available
+      if (displayName) {
+        finalProfile = { ...finalProfile, name: displayName };
+      }
+      if (photoURL) {
+        finalProfile = { ...finalProfile, photoURL };
+      }
+      if (email) {
+        finalProfile = { ...finalProfile, email };
+      }
+      
       // Persist mapping from auth uid -> teacher id (directory id if present, otherwise finalProfile.id)
       const mappedIdToSave = (mapped && mapped.id) || finalProfile.id;
-      if (uid) saveState(`auth:uid:${uid}`, mappedIdToSave);
+      if (uid) saveUserState(`auth:uid:${uid}`, mappedIdToSave);
       // Apply mapping to current app state (ensure we pass a full profile with courses)
       setTeacher(finalProfile);
       return finalProfile;
@@ -118,14 +134,31 @@ export function TeacherProvider({ children }) {
       if (user && user.email) {
         // Try to fetch teacher data from backend first
         try {
-          await fetchTeacherData(user.email);
+          const profile = await fetchTeacherData(user.email);
+          // Override with Google profile name/photo if available
+          if (user.displayName || user.photoURL) {
+            const updatedProfile = {
+              ...profile,
+              ...(user.displayName && { name: user.displayName }),
+              ...(user.photoURL && { photoURL: user.photoURL }),
+              ...(user.email && { email: user.email }),
+            };
+            setTeacher(updatedProfile);
+          }
         } catch (err) {
           // Fallback to local mapping if backend fails
-          const mappedId = loadState(`auth:uid:${user.uid}`);
+          const mappedId = loadUserState(`auth:uid:${user.uid}`);
           if (mappedId) {
             const found = teacherDirectory.find((t) => t.id === mappedId);
             if (found) {
-              setTeacher(found);
+              // Still apply Google profile info
+              const updatedFound = {
+                ...found,
+                ...(user.displayName && { name: user.displayName }),
+                ...(user.photoURL && { photoURL: user.photoURL }),
+                ...(user.email && { email: user.email }),
+              };
+              setTeacher(updatedFound);
               return;
             }
           }
