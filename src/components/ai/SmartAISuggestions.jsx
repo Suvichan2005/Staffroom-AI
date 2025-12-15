@@ -92,7 +92,7 @@ function TablePopup({ title, data, columns, onClose }) {
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h3 className="font-semibold text-slate-800">{title}</h3>
+          <h3 className="font-semibold text-black">{title}</h3>
           <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg">
             <X className="w-5 h-5 text-slate-500" />
           </button>
@@ -102,7 +102,7 @@ function TablePopup({ title, data, columns, onClose }) {
             <thead className="bg-slate-50 sticky top-0">
               <tr>
                 {columns.map((col, i) => (
-                  <th key={i} className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  <th key={i} className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
                     {col.label}
                   </th>
                 ))}
@@ -112,7 +112,7 @@ function TablePopup({ title, data, columns, onClose }) {
               {data.map((row, rowIdx) => (
                 <tr key={rowIdx} className="hover:bg-slate-50">
                   {columns.map((col, colIdx) => (
-                    <td key={colIdx} className="px-4 py-3 text-sm text-slate-700">
+                    <td key={colIdx} className="px-4 py-3 text-sm text-black">
                       {col.render ? col.render(row[col.key], row) : row[col.key]}
                     </td>
                   ))}
@@ -149,10 +149,15 @@ function SuggestionCard({ suggestion, isPurple, getCardStyle, getIconContainerSt
     : detail);
   const hasMoreDetail = detail.length > 80 || tableData;
   
+  // For purple variant, use transparent backgrounds with no visible borders
+  const cardBg = isPurple 
+    ? 'bg-white/10 border-transparent hover:bg-white/15' 
+    : getCardStyle(color);
+  
   return (
     <>
       <div 
-        className={`p-3 rounded-xl border-2 transition-all hover:shadow-md cursor-pointer ${getCardStyle(color)}`}
+        className={`p-3 rounded-xl border transition-all ${isPurple ? '' : 'hover:shadow-md'} cursor-pointer ${cardBg}`}
         onClick={() => hasMoreDetail && setIsExpanded(!isExpanded)}
       >
         <div className="flex gap-3">
@@ -215,7 +220,7 @@ function SuggestionCard({ suggestion, isPurple, getCardStyle, getIconContainerSt
  */
 export default function SmartAISuggestions({
   contextKey,
-  generateSuggestions,
+  generateSuggestions,  
   title = 'AI Suggestions',
   variant = 'default', // 'default' or 'purple'
 }) {
@@ -316,7 +321,7 @@ export default function SmartAISuggestions({
           <div className={`p-1.5 rounded-lg ${isPurple ? 'bg-white/20' : 'bg-indigo-100'}`}>
             <Sparkles className={`w-4 h-4 ${isPurple ? 'text-white' : 'text-indigo-600'}`} />
           </div>
-          <h3 className={`sc-heading text-base font-semibold ${isPurple ? 'text-white' : 'text-slate-800'}`}>
+          <h3 className={`text-base font-semibold ${isPurple ? 'text-white' : 'text-black'}`}>
             {title}
           </h3>
         </div>

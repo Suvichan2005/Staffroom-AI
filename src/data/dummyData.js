@@ -1,4 +1,7 @@
-import { loadState, saveState, resetNamespace } from "../utils/storage";
+import { loadUserState, saveUserState, resetUserNamespace, isUserInitialized, markUserInitialized } from "../utils/userScopedStorage";
+
+// Re-export for backward compatibility
+export { resetUserNamespace as resetNamespace };
 
 // CENTRAL SYLLABUS (Admin/HOD controlled)
 export const syllabusList = [
@@ -75,7 +78,7 @@ export const syllabusList = [
 // TEACHER DATA (per-teacher, with per-section progress mapping)
 export const teacherData = {
   id: "T001",
-  name: "Mr. Agarwal",
+  name: "Teacher",
   courses: [
     {
       id: "geo6",
@@ -85,7 +88,7 @@ export const teacherData = {
       sections: [
         {
           id: "6A",
-          schedules: ["Sat 0:00–23:45","Mon 09:00–09:45", "Thu 11:00–11:45"],
+          schedules: ["Sat 0:00–23:45","Sun 0:00–23:45","Mon 0:00–23:45","Tue 0:00–23:45","Wed 0:00–23:45","Thu 0:00–23:45","Fri 0:00–23:45","Mon 09:00–09:45", "Thu 11:00–11:45"],
           progress: {
             1: { topics: { 
               1: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-01T09:00:00Z", completedAt: "2025-11-01T09:45:00Z", lastCoveredAt: "2025-11-01T10:00:00Z" },
@@ -94,7 +97,7 @@ export const teacherData = {
             } },
             2: { topics: { 
               1: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-07T09:00:00Z", completedAt: "2025-11-07T09:45:00Z", lastCoveredAt: "2025-11-07T10:00:00Z" },
-              2: { status: "ongoing", currentPage: 45, notes: "Need to revisit deltas concept", startedAt: "2025-11-10T09:00:00Z", completedAt: null, lastCoveredAt: "2025-11-10T10:00:00Z" },
+              2: { status: "ongoing", currentPage: 32, notes: "Covered basic valley formations", startedAt: "2025-11-10T09:00:00Z", completedAt: null, lastCoveredAt: "2025-11-10T10:00:00Z" },
               3: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null }
             } },
             3: { topics: { 
@@ -185,7 +188,7 @@ export const teacherData = {
 };
 
 export const teacherDirectory = [
-  { id: "T001", name: "Mr. Agarwal", role: "Teacher", subject: "Geography", contact: "suvanshagar@gmail.com" },
+  { id: "T001", name: "Teacher", role: "Teacher", subject: "Geography", contact: "teacher@school.edu" },
   { id: "T002", name: "Ms. Gupta", role: "Teacher", subject: "History", contact: "gupta@school.demo" },
   { id: "T003", name: "Ms. Rao", role: "HOD", subject: "Geography", contact: "rao@school.demo" },
   { id: "T004", name: "Mr. Sharma", role: "IT Admin", subject: "Operations", contact: "sharma@school.demo" }
@@ -813,8 +816,9 @@ export const getProgressPercent = (syllabus, progressMap) =>
 
 const buildProgressStorageKey = (classId) => `syllabus:progress:${classId}`;
 
+// User-scoped progress loading - each user has their own progress
 export const loadStoredProgress = (classId, fallbackProgress = {}) => {
-  const stored = loadState(buildProgressStorageKey(classId), null);
+  const stored = loadUserState(buildProgressStorageKey(classId), null);
   if (!stored) {
     // Handle undefined/null fallback gracefully
     if (fallbackProgress === undefined || fallbackProgress === null) {
@@ -825,8 +829,9 @@ export const loadStoredProgress = (classId, fallbackProgress = {}) => {
   return stored;
 };
 
+// User-scoped progress persistence
 export const persistProgress = (classId, progress) => {
-  saveState(buildProgressStorageKey(classId), progress);
+  saveUserState(buildProgressStorageKey(classId), progress);
   try {
     if (typeof window !== 'undefined' && window.dispatchEvent) {
       window.dispatchEvent(new CustomEvent('syllabus-progress-updated', { detail: { classId } }));
@@ -1083,6 +1088,95 @@ export const getNextTopic = (sectionId) => {
   return null; // All topics completed
 };
 
+/**
+ * Reset all demo data for the current user
+ */
 export const resetDemoState = () => {
-  resetNamespace();
+  resetUserNamespace();
+};
+
+/**
+ * Seed initial demo data for a new user
+ * Called on first login to populate the user's isolated sandbox
+ */
+export const seedDemoDataForUser = () => {
+  if (isUserInitialized()) {
+    console.log('Demo data already seeded for this user');
+    return false;
+  }
+
+  console.log('Seeding demo data for new user...');
+
+  // Seed initial progress state from teacherData
+  // This gives each user their own copy of the demo progress
+  teacherData.courses.forEach((course) => {
+    const syllabus = getSyllabusByRef(course.syllabusRef);
+    course.sections.forEach((section) => {
+      const initialProgress = normalizeSectionProgress(syllabus, section.progress);
+      saveUserState(buildProgressStorageKey(section.id), initialProgress);
+    });
+  });
+
+  // Seed initial attendance logs for user's sandbox
+  saveUserState('attendance:logs', attendanceLogs);
+  
+  // Seed initial notifications
+  saveUserState('notifications', notifications);
+  
+  // Mark user as initialized
+  markUserInitialized();
+  
+  console.log('Demo data seeded successfully');
+  return true;
+};
+
+/**
+ * Check if current user needs demo data seeding
+ */
+export const needsDemoSeeding = () => {
+  return !isUserInitialized();
+};
+
+/**
+ * Get user-specific attendance logs
+ */
+export const getUserAttendanceLogs = () => {
+  return loadUserState('attendance:logs', attendanceLogs);
+};
+
+/**
+ * Save user-specific attendance logs
+ */
+export const saveUserAttendanceLogs = (logs) => {
+  saveUserState('attendance:logs', logs);
+};
+
+/**
+ * Mark attendance for a class (user-scoped)
+ */
+export const markClassAttendance = (classId, date, records) => {
+  const logs = getUserAttendanceLogs();
+  
+  // Remove existing logs for this class/date
+  const filtered = logs.filter(l => !(l.classId === classId && l.date === date));
+  
+  // Add new records
+  const newLogs = [...filtered, ...records];
+  
+  saveUserAttendanceLogs(newLogs);
+  return newLogs;
+};
+
+/**
+ * Get user-specific notifications
+ */
+export const getUserNotifications = () => {
+  return loadUserState('notifications', notifications);
+};
+
+/**
+ * Save user-specific notifications
+ */
+export const saveUserNotifications = (notifs) => {
+  saveUserState('notifications', notifs);
 };
