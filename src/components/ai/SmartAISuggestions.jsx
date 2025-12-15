@@ -1,18 +1,217 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Sparkles, ChevronRight } from 'lucide-react';
+import { 
+  RefreshCw, 
+  Sparkles,
+  AlertTriangle, 
+  TrendingUp, 
+  Calendar, 
+  BookOpen, 
+  Users, 
+  CheckCircle,
+  Clock,
+  Target,
+  Award,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Table2
+} from 'lucide-react';
 import {
   getCachedSuggestions,
   cacheSuggestions,
-  shouldRegenerateSuggestions,
-  markRegeneration,
-  formatTimeRemaining,
 } from '../../utils/aiSuggestions';
 import { toast } from 'react-hot-toast';
 
+// Icon mapping for AI-selected icons
+const ICONS = {
+  alert: AlertTriangle,
+  trending: TrendingUp,
+  calendar: Calendar,
+  book: BookOpen,
+  users: Users,
+  check: CheckCircle,
+  clock: Clock,
+  target: Target,
+  award: Award,
+};
+
+// Color styles for each priority
+const COLOR_STYLES = {
+  red: {
+    bg: 'bg-red-50',
+    border: 'border-red-200',
+    iconBg: 'bg-red-100',
+    iconColor: 'text-red-600',
+    titleColor: 'text-red-800',
+    textColor: 'text-red-700',
+    purpleBg: 'bg-red-500/20',
+    purpleBorder: 'border-red-400/40',
+  },
+  yellow: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-600',
+    titleColor: 'text-amber-800',
+    textColor: 'text-amber-700',
+    purpleBg: 'bg-amber-500/20',
+    purpleBorder: 'border-amber-400/40',
+  },
+  green: {
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-600',
+    titleColor: 'text-emerald-800',
+    textColor: 'text-emerald-700',
+    purpleBg: 'bg-emerald-500/20',
+    purpleBorder: 'border-emerald-400/40',
+  },
+  default: {
+    bg: 'bg-slate-50',
+    border: 'border-slate-200',
+    iconBg: 'bg-slate-100',
+    iconColor: 'text-slate-600',
+    titleColor: 'text-slate-800',
+    textColor: 'text-slate-700',
+    purpleBg: 'bg-white/10',
+    purpleBorder: 'border-white/20',
+  },
+};
+
+/**
+ * Table Popup Component for showing detailed data
+ */
+function TablePopup({ title, data, columns, onClose }) {
+  if (!data || data.length === 0) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div 
+        className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-4 border-b border-slate-200">
+          <h3 className="font-semibold text-slate-800">{title}</h3>
+          <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-lg">
+            <X className="w-5 h-5 text-slate-500" />
+          </button>
+        </div>
+        <div className="overflow-auto max-h-[60vh]">
+          <table className="w-full">
+            <thead className="bg-slate-50 sticky top-0">
+              <tr>
+                {columns.map((col, i) => (
+                  <th key={i} className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {data.map((row, rowIdx) => (
+                <tr key={rowIdx} className="hover:bg-slate-50">
+                  {columns.map((col, colIdx) => (
+                    <td key={colIdx} className="px-4 py-3 text-sm text-slate-700">
+                      {col.render ? col.render(row[col.key], row) : row[col.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Expandable Suggestion Card
+ */
+function SuggestionCard({ suggestion, isPurple, getCardStyle, getIconContainerStyle, getIconStyle, getTitleStyle, getDetailStyle }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showTable, setShowTable] = useState(false);
+  
+  const isObject = typeof suggestion === 'object' && suggestion !== null;
+  const suggTitle = isObject ? suggestion.title : null;
+  const detail = isObject ? (suggestion.detail || suggestion.text) : suggestion;
+  const summary = isObject ? suggestion.summary : null; // Short one-liner
+  const color = isObject ? suggestion.color : 'default';
+  const iconName = isObject ? suggestion.icon : 'book';
+  const tableData = isObject ? suggestion.tableData : null;
+  const tableColumns = isObject ? suggestion.tableColumns : null;
+  const Icon = ICONS[iconName] || BookOpen;
+  
+  // Extract summary from detail if not provided (first sentence or 60 chars)
+  const displaySummary = summary || (detail.length > 80 
+    ? detail.split(/[.!?]/)[0].slice(0, 80) + '...'
+    : detail);
+  const hasMoreDetail = detail.length > 80 || tableData;
+  
+  return (
+    <>
+      <div 
+        className={`p-3 rounded-xl border-2 transition-all hover:shadow-md cursor-pointer ${getCardStyle(color)}`}
+        onClick={() => hasMoreDetail && setIsExpanded(!isExpanded)}
+      >
+        <div className="flex gap-3">
+          <div className={`p-2 rounded-lg ${getIconContainerStyle(color)} flex-shrink-0 self-start`}>
+            <Icon className={`w-4 h-4 ${getIconStyle(color)}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            {suggTitle && (
+              <div className="flex items-center justify-between gap-2">
+                <p className={`text-sm ${getTitleStyle(color)}`}>
+                  {suggTitle}
+                </p>
+                {hasMoreDetail && (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {tableData && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setShowTable(true); }}
+                        className={`p-1 rounded hover:bg-black/10 ${isPurple ? 'text-white/70' : 'text-slate-400'}`}
+                        title="View details"
+                      >
+                        <Table2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {isExpanded ? (
+                      <ChevronUp className={`w-4 h-4 ${isPurple ? 'text-white/50' : 'text-slate-400'}`} />
+                    ) : (
+                      <ChevronDown className={`w-4 h-4 ${isPurple ? 'text-white/50' : 'text-slate-400'}`} />
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            <p className={`text-sm leading-relaxed ${getDetailStyle(color)}`}>
+              {isExpanded ? detail : displaySummary}
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      {showTable && tableData && (
+        <TablePopup
+          title={suggTitle || 'Details'}
+          data={tableData}
+          columns={tableColumns || [
+            { key: 'name', label: 'Name' },
+            { key: 'value', label: 'Value' }
+          ]}
+          onClose={() => setShowTable(false)}
+        />
+      )}
+    </>
+  );
+}
+
 /**
  * SmartAISuggestions Component
+ * Uses Gemini to generate contextual suggestions
  * Auto-caches suggestions for 1 hour per session
- * Allows manual regeneration with rate limiting (5 min cooldown)
+ * Expandable cards with table popups for detailed data
  */
 export default function SmartAISuggestions({
   contextKey,
@@ -23,56 +222,27 @@ export default function SmartAISuggestions({
   const [suggestions, setSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [canRegenerate, setCanRegenerate] = useState(true);
-  const [timeUntilRegen, setTimeUntilRegen] = useState(0);
 
   // Load or generate suggestions on mount
   useEffect(() => {
     loadSuggestions(false);
   }, [contextKey]);
 
-  // Update regeneration timer
-  useEffect(() => {
-    if (timeUntilRegen > 0) {
-      const interval = setInterval(() => {
-        setTimeUntilRegen(prev => {
-          const newTime = Math.max(0, prev - 1000);
-          if (newTime === 0) {
-            setCanRegenerate(true);
-          }
-          return newTime;
-        });
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [timeUntilRegen]);
-
-  const loadSuggestions = useCallback((isManual = false) => {
-    const decision = shouldRegenerateSuggestions(contextKey, isManual);
-
-    // If rate limited
-    if (isManual && decision.reason === 'rate_limited') {
-      setCanRegenerate(false);
-      setTimeUntilRegen(decision.timeUntilNextAllowed);
-      toast.error(`Please wait ${formatTimeRemaining(decision.timeUntilNextAllowed)} before regenerating`);
-      return;
-    }
-
-    // Use cached data if available and valid
-    if (!decision.shouldRegenerate && decision.cachedData) {
-      setSuggestions(decision.cachedData);
+  const loadSuggestions = useCallback(async (isManual = false) => {
+    // Check cache first (unless manual refresh)
+    if (!isManual) {
       const cached = getCachedSuggestions(contextKey);
-      if (cached) {
+      if (cached && cached.data && cached.data.length > 0 && !cached.isExpired) {
+        setSuggestions(cached.data);
         setLastUpdated(new Date(cached.timestamp));
+        return;
       }
-      return;
     }
 
-    // Generate new suggestions
+    // Generate new suggestions via Gemini
     setIsLoading(true);
     try {
-      const newSuggestions = generateSuggestions();
+      const newSuggestions = await generateSuggestions();
       const resolved = Array.isArray(newSuggestions) ? newSuggestions : [];
       setSuggestions(resolved);
       
@@ -80,11 +250,7 @@ export default function SmartAISuggestions({
       cacheSuggestions(contextKey, resolved);
       setLastUpdated(new Date());
 
-      // Mark regeneration if manual
-      if (isManual) {
-        markRegeneration(contextKey);
-        setCanRegenerate(false);
-        setTimeUntilRegen(5 * 60 * 1000); // 5 minutes
+      if (isManual && resolved.length > 0) {
         toast.success('Suggestions refreshed!');
       }
     } catch (error) {
@@ -97,66 +263,126 @@ export default function SmartAISuggestions({
   }, [contextKey, generateSuggestions]);
 
   const handleRegenerate = () => {
-    if (!canRegenerate && timeUntilRegen > 0) {
-      toast.error(`Please wait ${formatTimeRemaining(timeUntilRegen)} before regenerating`);
-      return;
-    }
     loadSuggestions(true);
   };
 
   const isPurple = variant === 'purple';
-  const headerClass = isPurple ? 'text-white' : 'text-black-800';
-  const buttonClass = isPurple 
-    ? 'text-white/80 hover:text-white bg-white/10 hover:bg-white/20'
-    : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100';
-  const suggestionClass = isPurple
-    ? 'flex items-start gap-2 p-3 bg-white/10 rounded-xl text-sm'
-    : 'border border-black-200 rounded-lg p-2 bg-white/60 text-sm text-black-700';
+
+  const getCardStyle = (color) => {
+    const styles = COLOR_STYLES[color] || COLOR_STYLES.default;
+    if (isPurple) {
+      return `${styles.purpleBg} ${styles.purpleBorder}`;
+    }
+    return `${styles.bg} ${styles.border}`;
+  };
+
+  const getIconContainerStyle = (color) => {
+    const styles = COLOR_STYLES[color] || COLOR_STYLES.default;
+    if (isPurple) {
+      return 'bg-white/20';
+    }
+    return styles.iconBg;
+  };
+
+  const getIconStyle = (color) => {
+    const styles = COLOR_STYLES[color] || COLOR_STYLES.default;
+    if (isPurple) {
+      return 'text-white';
+    }
+    return styles.iconColor;
+  };
+
+  const getTitleStyle = (color) => {
+    const styles = COLOR_STYLES[color] || COLOR_STYLES.default;
+    if (isPurple) {
+      return 'text-white font-semibold';
+    }
+    return `${styles.titleColor} font-semibold`;
+  };
+
+  const getDetailStyle = (color) => {
+    const styles = COLOR_STYLES[color] || COLOR_STYLES.default;
+    if (isPurple) {
+      return 'text-white/90';
+    }
+    return styles.textColor;
+  };
 
   return (
-    <>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className={`sc-heading text-base font-semibold ${headerClass}`}>{title}</h3>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className={`p-1.5 rounded-lg ${isPurple ? 'bg-white/20' : 'bg-indigo-100'}`}>
+            <Sparkles className={`w-4 h-4 ${isPurple ? 'text-white' : 'text-indigo-600'}`} />
+          </div>
+          <h3 className={`sc-heading text-base font-semibold ${isPurple ? 'text-white' : 'text-slate-800'}`}>
+            {title}
+          </h3>
+        </div>
         <button
           onClick={handleRegenerate}
-          disabled={isLoading || (!canRegenerate && timeUntilRegen > 0)}
-          className={`p-1.5 rounded-lg transition-all ${buttonClass} disabled:opacity-50 disabled:cursor-not-allowed`}
-          title={
-            !canRegenerate && timeUntilRegen > 0
-              ? `Wait ${formatTimeRemaining(timeUntilRegen)}`
-              : 'Regenerate suggestions'
-          }
+          disabled={isLoading}
+          className={`p-2 rounded-lg transition-all ${
+            isPurple 
+              ? 'text-white/80 hover:text-white bg-white/10 hover:bg-white/20'
+              : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+          title="Refresh suggestions"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
-      {/* Suggestions List */}
-      {isLoading && suggestions.length === 0 ? (
-        <div className="flex items-center justify-center py-6">
-          <RefreshCw className={`w-5 h-5 ${isPurple ? 'text-white' : 'text-indigo-600'} animate-spin`} />
-        </div>
-      ) : suggestions.length > 0 ? (
-        <ul className="space-y-2">
-          {suggestions.map((suggestion, idx) => (
-            <li key={idx} className={suggestionClass}>
-              {isPurple && <ChevronRight className="w-4 h-4 mt-0.5 flex-shrink-0" />}
-              {typeof suggestion === 'string' ? suggestion : suggestion.text || suggestion}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="text-center py-4">
-          <p className={`text-sm ${isPurple ? 'text-white/70' : 'text-black-500'}`}>No suggestions yet</p>
-        </div>
-      )}
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {isLoading && suggestions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className={`p-3 rounded-full ${isPurple ? 'bg-white/10' : 'bg-indigo-50'} mb-2`}>
+              <Sparkles className={`w-6 h-6 ${isPurple ? 'text-white' : 'text-indigo-600'} animate-pulse`} />
+            </div>
+            <p className={`text-sm ${isPurple ? 'text-white' : 'text-slate-700'}`}>
+              Analyzing data...
+            </p>
+          </div>
+        ) : suggestions.length > 0 ? (
+          <div className="space-y-2">
+            {suggestions.map((suggestion, idx) => (
+              <SuggestionCard
+                key={idx}
+                suggestion={suggestion}
+                isPurple={isPurple}
+                getCardStyle={getCardStyle}
+                getIconContainerStyle={getIconContainerStyle}
+                getIconStyle={getIconStyle}
+                getTitleStyle={getTitleStyle}
+                getDetailStyle={getDetailStyle}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Sparkles className={`w-6 h-6 ${isPurple ? 'text-white/50' : 'text-slate-400'} mb-2`} />
+            <button 
+              onClick={handleRegenerate}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                isPurple
+                  ? 'bg-white/20 hover:bg-white/30 text-white'
+                  : 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700'
+              }`}
+            >
+              Generate Insights
+            </button>
+          </div>
+        )}
+      </div>
 
-      {/* Rate limit warning */}
-      {!canRegenerate && timeUntilRegen > 0 && (
-        <p className={`text-xs mt-2 ${isPurple ? 'text-white/60' : 'text-yellow-600'}`}>
-          Next refresh in {formatTimeRemaining(timeUntilRegen)}
+      {/* Footer */}
+      {lastUpdated && suggestions.length > 0 && (
+        <p className={`text-xs mt-2 ${isPurple ? 'text-white/40' : 'text-slate-400'}`}>
+          Updated: {lastUpdated.toLocaleTimeString()}
         </p>
       )}
-    </>
+    </div>
   );
 }

@@ -16,7 +16,7 @@ import {
   persistProgress,
   getNextTopic,
 } from "../data/dummyData";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { toast } from "react-hot-toast";
 import { SyllabusProgress } from "../components/syllabus";
 import { AttendanceEditor, AttendanceHistoryModal } from "../components/attendance";
@@ -32,6 +32,7 @@ import { loadState, saveState } from "../utils/storage";
 import { useTeacher } from "../context/TeacherContext";
 import { ProgressBar } from "../components/charts";
 import { calculateTopicProgressPercent } from "../data/dummyData";
+import { generateSectionSuggestions } from "../services/aiService";
 
 export default function ClassPage() {
   const { courseId, classId } = useParams();
@@ -531,29 +532,7 @@ export default function ClassPage() {
               <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-5 text-white">
                 <SmartAISuggestions
                   contextKey={`class_${classId}`}
-                  generateSuggestions={() => {
-                    const suggestions = [];
-                    
-                    // Syllabus-based suggestions
-                    try {
-                      const nextTopic = getNextTopic(classId);
-                      if (nextTopic) {
-                        if (nextTopic.status === 'ongoing') {
-                          suggestions.push(`Continue: ${nextTopic.title} (Page ${nextTopic.currentPage})`);
-                        } else {
-                          suggestions.push(`Ready to start: ${nextTopic.title} (Chapter ${nextTopic.chapterIndex})`);
-                        }
-                      }
-                    } catch (e) {
-                      console.error('Error getting next topic:', e);
-                    }
-                    
-                    // Assessment suggestion
-                    suggestions.push('Generate quick quiz using AI for recent topics');
-                    suggestions.push('Review attendance patterns for early intervention');
-                    
-                    return suggestions;
-                  }}
+                  generateSuggestions={() => generateSectionSuggestions(classId)}
                   title="AI Suggestions"
                   variant="purple"
                 />

@@ -88,19 +88,19 @@ export const teacherData = {
           schedules: ["Sat 0:00–23:45","Mon 09:00–09:45", "Thu 11:00–11:45"],
           progress: {
             1: { topics: { 
-              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-01T10:00:00Z" },
-              2: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-03T10:00:00Z" },
-              3: { status: "done", currentPage: null, notes: "Students understood well", lastCoveredAt: "2025-11-05T10:00:00Z" }
+              1: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-01T09:00:00Z", completedAt: "2025-11-01T09:45:00Z", lastCoveredAt: "2025-11-01T10:00:00Z" },
+              2: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-03T09:00:00Z", completedAt: "2025-11-03T09:40:00Z", lastCoveredAt: "2025-11-03T10:00:00Z" },
+              3: { status: "done", currentPage: null, notes: "Students understood well", startedAt: "2025-11-05T09:00:00Z", completedAt: "2025-11-05T09:45:00Z", lastCoveredAt: "2025-11-05T10:00:00Z" }
             } },
             2: { topics: { 
-              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-07T10:00:00Z" },
-              2: { status: "ongoing", currentPage: 45, notes: "Need to revisit deltas concept", lastCoveredAt: "2025-11-10T10:00:00Z" },
-              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+              1: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-07T09:00:00Z", completedAt: "2025-11-07T09:45:00Z", lastCoveredAt: "2025-11-07T10:00:00Z" },
+              2: { status: "ongoing", currentPage: 45, notes: "Need to revisit deltas concept", startedAt: "2025-11-10T09:00:00Z", completedAt: null, lastCoveredAt: "2025-11-10T10:00:00Z" },
+              3: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null }
             } },
             3: { topics: { 
-              1: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
-              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
-              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+              1: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null },
+              2: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null }
             } }
           },
           exams: [ { date: "2025-11-20", type: "Unit Test", syllabusUpTo: 2 } ]
@@ -110,19 +110,19 @@ export const teacherData = {
           schedules: ["Tue 10:00–10:45", "Fri 09:00–09:45"],
           progress: {
             1: { topics: { 
-              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-01T10:00:00Z" },
-              2: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-03T10:00:00Z" },
-              3: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-05T10:00:00Z" }
+              1: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-01T10:00:00Z", completedAt: "2025-11-01T10:40:00Z", lastCoveredAt: "2025-11-01T10:00:00Z" },
+              2: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-03T10:00:00Z", completedAt: "2025-11-03T10:45:00Z", lastCoveredAt: "2025-11-03T10:00:00Z" },
+              3: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-05T10:00:00Z", completedAt: "2025-11-05T10:45:00Z", lastCoveredAt: "2025-11-05T10:00:00Z" }
             } },
             2: { topics: { 
-              1: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-07T10:00:00Z" },
-              2: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-08T10:00:00Z" },
-              3: { status: "done", currentPage: null, notes: null, lastCoveredAt: "2025-11-09T10:00:00Z" }
+              1: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-07T10:00:00Z", completedAt: "2025-11-07T10:45:00Z", lastCoveredAt: "2025-11-07T10:00:00Z" },
+              2: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-08T10:00:00Z", completedAt: "2025-11-08T10:45:00Z", lastCoveredAt: "2025-11-08T10:00:00Z" },
+              3: { status: "done", currentPage: null, notes: null, startedAt: "2025-11-09T10:00:00Z", completedAt: "2025-11-09T10:40:00Z", lastCoveredAt: "2025-11-09T10:00:00Z" }
             } },
             3: { topics: { 
-              1: { status: "ongoing", currentPage: 62, notes: "Starting climate zones", lastCoveredAt: "2025-11-11T10:00:00Z" },
-              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
-              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+              1: { status: "ongoing", currentPage: 62, notes: "Starting climate zones", startedAt: "2025-11-11T10:00:00Z", completedAt: null, lastCoveredAt: "2025-11-11T10:00:00Z" },
+              2: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null }
             } }
           },
           exams: [ { date: "2025-11-22", type: "Unit Test", syllabusUpTo: 3 } ]
@@ -140,14 +140,14 @@ export const teacherData = {
           schedules: ["Mon 12:00–12:45", "Wed 09:00–09:45"],
           progress: {
             1: { topics: { 
-              1: { status: "ongoing", currentPage: 18, notes: "Covering pre-colonial era", lastCoveredAt: "2025-11-10T12:00:00Z" },
-              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
-              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+              1: { status: "ongoing", currentPage: 18, notes: "Covering pre-colonial era", startedAt: "2025-11-10T12:00:00Z", completedAt: null, lastCoveredAt: "2025-11-10T12:00:00Z" },
+              2: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null }
             } },
             2: { topics: { 
-              1: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
-              2: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
-              3: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null }
+              1: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null },
+              2: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null },
+              3: { status: "not-started", currentPage: null, notes: null, startedAt: null, completedAt: null, lastCoveredAt: null }
             } },
             3: { topics: { 
               1: { status: "not-started", currentPage: null, notes: null, lastCoveredAt: null },
@@ -813,9 +813,15 @@ export const getProgressPercent = (syllabus, progressMap) =>
 
 const buildProgressStorageKey = (classId) => `syllabus:progress:${classId}`;
 
-export const loadStoredProgress = (classId, fallbackProgress) => {
+export const loadStoredProgress = (classId, fallbackProgress = {}) => {
   const stored = loadState(buildProgressStorageKey(classId), null);
-  if (!stored) return JSON.parse(JSON.stringify(fallbackProgress));
+  if (!stored) {
+    // Handle undefined/null fallback gracefully
+    if (fallbackProgress === undefined || fallbackProgress === null) {
+      return {};
+    }
+    return JSON.parse(JSON.stringify(fallbackProgress));
+  }
   return stored;
 };
 
