@@ -10,7 +10,8 @@ import {
   teacherData, 
   students, 
   getAllAssessments, 
-  getAssignmentStats 
+  getAssignmentStats,
+  syllabusList 
 } from "../data/dummyData";
 import { 
   createAssessment,
@@ -33,6 +34,7 @@ export default function Assessments() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showGradingModal, setShowGradingModal] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState(null);
   const [grades, setGrades] = useState({});
   const [formData, setFormData] = useState({
@@ -53,6 +55,21 @@ export default function Assessments() {
     const dummyAssessments = getAllAssessments();
     const allAssessments = getAllAssessmentsWithStored(dummyAssessments);
     setAssessmentsList(allAssessments);
+  }, []);
+
+  // Get chapters for AI generator
+  const availableChapters = useMemo(() => {
+    const chapters = [];
+    syllabusList.forEach(syl => {
+      syl.chapters.forEach(ch => {
+        chapters.push({ 
+          title: ch.title, 
+          subject: syl.subject, 
+          grade: syl.grade 
+        });
+      });
+    });
+    return chapters;
   }, []);
 
   // Get all unique classes from teacher's courses
@@ -344,21 +361,82 @@ export default function Assessments() {
 
   return (
     <PageShell width="6xl">
+      {/* AI Generator Modal */}
+      <AnimatePresence>
+        {showAIGenerator && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setShowAIGenerator(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-black-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-black-800">AI Assessment Generator</h2>
+                      <p className="text-xs text-black-500">Create quizzes & tests with AI</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAIGenerator(false)}
+                    className="p-2 hover:bg-black-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-black-500" />
+                  </button>
+                </div>
+                <AIAssignmentGenerator
+                  chapters={availableChapters}
+                  onSave={(content) => {
+                    console.log('Generated content:', content);
+                    setShowAIGenerator(false);
+                    toast.success('Assessment generated! Review and save.');
+                  }}
+                  className="border-none rounded-none"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-black-800">Assessments</h1>
           <p className="text-sm text-black-500 mt-1">Manage assignments, tests, and quizzes across all classes</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-lg shadow-indigo-200"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Create Assessment</span>
-        </motion.button>
+        <div className="flex items-center gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowAIGenerator(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all font-medium shadow-lg shadow-purple-200"
+          >
+            <Sparkles className="w-5 h-5" />
+            <span>AI Generate</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-lg shadow-indigo-200"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create</span>
+          </motion.button>
+        </div>
       </div>
 
       {/* Stats Cards */}
