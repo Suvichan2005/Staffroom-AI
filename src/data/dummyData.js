@@ -440,6 +440,15 @@ export function getUpcomingSessions(teacher, daysAhead=7){
   const now = new Date();
   const sessions = [];
   const courses = (teacher && Array.isArray(teacher.courses)) ? teacher.courses : [];
+  
+  // Helper to get local date string YYYY-MM-DD (avoids UTC timezone issues)
+  const getLocalDateStr = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
   courses.forEach((course) => {
     (course.sections || []).forEach((sec) => {
       (sec.schedules||[]).forEach((s) => {
@@ -449,7 +458,7 @@ export function getUpcomingSessions(teacher, daysAhead=7){
           const d = new Date(now);
           d.setDate(now.getDate()+i);
           if(d.getDay() === parsed.day){
-            const dateStr = d.toISOString().slice(0,10);
+            const dateStr = getLocalDateStr(d);
             sessions.push({
               courseId: course.id,
               subject: course.title.split(' ').slice(1).join(' ') || course.title,

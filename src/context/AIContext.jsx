@@ -450,7 +450,8 @@ SPECIAL HANDLING FOR "NEXT TOPIC":
     // Build temporal context - today's schedule, current/next class
     const sessions = getUpcomingSessions(teacherData, 1); // Today and tomorrow
     const now = new Date();
-    const today = now.toISOString().slice(0, 10);
+    // Use local date format to avoid UTC timezone issues
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const currentTimeStr = now.toTimeString().slice(0, 5);
     
     const todaysSessions = sessions.filter(s => s.date === today);

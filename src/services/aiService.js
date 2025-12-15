@@ -544,7 +544,8 @@ function tool_getNextTopic(sectionId) {
  */
 function getTemporalContext() {
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  // Use local date format to avoid UTC timezone issues
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const currentTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
   const currentHHMM = now.toTimeString().slice(0, 5); // "HH:MM" format for comparison
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -611,7 +612,8 @@ function getTemporalContext() {
  */
 function tool_getSchedule(daysAhead = 7) {
   const sessions = getUpcomingSessions(teacherData, daysAhead);
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   
   return {
     today: sessions.filter(s => s.date === today),
@@ -665,7 +667,8 @@ function tool_getAssignments(sectionId = null) {
     ? assignments.filter(a => a.classId.toUpperCase() === sectionId.toUpperCase())
     : assignments;
   
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   
   return {
     upcoming: relevantAssignments.filter(a => a.dueDate >= today).map(a => ({
