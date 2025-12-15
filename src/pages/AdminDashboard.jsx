@@ -199,20 +199,26 @@ export default function AdminDashboard() {
           transition={{ delay: 0.5 }}
           className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-5 text-white"
         >
-          <h3 className="font-semibold mb-4">Quick Actions</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Quick Actions</h3>
+            <span className="px-2 py-0.5 bg-white/20 text-white/90 text-xs font-medium rounded-full">In Progress</span>
+          </div>
           <div className="space-y-3">
             {[
-              { label: 'Upload Timetable', onClick: () => setActiveTab('timetable') },
-              { label: 'Manage Teachers', onClick: () => setActiveTab('mapping') },
-              { label: 'View Students', onClick: () => setActiveTab('students') },
-              { label: 'Export Reports', onClick: () => toast.success('Reports exported (mock)') },
+              { label: 'Upload Timetable', onClick: () => setActiveTab('timetable'), inProgress: true },
+              { label: 'Manage Teachers', onClick: () => setActiveTab('mapping'), inProgress: true },
+              { label: 'View Students', onClick: () => setActiveTab('students'), inProgress: true },
+              { label: 'Export Reports', onClick: () => toast.success('Reports exported (mock)'), inProgress: true },
             ].map((action, idx) => (
               <button
                 key={idx}
                 onClick={action.onClick}
                 className="w-full flex items-center justify-between p-3 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-sm"
               >
-                <span>{action.label}</span>
+                <span className="flex items-center gap-2">
+                  {action.label}
+                  {action.inProgress && <span className="px-1.5 py-0.5 bg-amber-500/30 text-amber-200 text-[10px] rounded">WIP</span>}
+                </span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             ))}

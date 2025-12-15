@@ -224,7 +224,10 @@ export default function ProfilePage() {
           transition={{ delay: 0.4 }}
           className="bg-white rounded-2xl border border-black-200 p-5"
         >
-          <h2 className="text-lg font-semibold text-black-800 mb-4">Account Settings</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-black-800">Account Settings</h2>
+            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">In Progress</span>
+          </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
             {[
               { icon: Shield, label: 'Security', desc: 'Password & 2FA' },
@@ -235,7 +238,8 @@ export default function ProfilePage() {
               return (
                 <button 
                   key={i}
-                  className="flex items-center gap-3 p-4 rounded-xl border border-black-200 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all text-left"
+                  className="relative flex items-center gap-3 p-4 rounded-xl border border-black-200 hover:border-indigo-200 hover:bg-indigo-50/50 transition-all text-left opacity-60 cursor-not-allowed"
+                  disabled
                 >
                   <div className="p-2 bg-black-100 rounded-lg">
                     <Icon className="w-5 h-5 text-black-600" />

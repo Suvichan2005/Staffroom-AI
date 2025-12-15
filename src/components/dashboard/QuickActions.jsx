@@ -9,6 +9,8 @@ import {
   Sparkles,
   CalendarDays,
 } from 'lucide-react';
+import { useTeacher } from '../../context/TeacherContext';
+import { teacherData } from '../../data/dummyData';
 
 /**
  * QuickActions - Grid of quick action buttons
@@ -16,13 +18,60 @@ import {
  */
 export default function QuickActions() {
   const navigate = useNavigate();
+  const teacherCtx = useTeacher();
+  const teacher = teacherCtx?.teacher || teacherData;
+
+  // Find first active class for Take Attendance
+  const getFirstActiveClass = () => {
+    const now = new Date();
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = dayNames[now.getDay()];
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    for (const course of teacher?.courses || []) {
+      for (const section of course.sections || []) {
+        const schedules = section.schedules || (section.schedule ? [section.schedule] : []);
+        for (const schedule of schedules) {
+          if (schedule.startsWith(today)) {
+            const timeMatch = schedule.match(/(\d{1,2}):(\d{2})/);
+            if (timeMatch) {
+              const scheduleTime = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]);
+              const diff = Math.abs(currentTime - scheduleTime);
+              if (diff <= 15) {
+                return { courseId: course.id, classId: section.id };
+              }
+            }
+          }
+        }
+      }
+    }
+    // If no active class, return first class of the day
+    for (const course of teacher?.courses || []) {
+      for (const section of course.sections || []) {
+        const schedules = section.schedules || (section.schedule ? [section.schedule] : []);
+        if (schedules.some(s => s.startsWith(today))) {
+          return { courseId: course.id, classId: section.id };
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleTakeAttendance = () => {
+    const activeClass = getFirstActiveClass();
+    if (activeClass) {
+      navigate(`/course/${activeClass.courseId}/class/${activeClass.classId}?take=1`);
+    } else {
+      navigate('/classes');
+    }
+  };
 
   const actions = [
     {
       label: 'Take Attendance',
       icon: ClipboardCheck,
       color: 'from-indigo-500 to-indigo-600',
-      onClick: () => navigate('/classes'),
+      onClick: handleTakeAttendance,
     },
     {
       label: 'View Courses',

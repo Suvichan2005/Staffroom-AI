@@ -346,7 +346,7 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
           <Mic className="w-4 h-4 text-indigo-600" />
           Voice Attendance
           {shouldUseLiveAPI && (
-            <span className="flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-medium rounded-full">
+            <span className="flex items-center gap-1 px-1.5 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[5px] md:text-[10px] font-medium rounded-full">
               <Zap className="w-2.5 h-2.5" />
               LIVE AI
             </span>
