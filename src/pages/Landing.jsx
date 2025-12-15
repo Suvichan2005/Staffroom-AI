@@ -8,7 +8,12 @@ import {
   BarChart3, 
   Users,
   Sparkles,
-  CheckCircle2
+  CheckCircle2,
+  MessageSquare,
+  BookOpen,
+  ClipboardList,
+  Eye,
+  Play
 } from "lucide-react";
 
 export default function Landing() {
@@ -16,36 +21,63 @@ export default function Landing() {
 
   const features = [
     {
+      icon: MessageSquare,
+      title: "Natural Language Syllabus Updates",
+      description: "Just tell the AI 'I finished Chapter 3 in 6A Geography, left off at page 34' and it updates your syllabus progress automatically.",
+      color: "indigo"
+    },
+    {
       icon: Mic,
-      title: "Voice-First Workflow",
-      description: "Say 'I finished Chapter 4 in 6A Geography' and watch your progress update instantly.",
+      title: "Voice-Based Attendance",
+      description: "Call out names naturally — 'Aarav present, roll 5 absent, Priya here' — and watch attendance update live on screen.",
+      color: "purple"
+    },
+    {
+      icon: BookOpen,
+      title: "Topic-Wise Tracking",
+      description: "Each topic mapped to your curriculum with notes, page numbers, and progress status. Never forget where you left off.",
       color: "indigo"
     },
     {
       icon: Brain,
-      title: "AI Teaching Assistant",
-      description: "Get smart suggestions for quizzes, identify at-risk students, and plan lessons effortlessly.",
-      color: "purple"
-    },
-    {
-      icon: BarChart3,
-      title: "Real-Time Analytics",
-      description: "Track syllabus coverage, attendance patterns, and student performance at a glance.",
-      color: "indigo"
-    },
-    {
-      icon: Users,
-      title: "Team Collaboration",
-      description: "Share resources, coordinate with colleagues, and align curriculum across sections.",
+      title: "Context-Aware AI Assistant",
+      description: "The AI remembers context. Say 'mark the next topic as ongoing' and it understands exactly what you mean.",
       color: "purple"
     }
   ];
 
   const benefits = [
-    "Save hours of manual work weekly",
-    "Voice-powered tracking",
-    "AI-generated quizzes",
-    "At-risk student alerts"
+    "No more manual tracking",
+    "Voice-first workflow",
+    "Smart syllabus mapping",
+    "Real-time visual feedback"
+  ];
+
+  const howToTest = [
+    {
+      step: "1",
+      title: "Login with Demo",
+      desc: "Click 'Try Demo' below to access the platform with pre-loaded sample data.",
+      icon: Play
+    },
+    {
+      step: "2", 
+      title: "Explore a Class",
+      desc: "Open the dashboard and select a class (e.g., 6A Geography) to see syllabus tracking in action.",
+      icon: BookOpen
+    },
+    {
+      step: "3",
+      title: "Try Voice Attendance",
+      desc: "Go to Today's Classes → Take Attendance → Enable voice mode and start calling out names.",
+      icon: Mic
+    },
+    {
+      step: "4",
+      title: "Chat with AI",
+      desc: "Use the chatbot to update syllabus: 'I covered Chapter 2 today' or 'Where did I leave off in 6B?'",
+      icon: MessageSquare
+    }
   ];
 
   const getColorClasses = (color) => {
@@ -89,7 +121,7 @@ export default function Landing() {
               <div className="space-y-4">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-100 text-indigo-700 text-sm font-medium">
                   <Sparkles className="w-4 h-4" />
-                  AI-Powered Teacher Assistant
+                  Early Preview
                 </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black-900 leading-tight">
                   The Staffroom
@@ -97,8 +129,8 @@ export default function Landing() {
                   Deserve
                 </h1>
                 <p className="text-lg text-black-600 leading-relaxed max-w-xl">
-                  Streamline attendance, track curriculum, and get AI-powered insights — all through voice commands. 
-                  Spend less time on paperwork, more time teaching.
+                  Voice and AI-powered workflows to reduce repetitive admin tasks — track syllabus, take attendance, 
+                  and manage classes naturally. Spend less time on paperwork, more time teaching.
                 </p>
               </div>
 
@@ -107,9 +139,16 @@ export default function Landing() {
                   onClick={() => navigate("/login")}
                   className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-indigo-600 text-white font-semibold text-base hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 hover:shadow-2xl hover:shadow-indigo-300"
                 >
-                  Get Started
+                  Try Demo
                   <ArrowRight className="w-5 h-5" />
                 </button>
+                <a
+                  href="#how-to-test"
+                  className="flex items-center justify-center gap-2 px-8 py-4 rounded-2xl bg-white text-indigo-600 font-semibold text-base border-2 border-indigo-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all"
+                >
+                  <Eye className="w-5 h-5" />
+                  How to Test
+                </a>
               </div>
 
               {/* Quick Benefits */}
@@ -205,13 +244,13 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">Features</p>
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">Live Features</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-black-900 mb-4">
-              Everything you need to teach smarter
+              What's working right now
             </h2>
             <p className="text-lg text-black-600 max-w-2xl mx-auto">
-              Staffroom brings together attendance, curriculum tracking, and AI assistance 
-              into one seamless experience designed for educators.
+              These features are live and ready to test. Built for real teaching workflows, 
+              designed to save you time every day.
             </p>
           </motion.div>
 
@@ -239,7 +278,66 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How It Works */}
+      {/* How to Test Section */}
+      <section id="how-to-test" className="py-20 px-4 sm:px-6 bg-gradient-to-b from-white to-indigo-50">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">Try It Out</p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-black-900 mb-4">
+              How to test the features
+            </h2>
+            <p className="text-lg text-black-600 max-w-2xl mx-auto">
+              The demo is pre-loaded with sample data. Here's how to explore each feature:
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {howToTest.map((item, i) => (
+              <motion.div
+                key={item.step}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="relative"
+              >
+                <div className="absolute -top-3 left-4 w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center z-10 shadow-lg">
+                  {item.step}
+                </div>
+                <div className="bg-white rounded-2xl border border-black-200 p-6 pt-8 h-full hover:shadow-lg transition-shadow">
+                  <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mb-4">
+                    <item.icon className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black-800 mb-2">{item.title}</h3>
+                  <p className="text-sm text-black-600">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-12 text-center"
+          >
+            <button
+              onClick={() => navigate("/login")}
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-indigo-600 text-white font-semibold text-base hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200"
+            >
+              Start Testing Now
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Vision Section */}
       <section className="py-20 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <motion.div
@@ -248,33 +346,47 @@ export default function Landing() {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">How It Works</p>
+            <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wider mb-2">The Vision</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-black-900 mb-4">
-              Simplify your teaching workflow
+              Where we're headed
             </h2>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { step: "1", icon: Mic, title: "Speak", desc: "Use voice commands to log attendance, update progress, or ask questions." },
-              { step: "2", icon: Brain, title: "AI Processes", desc: "Our AI understands context and updates your data automatically." },
-              { step: "3", icon: BarChart3, title: "Insights Ready", desc: "Get real-time analytics, suggestions, and reports instantly." }
+              { 
+                icon: ClipboardList, 
+                title: "Assignment & Assessment", 
+                desc: "AI-generated quizzes, assignment tracking, and automatic score logging from voice or image input.",
+                status: "Coming Soon"
+              },
+              { 
+                icon: BarChart3, 
+                title: "Student Insights", 
+                desc: "Smart alerts for at-risk students, attendance patterns, and personalized teaching suggestions.",
+                status: "Coming Soon"
+              },
+              { 
+                icon: Users, 
+                title: "HOD & Admin Dashboards", 
+                desc: "Syllabus oversight across sections, timetable management, substitution handling, and coordination tools.",
+                status: "Coming Soon"
+              }
             ].map((item, i) => (
               <motion.div
-                key={item.step}
+                key={item.title}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="relative pt-4"
+                className="relative"
               >
-                {/* Step Number */}
-                <div className="absolute top-0 -translate-x-1/2 w-8 h-8 rounded-full bg-indigo-600 text-white text-sm font-bold flex items-center justify-center z-10 shadow-lg">
-                  {item.step}
-                </div>
-                <div className="bg-white rounded-2xl border border-black-200 p-6 pt-8 text-center hover:shadow-lg transition-shadow">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center mx-auto mb-4">
-                    <item.icon className="w-7 h-7 text-white" />
+                <div className="bg-white rounded-2xl border border-black-200 p-6 text-center hover:shadow-lg transition-shadow h-full">
+                  <div className="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-medium mb-4">
+                    {item.status}
+                  </div>
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mx-auto mb-4">
+                    <item.icon className="w-7 h-7 text-indigo-600" />
                   </div>
                   <h3 className="text-xl font-semibold text-black-800 mb-2">{item.title}</h3>
                   <p className="text-sm text-black-600">{item.desc}</p>
@@ -282,6 +394,22 @@ export default function Landing() {
               </motion.div>
             ))}
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-12 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-8 border border-indigo-100"
+          >
+            <div className="max-w-3xl mx-auto text-center">
+              <h3 className="text-xl font-semibold text-black-800 mb-4">The Long-Term Goal</h3>
+              <p className="text-black-600 leading-relaxed">
+                Staffroom AI is designed to be a <strong>teaching companion</strong>, not a replacement for existing systems. 
+                It works alongside tools like Google Classroom or campus ERPs, adding intelligence, automation, and analytics 
+                on top. The goal is simple: let teachers focus on teaching, while Staffroom handles the rest.
+              </p>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -300,17 +428,17 @@ export default function Landing() {
             
             <div className="relative z-10">
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                Ready to transform your teaching?
+                Your feedback shapes this product
               </h2>
               <p className="text-lg text-indigo-100 mb-8 max-w-xl mx-auto">
-                Join educators who are saving hours every week with Staffroom's 
-                AI-powered workflow automation.
+                This is an early prototype built specifically for teachers. 
+                I'd genuinely love to hear what works, what doesn't, and what you wish existed.
               </p>
               <button
                 onClick={() => navigate("/login")}
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-indigo-600 font-semibold text-base hover:bg-indigo-50 transition-colors shadow-xl"
               >
-                Login to Staffroom
+                Explore the Demo
                 <ArrowRight className="w-5 h-5" />
               </button>
             </div>
@@ -325,10 +453,10 @@ export default function Landing() {
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">S</span>
             </div>
-            <span className="text-sm font-semibold text-black-700">Staffroom</span>
+            <span className="text-sm font-semibold text-black-700">Staffroom AI</span>
           </div>
           <p className="text-sm text-black-500">
-            © 2025 Staffroom. Built for educators, powered by AI.
+            Built by Suvansh ✨
           </p>
         </div>
       </footer>
