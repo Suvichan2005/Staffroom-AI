@@ -78,7 +78,9 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
 
   const isActiveNow = (sess) => {
     const now = new Date();
-    const isToday = sess.date === now.toISOString().slice(0,10);
+    // Use local date format to avoid UTC timezone issues
+    const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const isToday = sess.date === todayLocal;
     if (!isToday) return false;
     const [sh, sm] = sess.startTime.split(':').map(Number);
     const [eh, em] = sess.endTime.split(':').map(Number);
