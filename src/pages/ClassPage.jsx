@@ -454,37 +454,37 @@ export default function ClassPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="grid md:grid-cols-12 gap-6"
+            className="grid md:grid-cols-12 gap-6 w-full overflow-hidden"
           >
             {/* Main Content */}
-            <div className="md:col-span-8 space-y-6">
+            <div className="md:col-span-8 space-y-6 min-w-0">
               {/* Progress Overview */}
-              <div className="bg-white rounded-2xl border border-black-200 p-5">
+              <div className="bg-white rounded-2xl border border-black-200 p-4 sm:p-5 overflow-hidden">
                 <h3 className="font-semibold text-black-800 mb-4">Progress Overview</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {/* Syllabus Progress */}
-                  <div className="p-4 rounded-xl bg-indigo-50">
-                    <BookOpen className="w-5 h-5 text-indigo-600 mb-2" />
-                    <p className="text-2xl font-bold text-indigo-700">{progressPercent}%</p>
-                    <p className="text-xs text-black-600">Syllabus</p>
+                  <div className="p-3 sm:p-4 rounded-xl bg-indigo-50">
+                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 mb-1 sm:mb-2" />
+                    <p className="text-xl sm:text-2xl font-bold text-indigo-700">{progressPercent}%</p>
+                    <p className="text-[10px] sm:text-xs text-black-600">Syllabus</p>
                   </div>
                   {/* Attendance */}
-                  <div className="p-4 rounded-xl bg-green-50">
-                    <Users className="w-5 h-5 text-green-600 mb-2" />
-                    <p className="text-2xl font-bold text-green-700">{attendanceMetrics.avgPercent}%</p>
-                    <p className="text-xs text-black-600">Attendance</p>
+                  <div className="p-3 sm:p-4 rounded-xl bg-green-50">
+                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 mb-1 sm:mb-2" />
+                    <p className="text-xl sm:text-2xl font-bold text-green-700">{attendanceMetrics.avgPercent}%</p>
+                    <p className="text-[10px] sm:text-xs text-black-600">Attendance</p>
                   </div>
                   {/* Days Recorded */}
-                  <div className="p-4 rounded-xl bg-yellow-50">
-                    <Calendar className="w-5 h-5 text-yellow-600 mb-2" />
-                    <p className="text-2xl font-bold text-yellow-700">{attendanceMetrics.totalDays}</p>
-                    <p className="text-xs text-black-600">Days Recorded</p>
+                  <div className="p-3 sm:p-4 rounded-xl bg-yellow-50">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 mb-1 sm:mb-2" />
+                    <p className="text-xl sm:text-2xl font-bold text-yellow-700">{attendanceMetrics.totalDays}</p>
+                    <p className="text-[10px] sm:text-xs text-black-600">Days Recorded</p>
                   </div>
                   {/* Best Attendance */}
-                  <div className="p-4 rounded-xl bg-blue-50">
-                    <Award className="w-5 h-5 text-blue-600 mb-2" />
-                    <p className="text-2xl font-bold text-blue-700">{attendanceMetrics.bestPercent}%</p>
-                    <p className="text-xs text-black-600">Best Attendance</p>
+                  <div className="p-3 sm:p-4 rounded-xl bg-blue-50">
+                    <Award className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mb-1 sm:mb-2" />
+                    <p className="text-xl sm:text-2xl font-bold text-blue-700">{attendanceMetrics.bestPercent}%</p>
+                    <p className="text-[10px] sm:text-xs text-black-600">Best Attendance</p>
                   </div>
                 </div>
               </div>
@@ -540,7 +540,7 @@ export default function ClassPage() {
 
               {/* Quick Actions */}
               <div className="bg-white rounded-2xl border border-black-200 p-5">
-                <h3 className="font-semibold text-black-800 mb-4">Quick Actions</h3>
+                <h3 className="font-semibold text-black-800 mb-4">Quick Actions (in-progress)</h3>
                 <div className="space-y-2">
                   {[
                     { label: 'Generate Quiz', icon: Sparkles, onClick: () => {} },
@@ -558,6 +558,9 @@ export default function ClassPage() {
                           <Icon className="w-4 h-4 text-black-600" />
                         </div>
                         <span className="text-sm font-medium text-black-700">{action.label}</span>
+                        {action.inProgress && (
+                          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 rounded-full">In Progress</span>
+                        )}
                         <ChevronRight className="w-4 h-4 text-black-400 ml-auto" />
                       </button>
                     );

@@ -121,24 +121,28 @@ export default function SettingsPage() {
     {
       title: 'Privacy & Security',
       icon: Shield,
+      inProgress: true,
       items: [
         {
           icon: Lock,
           label: 'Change Password',
           desc: 'Update your password',
           type: 'link',
+          inProgress: true,
         },
         {
           icon: Shield,
           label: 'Two-Factor Authentication',
           desc: 'Add extra security layer',
           type: 'link',
+          inProgress: true,
         },
         {
           icon: User,
           label: 'Privacy Settings',
           desc: 'Control data sharing',
           type: 'link',
+          inProgress: true,
         },
       ],
     },
@@ -208,6 +212,9 @@ export default function SettingsPage() {
                   <SectionIcon className="w-4 h-4 text-black-600" />
                 </div>
                 <h2 className="text-sm font-semibold text-black-800">{section.title}</h2>
+                {section.inProgress && (
+                  <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">In Progress</span>
+                )}
               </div>
 
               {/* Section Items */}
@@ -232,7 +239,10 @@ export default function SettingsPage() {
                       )}
 
                       {item.type === 'link' && (
-                        <ChevronRight className="w-5 h-5 text-black-400" />
+                        <div className="flex items-center gap-2">
+                          {item.inProgress && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">WIP</span>}
+                          <ChevronRight className="w-5 h-5 text-black-400" />
+                        </div>
                       )}
 
                       {item.type === 'select' && (

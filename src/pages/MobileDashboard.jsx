@@ -46,13 +46,58 @@ export default function MobileDashboard() {
     return 'Good evening';
   }, []);
 
+  // Find first active class for Take Attendance
+  const getFirstActiveClass = () => {
+    const now = new Date();
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = dayNames[now.getDay()];
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    for (const course of teacher?.courses || []) {
+      for (const section of course.sections || []) {
+        const schedules = section.schedules || (section.schedule ? [section.schedule] : []);
+        for (const schedule of schedules) {
+          if (schedule.startsWith(today)) {
+            const timeMatch = schedule.match(/(\d{1,2}):(\d{2})/);
+            if (timeMatch) {
+              const scheduleTime = parseInt(timeMatch[1]) * 60 + parseInt(timeMatch[2]);
+              const diff = Math.abs(currentTime - scheduleTime);
+              if (diff <= 15) {
+                return { courseId: course.id, classId: section.id };
+              }
+            }
+          }
+        }
+      }
+    }
+    // If no active class, return first class of the day
+    for (const course of teacher?.courses || []) {
+      for (const section of course.sections || []) {
+        const schedules = section.schedules || (section.schedule ? [section.schedule] : []);
+        if (schedules.some(s => s.startsWith(today))) {
+          return { courseId: course.id, classId: section.id };
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleTakeAttendance = () => {
+    const activeClass = getFirstActiveClass();
+    if (activeClass) {
+      navigate(`/course/${activeClass.courseId}/class/${activeClass.classId}?take=1`);
+    } else {
+      navigate('/classes');
+    }
+  };
+
   // Quick actions - top 5 teacher needs
   const quickActions = [
-    { id: 'attendance', icon: ClipboardCheck, label: 'Mark Attendance', color: 'from-indigo-500 to-blue-500', badge: todayActions.pendingAttendance, path: '/attendance' },
-    { id: 'schedule', icon: Calendar, label: 'Today\'s Classes', color: 'from-purple-500 to-pink-500', path: '/schedule' },
-    { id: 'students', icon: Users, label: 'Students', color: 'from-green-500 to-teal-500', path: '/students' },
-    { id: 'resources', icon: BookOpen, label: 'Resources', color: 'from-orange-500 to-yellow-500', path: '/resources' },
-    { id: 'tasks', icon: FileText, label: 'Tasks', color: 'from-red-500 to-red-500', badge: todayActions.assignmentsDue, path: '/tasks' },
+    { id: 'attendance', icon: ClipboardCheck, label: 'Mark Attendance', color: 'from-indigo-500 to-blue-500', badge: todayActions.pendingAttendance, onClick: handleTakeAttendance, inProgress: true },
+    { id: 'schedule', icon: Calendar, label: 'Today\'s Classes', color: 'from-purple-500 to-pink-500', onClick: () => navigate('/schedule') },
+    { id: 'students', icon: Users, label: 'Students', color: 'from-green-500 to-teal-500', onClick: () => navigate('/classes'), inProgress: true },
+    { id: 'resources', icon: BookOpen, label: 'Resources', color: 'from-orange-500 to-yellow-500', onClick: () => navigate('/resources') },
+    { id: 'tasks', icon: FileText, label: 'Tasks', color: 'from-red-500 to-red-500', badge: todayActions.assignmentsDue, onClick: () => navigate('/assignments'), inProgress: true },
   ];
 
   // Today's classes (mock data based on teacher courses)
@@ -107,20 +152,21 @@ export default function MobileDashboard() {
           <div className="flex items-center gap-2">
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/search')}
-              className="p-2.5 bg-white/10 backdrop-blur-sm rounded-xl"
+              onClick={() => navigate('/chat')}
+              className="relative p-2.5 bg-white/10 backdrop-blur-sm rounded-xl"
+              title="Search (In Progress)"
             >
               <Search className="w-5 h-5 text-white" />
+              <span className="absolute -top-0.5 -right-0.5 px-1 py-0.5 bg-amber-500 text-white text-[7px] font-bold rounded">WIP</span>
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/notifications')}
+              onClick={() => navigate('/chat')}
               className="relative p-2.5 bg-white/10 backdrop-blur-sm rounded-xl"
+              title="Notifications (In Progress)"
             >
               <Bell className="w-5 h-5 text-white" />
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                3
-              </span>
+              <span className="absolute -top-0.5 -right-0.5 px-1 py-0.5 bg-amber-500 text-white text-[7px] font-bold rounded">WIP</span>
             </motion.button>
           </div>
         </div>
@@ -163,7 +209,7 @@ export default function MobileDashboard() {
         >
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-black-800">Quick Actions</h2>
-            <button className="text-xs text-indigo-600 font-medium">Customize</button>
+            <span className="text-xs text-black-400 font-medium">Customize <span className="px-1 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px]">WIP</span></span>
           </div>
           <div className="grid grid-cols-5 gap-2">
             {quickActions.map((action, index) => (
@@ -171,7 +217,7 @@ export default function MobileDashboard() {
                 key={action.id}
                 action={action}
                 delay={0.2 + index * 0.05}
-                onClick={() => navigate(action.path)}
+                onClick={action.onClick}
               />
             ))}
           </div>
@@ -259,10 +305,12 @@ export default function MobileDashboard() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 300, delay: 0.6 }}
-        onClick={() => navigate('/create')}
+        onClick={() => navigate('/assignments')}
         className="fixed right-4 bottom-36 w-14 h-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-full shadow-lg shadow-indigo-300 flex items-center justify-center z-30"
+        title="Quick Create (In Progress)"
       >
         <Plus className="w-6 h-6 text-white" />
+        <span className="absolute -top-1 -right-1 px-1.5 py-0.5 bg-amber-500 text-white text-[8px] font-bold rounded">WIP</span>
       </motion.button>
     </div>
   );
@@ -301,6 +349,9 @@ function QuickActionItem({ action, delay, onClick }) {
       <span className="text-[10px] text-black-600 font-medium text-center leading-tight">
         {action.label.split(' ').slice(0, 2).join(' ')}
       </span>
+      {action.inProgress && (
+        <span className="text-[8px] text-amber-600 font-medium">WIP</span>
+      )}
     </motion.button>
   );
 }
