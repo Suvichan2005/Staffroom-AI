@@ -10,6 +10,7 @@ import { CourseCard } from "../components/teacher";
 import { UpcomingClasses, NoticesPanel } from "../components/dashboard";
 import { getSyllabusByRef, getTeacherTodayActions, getTeacherAnalyticsSnapshot, teacherData } from "../data/dummyData";
 import { getTeacherAnalyticsCharts } from "../data/analyticsData";
+import { generateDashboardInsights } from "../services/aiService";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -73,37 +74,7 @@ export default function Dashboard() {
           <div className="sc-card mt-6">
             <SmartAISuggestions
               contextKey="dashboard"
-              generateSuggestions={() => {
-                // Generate dashboard-level suggestions
-                const suggestions = [];
-                
-                // Check for pending actions
-                if (todayActions.pendingAttendance > 0) {
-                  suggestions.push(
-                    `${todayActions.pendingAttendance} class${todayActions.pendingAttendance > 1 ? 'es' : ''} awaiting attendance submission today`
-                  );
-                }
-                
-                // Check for syllabus gaps
-                if (todayActions.chaptersLeft > 5) {
-                  suggestions.push(
-                    `${todayActions.chaptersLeft} chapters remaining across sections - consider accelerating pace`
-                  );
-                }
-                
-                // Check assignments
-                if (todayActions.assignmentsDue > 0) {
-                  suggestions.push(
-                    `${todayActions.assignmentsDue} assignments due ${todayActions.date} - review submissions`
-                  );
-                }
-                
-                // Add general teaching tips
-                suggestions.push('Consider using AI quiz generator for quick assessments');
-                suggestions.push('Review student performance trends in analytics');
-                
-                return suggestions;
-              }}
+              generateSuggestions={generateDashboardInsights}
               title="AI Suggestions"
             />
           </div>

@@ -2065,122 +2065,738 @@ export default {
   detectAttendanceRisks
 };
 
-// Export tool functions and declarations for voice agent to share
+// ============================================================================
+// SMART AI SUGGESTIONS - GEMINI-POWERED
+// ============================================================================
+// SMART AI SUGGESTIONS - GEMINI-POWERED WITH COMPLETE CONTEXT
+// ============================================================================
+
 /**
- * Generate AI insights for dashboard
- * Returns array of insights with color and icon
+ * Build COMPLETE detailed context for a specific section
+ * Includes: per-student attendance per day, topics covered each day, grades, comparisons
  */
-export function generateAIInsights() {
-  const insights = [];
+function buildDetailedSectionContext(sectionId) {
+  // Find course and section
+  let course = null;
+  let section = null;
+  for (const c of teacherData.courses) {
+    const s = c.sections.find(sec => sec.sectionId === sectionId || sec.id === sectionId || sec.name === sectionId);
+    if (s) {
+      course = c;
+      section = s;
+      break;
+    }
+  }
   
-  // Get teacher data
-  const teacher = teacherData;
-  const courses = teacher?.courses || [];
+  if (!course || !section) return null;
   
-  // Analyze attendance patterns
-  const attendanceData = attendanceLogs.filter(log => {
-    const logDate = new Date(log.date);
-    const daysDiff = (new Date() - logDate) / (1000 * 60 * 60 * 24);
-    return daysDiff <= 7; // Last 7 days
+  const classId = section.sectionId || section.id || section.name;
+  
+  // Get students for this section
+  const sectionStudents = students.filter(s => s.classId === classId);
+  
+  // Get syllabus and progress
+  const syllabus = getSyllabusByRef(course.syllabusRef);
+  const baseProgress = syllabus ? normalizeSectionProgress(classId, syllabus) : {};
+  const storedProgress = loadStoredProgress(classId, {});
+  const effectiveProgress = { ...baseProgress, ...storedProgress };
+  
+  // Build topic history with dates
+  const topicHistory = [];
+  const topicsWithLowAttendance = [];
+  
+  if (syllabus) {
+    for (const chapter of syllabus.chapters) {
+      for (const topic of chapter.subTopics) {
+        const topicData = effectiveProgress[chapter.index]?.topics?.[topic.index];
+        const status = typeof topicData === 'object' ? topicData.status : topicData;
+        const lastCoveredAt = typeof topicData === 'object' ? topicData.lastCoveredAt : null;
+        
+        if (status === 'done' && lastCoveredAt) {
+          const coveredDate = new Date(lastCoveredAt).toISOString().split('T')[0];
+          
+          // Get attendance for that day
+          const dayAttendance = attendanceLogs.filter(log => 
+            log.classId === classId && log.date === coveredDate
+          );
+          const presentCount = dayAttendance.filter(a => a.status === 'present').length;
+          const totalStudents = sectionStudents.length;
+          const attendancePercent = totalStudents > 0 ? Math.round((presentCount / totalStudents) * 100) : 0;
+          
+          // Get names of absent students that day
+          const absentStudentIds = dayAttendance.filter(a => a.status === 'absent').map(a => a.studentId);
+          const absentNames = sectionStudents
+            .filter(s => absentStudentIds.includes(s.studentId))
+            .map(s => s.name);
+          
+          const topicEntry = {
+            topic: topic.title,
+            chapter: chapter.title,
+            chapterIndex: chapter.index,
+            topicIndex: topic.index,
+            date: coveredDate,
+            attendancePercent,
+            presentCount,
+            totalStudents,
+            absentStudents: absentNames
+          };
+          
+          topicHistory.push(topicEntry);
+          
+          // Flag topics covered with low attendance (<70%)
+          if (attendancePercent < 70) {
+            topicsWithLowAttendance.push(topicEntry);
+          }
+        }
+      }
+    }
+  }
+  
+  // Sort topic history by date (most recent first)
+  topicHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  // Find current topic and next topic
+  let currentTopic = null;
+  let nextTopic = null;
+  let completedTopics = 0;
+  let totalTopics = 0;
+  
+  if (syllabus) {
+    for (const chapter of syllabus.chapters) {
+      for (const topic of chapter.subTopics) {
+        totalTopics++;
+        const topicData = effectiveProgress[chapter.index]?.topics?.[topic.index];
+        const status = typeof topicData === 'object' ? topicData.status : topicData;
+        
+        if (status === 'done') {
+          completedTopics++;
+        } else if (status === 'ongoing' && !currentTopic) {
+          currentTopic = {
+            title: topic.title,
+            chapter: chapter.title,
+            chapterIndex: chapter.index,
+            topicIndex: topic.index,
+            currentPage: topicData?.currentPage || topic.pageFrom,
+            pageTo: topic.pageTo,
+            notes: topicData?.notes
+          };
+        } else if (!status || status === 'not-started') {
+          if (!nextTopic) {
+            nextTopic = {
+              title: topic.title,
+              chapter: chapter.title,
+              chapterIndex: chapter.index,
+              topicIndex: topic.index,
+              pageFrom: topic.pageFrom,
+              pageTo: topic.pageTo
+            };
+          }
+        }
+      }
+    }
+  }
+  
+  // Per-student detailed attendance with dates
+  const studentDetails = sectionStudents.map(student => {
+    const studentLogs = attendanceLogs.filter(log => log.studentId === student.studentId);
+    const presentDays = studentLogs.filter(a => a.status === 'present');
+    const absentDays = studentLogs.filter(a => a.status === 'absent');
+    const attendancePercent = studentLogs.length > 0 
+      ? Math.round((presentDays.length / studentLogs.length) * 100) 
+      : 100;
+    
+    // Get the last 5 absence dates
+    const recentAbsences = absentDays
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5)
+      .map(a => a.date);
+    
+    // Get student grades
+    const studentGrades = [];
+    assignments.filter(a => a.classId === classId).forEach(assn => {
+      const submission = assn.submissions?.find(s => s.studentId === student.studentId);
+      if (submission && submission.grade !== undefined) {
+        studentGrades.push({
+          assignment: assn.title,
+          grade: submission.grade,
+          maxPoints: assn.maxPoints,
+          percent: Math.round((submission.grade / assn.maxPoints) * 100)
+        });
+      }
+    });
+    
+    const avgGrade = studentGrades.length > 0 
+      ? Math.round(studentGrades.reduce((sum, g) => sum + g.percent, 0) / studentGrades.length)
+      : null;
+    
+    // Check which completed topics this student missed
+    const missedTopics = topicHistory
+      .filter(th => th.absentStudents.includes(student.name))
+      .map(th => ({ topic: th.topic, chapter: th.chapter, date: th.date }));
+    
+    return {
+      name: student.name,
+      rollNo: student.rollNo,
+      attendancePercent,
+      totalPresent: presentDays.length,
+      totalAbsent: absentDays.length,
+      recentAbsenceDates: recentAbsences,
+      avgGrade,
+      grades: studentGrades,
+      missedTopics
+    };
   });
   
-  if (attendanceData.length > 0) {
-    const avgAttendance = attendanceData.reduce((sum, log) => {
-      const present = log.students.filter(s => s.status === 'present').length;
-      return sum + (present / log.students.length) * 100;
-    }, 0) / attendanceData.length;
+  // Identify at-risk students
+  const atRiskStudents = studentDetails.filter(s => 
+    s.attendancePercent < 75 || 
+    (s.avgGrade !== null && s.avgGrade < 60) ||
+    s.totalAbsent >= 3
+  ).map(s => ({
+    name: s.name,
+    attendancePercent: s.attendancePercent,
+    avgGrade: s.avgGrade,
+    recentAbsenceDates: s.recentAbsenceDates,
+    missedTopics: s.missedTopics.slice(0, 3)
+  }));
+  
+  // Get other sections in same course for comparison
+  const otherSections = course.sections
+    .filter(s => (s.sectionId || s.id || s.name) !== classId)
+    .map(s => {
+      const otherId = s.sectionId || s.id || s.name;
+      const otherProgress = loadStoredProgress(otherId, {});
+      const otherBase = syllabus ? normalizeSectionProgress(otherId, syllabus) : {};
+      const otherEffective = { ...otherBase, ...otherProgress };
+      
+      let otherCompleted = 0;
+      let otherCurrentTopic = null;
+      
+      if (syllabus) {
+        for (const ch of syllabus.chapters) {
+          for (const t of ch.subTopics) {
+            const td = otherEffective[ch.index]?.topics?.[t.index];
+            const st = typeof td === 'object' ? td.status : td;
+            if (st === 'done') otherCompleted++;
+            else if (st === 'ongoing' && !otherCurrentTopic) {
+              otherCurrentTopic = t.title;
+            }
+          }
+        }
+      }
+      
+      return {
+        name: s.name,
+        completedTopics: otherCompleted,
+        progressPercent: totalTopics > 0 ? Math.round((otherCompleted / totalTopics) * 100) : 0,
+        currentTopic: otherCurrentTopic
+      };
+    });
+  
+  // Get pending assignments for this class
+  const pendingAssignments = assignments
+    .filter(a => a.classId === classId && new Date(a.dueDate) >= new Date())
+    .map(a => ({
+      title: a.title,
+      dueDate: a.dueDate,
+      submitted: a.submissions?.length || 0,
+      total: sectionStudents.length
+    }));
+  
+  return {
+    courseName: course.title,
+    sectionName: section.name,
+    classId,
+    subject: syllabus?.subject,
+    grade: syllabus?.grade,
+    currentTopic,
+    nextTopic,
+    completedTopics,
+    totalTopics,
+    progressPercent: totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0,
+    studentCount: sectionStudents.length,
+    students: studentDetails,
+    atRiskStudents,
+    topicHistory: topicHistory.slice(0, 10), // Last 10 topics covered
+    topicsWithLowAttendance,
+    otherSections,
+    pendingAssignments
+  };
+}
+
+/**
+ * Generate smart suggestions for a specific section using Gemini
+ * Optimized for speed with shorter prompts
+ */
+export async function generateSectionSuggestions(sectionId) {
+  const context = buildDetailedSectionContext(sectionId);
+  
+  if (!context) {
+    console.error('Could not build context for section:', sectionId);
+    return getFallbackSuggestions({ sectionName: sectionId, atRiskStudents: [], currentTopic: null, nextTopic: null, otherSections: [], progressPercent: 0, topicsWithLowAttendance: [], pendingAssignments: [] });
+  }
+  
+  // Build compact data for faster processing
+  const atRiskList = context.atRiskStudents.slice(0, 5).map(s => 
+    `${s.name}:${s.attendancePercent}%${s.avgGrade ? `,${s.avgGrade}%grade` : ''}`
+  ).join('|');
+  
+  const lowAttTopics = context.topicsWithLowAttendance.slice(0, 3).map(t => 
+    `"${t.topic}"(${t.date},${t.attendancePercent}%)`
+  ).join('|');
+  
+  const prompt = `Teacher assistant: Give 3-4 SHORT suggestions for this class.
+
+CLASS: ${context.courseName} ${context.sectionName} | ${context.studentCount} students | ${context.progressPercent}% done
+CURRENT: ${context.currentTopic ? `"${context.currentTopic.title}" pg${context.currentTopic.currentPage}` : context.nextTopic ? `Next: "${context.nextTopic.title}"` : 'Done'}
+LOW_ATT_TOPICS: ${lowAttTopics || 'None'}
+AT_RISK: ${atRiskList || 'None'}
+OTHER_SECTIONS: ${context.otherSections.slice(0, 2).map(s => `${s.name}:${s.progressPercent}%`).join('|') || 'None'}
+
+Rules:
+- Each suggestion: short title + 1-sentence detail with specific names/dates
+- Use color: red (urgent), yellow (attention), green (positive)
+- Use icon: alert|users|book|calendar|trending|target|check
+
+JSON only:
+[{"title":"3-5 words","detail":"one sentence","color":"red|yellow|green","icon":"alert|users|book|calendar|trending|target"}]`;
+
+  try {
+    const response = await callGemini(prompt, false);
     
-    if (avgAttendance < 85) {
-      insights.push({
-        title: "Attendance Alert",
-        detail: `Average attendance is ${avgAttendance.toFixed(1)}% this week - consider follow-up with absent students`,
-        color: "red",
-        icon: "alert"
-      });
-    } else if (avgAttendance >= 95) {
-      insights.push({
-        title: "Excellent Attendance",
-        detail: `${avgAttendance.toFixed(1)}% attendance this week - great engagement!`,
-        color: "green",
-        icon: "check"
+    // Parse JSON from response - handle markdown code blocks
+    let jsonStr = response;
+    
+    // Remove markdown code block wrappers if present
+    if (jsonStr.includes('```json')) {
+      jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    } else if (jsonStr.includes('```')) {
+      jsonStr = jsonStr.replace(/```\s*/g, '');
+    }
+    
+    // Try to extract complete JSON array
+    const jsonMatch = jsonStr.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/); 
+    if (jsonMatch) {
+      try {
+        const suggestions = JSON.parse(jsonMatch[0]);
+        return Array.isArray(suggestions) ? suggestions.slice(0, 5) : [];
+      } catch (parseErr) {
+        // JSON was truncated, try to fix it
+        const fixedJson = fixTruncatedJson(jsonMatch[0]);
+        if (fixedJson) {
+          const suggestions = JSON.parse(fixedJson);
+          return Array.isArray(suggestions) ? suggestions.slice(0, 5) : [];
+        }
+      }
+    }
+    
+    // Try to extract partial JSON objects and construct array
+    const partialSuggestions = extractPartialSuggestions(jsonStr);
+    if (partialSuggestions.length > 0) {
+      return partialSuggestions;
+    }
+    
+    console.warn('Could not parse suggestions, using fallback');
+    return getFallbackSuggestions(context);
+  } catch (error) {
+    console.error('Error generating suggestions:', error);
+    return getFallbackSuggestions(context);
+  }
+}
+
+/**
+ * Try to fix truncated JSON by closing open brackets/braces
+ */
+function fixTruncatedJson(json) {
+  try {
+    // Count unclosed brackets
+    let braceCount = 0;
+    let bracketCount = 0;
+    let inString = false;
+    let escapeNext = false;
+    
+    for (const char of json) {
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+      if (char === '\\') {
+        escapeNext = true;
+        continue;
+      }
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+      if (!inString) {
+        if (char === '{') braceCount++;
+        else if (char === '}') braceCount--;
+        else if (char === '[') bracketCount++;
+        else if (char === ']') bracketCount--;
+      }
+    }
+    
+    // If we're in a string, close it
+    let fixed = json;
+    if (inString) {
+      fixed += '"';
+    }
+    
+    // Close any unclosed braces and brackets
+    while (braceCount > 0) {
+      fixed += '}';
+      braceCount--;
+    }
+    while (bracketCount > 0) {
+      fixed += ']';
+      bracketCount--;
+    }
+    
+    // Validate it parses
+    JSON.parse(fixed);
+    return fixed;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Extract complete suggestion objects from potentially truncated JSON
+ */
+function extractPartialSuggestions(text) {
+  const suggestions = [];
+  // Match complete objects with all required fields
+  const objectPattern = /\{\s*"title"\s*:\s*"([^"]+)"\s*,\s*"detail"\s*:\s*"([^"]+)"\s*,\s*"color"\s*:\s*"(red|yellow|green)"\s*,\s*"icon"\s*:\s*"(\w+)"\s*\}/g;
+  
+  let match;
+  while ((match = objectPattern.exec(text)) !== null) {
+    suggestions.push({
+      title: match[1],
+      detail: match[2],
+      color: match[3],
+      icon: match[4]
+    });
+  }
+  
+  return suggestions.slice(0, 5);
+}
+
+/**
+ * Fallback suggestions when API fails - uses real data with table support
+ */
+function getFallbackSuggestions(context) {
+  const suggestions = [];
+  
+  // Topics with low attendance need revision
+  if (context.topicsWithLowAttendance?.length > 0) {
+    const topics = context.topicsWithLowAttendance;
+    const topic = topics[0];
+    const absentNames = topic.absentStudents.slice(0, 3).join(', ');
+    const moreCount = topic.absentStudents.length > 3 ? ` +${topic.absentStudents.length - 3} more` : '';
+    
+    suggestions.push({
+      title: "Revision Needed",
+      summary: `${topics.length} topic${topics.length > 1 ? 's' : ''} covered with low attendance`,
+      detail: `"${topic.topic}" (${topic.date}) had only ${topic.attendancePercent}% attendance. Absent: ${absentNames}${moreCount}. Plan a revision session.`,
+      color: "yellow",
+      icon: "book",
+      tableData: topics.length > 1 ? topics.map(t => ({
+        topic: t.topic,
+        date: t.date,
+        attendance: `${t.attendancePercent}%`,
+        absent: t.absentStudents.join(', ')
+      })) : null,
+      tableColumns: [
+        { key: 'topic', label: 'Topic' },
+        { key: 'date', label: 'Date' },
+        { key: 'attendance', label: 'Attendance' },
+        { key: 'absent', label: 'Absent Students' }
+      ]
+    });
+  }
+  
+  // At-risk students with table data
+  if (context.atRiskStudents?.length > 0) {
+    const students = context.atRiskStudents;
+    const topStudent = students[0];
+    const summaryNames = students.slice(0, 2).map(s => `${s.name} (${s.attendancePercent}%)`).join(', ');
+    const moreCount = students.length > 2 ? ` +${students.length - 2} more` : '';
+    
+    suggestions.push({
+      title: "Students Need Attention",
+      summary: `${students.length} student${students.length > 1 ? 's' : ''} flagged for follow-up`,
+      detail: `Contact parents/guardians: ${summaryNames}${moreCount}. Low attendance may indicate issues.`,
+      color: "red",
+      icon: "users",
+      tableData: students.map(s => ({
+        name: s.name,
+        attendance: `${s.attendancePercent}%`,
+        grade: s.avgGrade !== null ? `${s.avgGrade}%` : 'N/A',
+        recentAbsences: s.recentAbsenceDates?.slice(0, 3).join(', ') || 'None',
+        missedTopics: s.missedTopics?.slice(0, 2).map(t => t.topic).join(', ') || 'None'
+      })),
+      tableColumns: [
+        { key: 'name', label: 'Student' },
+        { key: 'attendance', label: 'Attendance' },
+        { key: 'grade', label: 'Avg Grade' },
+        { key: 'recentAbsences', label: 'Recent Absences' },
+        { key: 'missedTopics', label: 'Missed Topics' }
+      ]
+    });
+  }
+  
+  // Current/next topic
+  if (context.currentTopic) {
+    suggestions.push({
+      title: "Continue Teaching",
+      summary: `Resume ${context.currentTopic.title}`,
+      detail: `Continue "${context.currentTopic.title}" from page ${context.currentTopic.currentPage} of ${context.currentTopic.pageTo} (${context.currentTopic.chapter})`,
+      color: "green",
+      icon: "book"
+    });
+  } else if (context.nextTopic) {
+    suggestions.push({
+      title: "Start Next Topic",
+      summary: `Ready for ${context.nextTopic.title}`,
+      detail: `Begin "${context.nextTopic.title}" - pages ${context.nextTopic.pageFrom}-${context.nextTopic.pageTo} (${context.nextTopic.chapter})`,
+      color: "green",
+      icon: "target"
+    });
+  }
+  
+  // Comparison with other sections
+  if (context.otherSections?.length > 0) {
+    const ahead = context.otherSections.filter(s => s.progressPercent > (context.progressPercent || 0) + 10);
+    if (ahead.length > 0) {
+      suggestions.push({
+        title: "Section Comparison",
+        summary: `${ahead[0].name} is ahead by ${ahead[0].progressPercent - context.progressPercent}%`,
+        detail: `${ahead[0].name} is at ${ahead[0].progressPercent}% vs your ${context.progressPercent}%. Consider accelerating pace.`,
+        color: "yellow",
+        icon: "trending"
       });
     }
   }
   
-  // Analyze syllabus progress
-  courses.forEach(course => {
-    const sections = course.sections || [];
-    sections.forEach(section => {
-      const syllabus = getSyllabusByRef(course.syllabusRef);
-      if (syllabus) {
-        const progress = normalizeSectionProgress(section.sectionId, syllabus);
-        const stored = loadStoredProgress(section.sectionId);
-        const effective = { ...progress, ...stored };
-        
-        const totalTopics = syllabus.chapters.reduce((sum, ch) => sum + ch.subTopics.length, 0);
-        const doneTopics = syllabus.chapters.reduce((sum, ch) => {
-          return sum + ch.subTopics.filter((t, idx) => {
-            const topicData = effective[ch.index]?.topics?.[idx];
-            const status = typeof topicData === 'object' ? topicData.status : topicData;
-            return status === 'done';
-          }).length;
-        }, 0);
-        
-        const percent = (doneTopics / totalTopics) * 100;
-        
-        if (percent < 50) {
-          insights.push({
-            title: `${section.name} Progress`,
-            detail: `Only ${percent.toFixed(0)}% syllabus completed - consider accelerating pace`,
-            color: "yellow",
-            icon: "trending"
-          });
-        } else if (percent >= 80) {
-          insights.push({
-            title: `${section.name} On Track`,
-            detail: `${percent.toFixed(0)}% syllabus completed - excellent progress!`,
-            color: "green",
-            icon: "target"
-          });
+  // Pending assignments
+  if (context.pendingAssignments?.length > 0) {
+    const assn = context.pendingAssignments[0];
+    const missing = assn.total - assn.submitted;
+    if (missing > 0) {
+      suggestions.push({
+        title: "Assignment Reminder",
+        summary: `${missing} pending submissions for ${assn.title}`,
+        detail: `"${assn.title}" due ${assn.dueDate} - ${missing} of ${assn.total} students haven't submitted`,
+        color: "yellow",
+        icon: "calendar"
+      });
+    }
+  }
+  
+  return suggestions.slice(0, 5);
+}
+
+/**
+ * Generate aggregated dashboard insights from all sections
+ * Optimized for speed with shorter prompts
+ */
+export async function generateDashboardInsights() {
+  const allSectionContexts = [];
+  
+  // Gather context for all sections
+  for (const course of teacherData.courses) {
+    for (const section of course.sections) {
+      const sectionId = section.sectionId || section.id || section.name;
+      const context = buildDetailedSectionContext(sectionId);
+      if (context) {
+        allSectionContexts.push(context);
+      }
+    }
+  }
+  
+  if (allSectionContexts.length === 0) {
+    return [{ title: "No Data", detail: "No sections found", color: "yellow", icon: "alert" }];
+  }
+  
+  // Aggregate data
+  const totalStudents = allSectionContexts.reduce((sum, c) => sum + c.studentCount, 0);
+  const allAtRisk = allSectionContexts.flatMap(c => 
+    c.atRiskStudents.map(s => ({ ...s, section: c.sectionName, course: c.courseName }))
+  );
+  const allLowAttendanceTopics = allSectionContexts.flatMap(c => 
+    c.topicsWithLowAttendance.map(t => ({ ...t, section: c.sectionName }))
+  );
+  const avgProgress = Math.round(
+    allSectionContexts.reduce((sum, c) => sum + c.progressPercent, 0) / allSectionContexts.length
+  );
+  
+  // Find sections behind/ahead
+  const behindSections = allSectionContexts.filter(c => c.progressPercent < avgProgress - 15);
+  const aheadSections = allSectionContexts.filter(c => c.progressPercent > avgProgress + 15);
+  
+  // Build compact data for faster processing
+  const sectionsCompact = allSectionContexts.map(c => 
+    `${c.sectionName}:${c.progressPercent}%,${c.atRiskStudents.length}risk`
+  ).join('|');
+  
+  const lowAttCompact = allLowAttendanceTopics.slice(0, 3).map(t => 
+    `${t.section}:"${t.topic}"(${t.attendancePercent}%)`
+  ).join('|');
+  
+  const atRiskCompact = allAtRisk.slice(0, 4).map(s => 
+    `${s.name}(${s.section}):${s.attendancePercent}%`
+  ).join('|');
+
+  const prompt = `Dashboard insights for teacher. Give 3-4 SHORT prioritized insights.
+
+SUMMARY: ${allSectionContexts.length} sections, ${totalStudents} students, ${avgProgress}% avg progress
+SECTIONS: ${sectionsCompact}
+LOW_ATT_TOPICS: ${lowAttCompact || 'None'}
+AT_RISK: ${atRiskCompact || 'None'}
+BEHIND: ${behindSections.map(c => c.sectionName).join(',') || 'None'}
+AHEAD: ${aheadSections.map(c => c.sectionName).join(',') || 'None'}
+
+Rules:
+- Priority: red (critical) > yellow (attention) > green (positive)
+- Use icon: alert|users|book|calendar|trending|target|check
+- Each: short title + 1-sentence detail with names
+
+JSON only:
+[{"title":"3-5 words","detail":"one sentence","color":"red|yellow|green","icon":"alert|users|book|trending|target"}]`;
+
+  try {
+    const response = await callGemini(prompt, false);
+    
+    // Parse JSON from response - handle markdown code blocks
+    let jsonStr = response;
+    
+    // Remove markdown code block wrappers if present
+    if (jsonStr.includes('```json')) {
+      jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+    } else if (jsonStr.includes('```')) {
+      jsonStr = jsonStr.replace(/```\s*/g, '');
+    }
+    
+    // Try to extract complete JSON array
+    const jsonMatch = jsonStr.match(/\[\s*\{[\s\S]*?\}\s*(?:,\s*\{[\s\S]*?\}\s*)*\]/);
+    if (jsonMatch) {
+      try {
+        const insights = JSON.parse(jsonMatch[0]);
+        return Array.isArray(insights) ? insights.slice(0, 4) : [];
+      } catch (parseErr) {
+        // JSON was truncated, try to fix it
+        const fixedJson = fixTruncatedJson(jsonMatch[0]);
+        if (fixedJson) {
+          const insights = JSON.parse(fixedJson);
+          return Array.isArray(insights) ? insights.slice(0, 4) : [];
         }
       }
-    });
-  });
+    }
+    
+    // Try to extract partial JSON objects
+    const partialInsights = extractPartialSuggestions(jsonStr);
+    if (partialInsights.length > 0) {
+      return partialInsights.slice(0, 4);
+    }
+    
+    console.warn('Could not parse insights, using fallback');
+    return getFallbackDashboardInsights(allSectionContexts, allAtRisk, allLowAttendanceTopics, avgProgress);
+  } catch (error) {
+    console.error('Error generating dashboard insights:', error);
+    return getFallbackDashboardInsights(allSectionContexts, allAtRisk, allLowAttendanceTopics, avgProgress);
+  }
+}
+
+/**
+ * Fallback dashboard insights when API fails
+ */
+function getFallbackDashboardInsights(sections, atRisk, lowAttendanceTopics, avgProgress) {
+  const insights = [];
   
-  // Check upcoming deadlines
-  const upcomingAssignments = assignments.filter(a => {
-    const dueDate = new Date(a.dueDate);
-    const daysDiff = (dueDate - new Date()) / (1000 * 60 * 60 * 24);
-    return daysDiff > 0 && daysDiff <= 3;
-  });
-  
-  if (upcomingAssignments.length > 0) {
+  // Topics needing revision with table data
+  if (lowAttendanceTopics.length > 0) {
+    const topic = lowAttendanceTopics[0];
+    const summaryTopics = lowAttendanceTopics.slice(0, 2).map(t => `"${t.topic}" (${t.section})`).join(', ');
     insights.push({
-      title: "Upcoming Deadlines",
-      detail: `${upcomingAssignments.length} assignment${upcomingAssignments.length > 1 ? 's' : ''} due in next 3 days`,
+      title: "Revision Needed",
+      summary: `${lowAttendanceTopics.length} topic${lowAttendanceTopics.length > 1 ? 's' : ''} covered with low attendance`,
+      detail: `${summaryTopics}${lowAttendanceTopics.length > 2 ? ` +${lowAttendanceTopics.length - 2} more` : ''} - plan revision sessions.`,
       color: "yellow",
-      icon: "calendar"
+      icon: "book",
+      tableData: lowAttendanceTopics.length > 1 ? lowAttendanceTopics.map(t => ({
+        section: t.section,
+        topic: t.topic,
+        date: t.date,
+        attendance: `${t.attendancePercent}%`
+      })) : null,
+      tableColumns: [
+        { key: 'section', label: 'Section' },
+        { key: 'topic', label: 'Topic' },
+        { key: 'date', label: 'Date' },
+        { key: 'attendance', label: 'Attendance' }
+      ]
     });
   }
   
-  // Add general tip if no insights
+  // At-risk students with table data
+  if (atRisk.length > 0) {
+    const summaryNames = atRisk.slice(0, 2).map(s => `${s.name} (${s.attendancePercent}%)`).join(', ');
+    insights.push({
+      title: "Students Need Attention",
+      summary: `${atRisk.length} student${atRisk.length > 1 ? 's' : ''} flagged across all classes`,
+      detail: `Contact: ${summaryNames}${atRisk.length > 2 ? ` +${atRisk.length - 2} more` : ''}`,
+      color: "red",
+      icon: "users",
+      tableData: atRisk.map(s => ({
+        name: s.name,
+        section: s.section,
+        attendance: `${s.attendancePercent}%`,
+        grade: s.avgGrade !== null ? `${s.avgGrade}%` : 'N/A'
+      })),
+      tableColumns: [
+        { key: 'name', label: 'Student' },
+        { key: 'section', label: 'Section' },
+        { key: 'attendance', label: 'Attendance' },
+        { key: 'grade', label: 'Avg Grade' }
+      ]
+    });
+  }
+  
+  // Section comparisons
+  const behind = sections.filter(s => s.progressPercent < avgProgress - 10);
+  if (behind.length > 0) {
+    insights.push({
+      title: "Section Behind",
+      summary: `${behind[0].sectionName} needs attention`,
+      detail: `${behind[0].sectionName} at ${behind[0].progressPercent}% vs ${avgProgress}% average - consider acceleration`,
+      color: "yellow",
+      icon: "trending"
+    });
+  }
+  
+  const ahead = sections.filter(s => s.progressPercent > avgProgress + 10);
+  if (ahead.length > 0) {
+    insights.push({
+      title: "Strong Progress",
+      summary: `${ahead[0].sectionName} ahead of schedule`,
+      detail: `${ahead[0].sectionName} at ${ahead[0].progressPercent}% - great pace!`,
+      color: "green",
+      icon: "target"
+    });
+  }
+  
   if (insights.length === 0) {
     insights.push({
-      title: "All Clear",
-      detail: "No urgent items - consider planning ahead for upcoming lessons",
+      title: "All On Track",
+      summary: "No urgent items",
+      detail: `All ${sections.length} sections at ~${avgProgress}% average. Keep up the good work!`,
       color: "green",
       icon: "check"
     });
-    insights.push({
-      title: "Pro Tip",
-      detail: "Use the AI quiz generator to create quick assessments from your syllabus",
-      color: "green",
-      icon: "book"
-    });
   }
   
-  // Limit to 3 most important insights
-  return insights.slice(0, 3);
+  return insights.slice(0, 4);
 }
 
+// Export tool functions and declarations for voice agent to share
 export { toolFunctions, chatToolDeclarations, toolDeclarations };

@@ -6,6 +6,7 @@ build/
 .vscode/
 *.log
 .env
+.cache
 .env.*
 npm-debug.log*
 yarn-debug.log*

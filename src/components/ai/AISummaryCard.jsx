@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   RefreshCw, 
+  Sparkles,
   AlertTriangle, 
   TrendingUp, 
   Calendar, 
@@ -15,11 +16,8 @@ import { toast } from 'react-hot-toast';
 import {
   getCachedSuggestions,
   cacheSuggestions,
-  shouldRegenerateSuggestions,
-  markRegeneration,
-  formatTimeRemaining,
 } from '../../utils/aiSuggestions';
-import { generateAIInsights } from '../../services/aiService';
+import { generateDashboardInsights } from '../../services/aiService';
 
 // Available icons for AI to choose from
 const ICONS = {
@@ -34,67 +32,74 @@ const ICONS = {
   award: Award,
 };
 
+// Color styles for each priority
+const COLOR_STYLES = {
+  red: {
+    bg: 'bg-red-50',
+    border: 'border-red-200',
+    iconBg: 'bg-red-100',
+    iconColor: 'text-red-600',
+    titleColor: 'text-red-800',
+    textColor: 'text-red-700',
+  },
+  yellow: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-600',
+    titleColor: 'text-amber-800',
+    textColor: 'text-amber-700',
+  },
+  green: {
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    iconBg: 'bg-emerald-100',
+    iconColor: 'text-emerald-600',
+    titleColor: 'text-emerald-800',
+    textColor: 'text-emerald-700',
+  },
+  default: {
+    bg: 'bg-slate-50',
+    border: 'border-slate-200',
+    iconBg: 'bg-slate-100',
+    iconColor: 'text-slate-600',
+    titleColor: 'text-slate-800',
+    textColor: 'text-slate-700',
+  },
+};
+
 export default function AISummaryCard({ className = "" }) {
   const [insights, setInsights] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [canRegenerate, setCanRegenerate] = useState(true);
-  const [timeUntilRegen, setTimeUntilRegen] = useState(0);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // Load insights on mount
   useEffect(() => {
     loadInsights();
   }, []);
 
-  // Timer for regenerate button cooldown
-  useEffect(() => {
-    if (timeUntilRegen <= 0) {
-      setCanRegenerate(true);
-      return;
+  const loadInsights = useCallback(async (isManual = false) => {
+    const contextKey = 'dashboard_insights_card';
+    
+    // Check cache first (unless manual refresh)
+    if (!isManual) {
+      const cached = getCachedSuggestions(contextKey);
+      if (cached && cached.data && cached.data.length > 0 && !cached.isExpired) {
+        setInsights(cached.data);
+        setLastUpdated(new Date(cached.timestamp));
+        return;
+      }
     }
 
-    const interval = setInterval(() => {
-      setTimeUntilRegen((prev) => {
-        const next = prev - 1000;
-        if (next <= 0) {
-          setCanRegenerate(true);
-          return 0;
-        }
-        return next;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timeUntilRegen]);
-
-  const loadInsights = useCallback((isManual = false) => {
-    const contextKey = 'dashboard_insights';
-    const decision = shouldRegenerateSuggestions(contextKey, isManual);
-
-    // Rate limited
-    if (isManual && decision.reason === 'rate_limited') {
-      setCanRegenerate(false);
-      setTimeUntilRegen(decision.timeUntilNextAllowed);
-      toast.error(`Please wait ${formatTimeRemaining(decision.timeUntilNextAllowed)} before regenerating`);
-      return;
-    }
-
-    // Use cache if valid
-    if (!decision.shouldRegenerate && decision.cachedData) {
-      setInsights(decision.cachedData);
-      return;
-    }
-
-    // Generate new insights
+    // Generate new insights using Gemini
     setIsLoading(true);
     try {
-      const newInsights = generateAIInsights();
+      const newInsights = await generateDashboardInsights();
       setInsights(newInsights);
       cacheSuggestions(contextKey, newInsights);
+      setLastUpdated(new Date());
 
-      if (isManual) {
-        markRegeneration(contextKey);
-        setCanRegenerate(false);
-        setTimeUntilRegen(5 * 60 * 1000);
+      if (isManual && newInsights.length > 0) {
         toast.success('Insights refreshed!');
       }
     } catch (error) {
@@ -112,63 +117,83 @@ export default function AISummaryCard({ className = "" }) {
 
   return (
     <div className={`sc-card ${className}`.trim()}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="sc-heading text-base">AI Insights</h3>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-indigo-100">
+            <Sparkles className="w-4 h-4 text-indigo-600" />
+          </div>
+          <h3 className="sc-heading text-base">AI Insights</h3>
+        </div>
         <button
           onClick={handleRegenerate}
-          disabled={isLoading || (!canRegenerate && timeUntilRegen > 0)}
-          className={`p-1.5 rounded-lg transition-all ${
-            isLoading || (!canRegenerate && timeUntilRegen > 0)
-              ? 'bg-black-100 text-black-400 cursor-not-allowed'
+          disabled={isLoading}
+          className={`p-2 rounded-lg transition-all ${
+            isLoading
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
               : 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100'
           }`}
-          title={
-            !canRegenerate && timeUntilRegen > 0
-              ? `Wait ${formatTimeRemaining(timeUntilRegen)}`
-              : 'Regenerate insights'
-          }
+          title="Refresh insights"
         >
           <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
         </button>
       </div>
 
+      {/* Content */}
       {isLoading && insights.length === 0 ? (
-        <div className="flex items-center justify-center py-6">
-          <RefreshCw className="w-5 h-5 text-indigo-600 animate-spin" />
+        <div className="flex flex-col items-center justify-center py-10">
+          <div className="p-4 rounded-full bg-indigo-50 mb-3">
+            <Sparkles className="w-8 h-8 text-indigo-600 animate-pulse" />
+          </div>
+          <p className="text-sm font-medium text-slate-700">Analyzing your classes...</p>
+          <p className="text-xs text-slate-500 mt-1">This may take a moment</p>
         </div>
       ) : insights.length > 0 ? (
-        <ul className="space-y-2 text-sm">
+        <div className="space-y-3">
           {insights.map((item, idx) => {
             const Icon = ICONS[item.icon] || BookOpen;
-            const colorClasses = {
-              red: 'bg-red-50 border-red-200 text-red-700',
-              yellow: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-              green: 'bg-green-50 border-green-200 text-green-700',
-            }[item.color] || 'bg-white/60 border-black-200 text-black-700';
+            const colors = COLOR_STYLES[item.color] || COLOR_STYLES.default;
 
             return (
-              <li key={idx} className={`border rounded-lg p-2.5 ${colorClasses}`}>
-                <div className="flex items-start gap-2">
-                  <Icon className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{item.title}</p>
-                    <p className="text-xs leading-relaxed opacity-90 mt-0.5">{item.detail}</p>
+              <div 
+                key={idx} 
+                className={`${colors.bg} ${colors.border} border-2 rounded-xl p-4 transition-all hover:shadow-md`}
+              >
+                <div className="flex gap-3">
+                  <div className={`p-2 rounded-lg ${colors.iconBg} flex-shrink-0`}>
+                    <Icon className={`w-4 h-4 ${colors.iconColor}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-semibold text-sm ${colors.titleColor}`}>{item.title}</p>
+                    <p className={`text-sm leading-relaxed ${colors.textColor} mt-1`}>{item.detail}</p>
                   </div>
                 </div>
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
       ) : (
-        <div className="text-center py-4">
-          <p className="text-sm text-black-500">No insights yet</p>
+        <div className="flex flex-col items-center justify-center py-10">
+          <div className="p-4 rounded-full bg-slate-100 mb-3">
+            <Sparkles className="w-8 h-8 text-slate-400" />
+          </div>
+          <p className="text-sm text-slate-500">No insights yet</p>
+          <button 
+            onClick={handleRegenerate}
+            className="mt-3 px-4 py-2 rounded-lg text-sm font-medium bg-indigo-100 hover:bg-indigo-200 text-indigo-700 transition-all"
+          >
+            Generate Insights
+          </button>
         </div>
       )}
 
-      {!canRegenerate && timeUntilRegen > 0 && (
-        <p className="text-xs text-yellow-600 mt-2">
-          Next refresh in {formatTimeRemaining(timeUntilRegen)}
-        </p>
+      {/* Footer - Last Updated */}
+      {lastUpdated && insights.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-slate-200">
+          <p className="text-xs text-slate-400">
+            Last updated: {lastUpdated.toLocaleTimeString()}
+          </p>
+        </div>
       )}
     </div>
   );
