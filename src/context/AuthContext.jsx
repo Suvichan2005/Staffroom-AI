@@ -3,12 +3,18 @@ import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPasswor
 import { auth, googleProvider } from '../firebase/client';
 import { setStorageUserId, clearStorageUserId } from '../utils/userScopedStorage';
 import { seedDemoDataForUser, needsDemoSeeding } from '../data/dummyData';
+import { logAuthEvent, logInfo, LogCategory, setLoggerUserEmail } from '../services/activityLogger';
 
 const AuthContext = createContext();
 
+// Track if we've already logged the session restore for this session
+let sessionRestoreLogged = false;
+
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    // Check if Firebase has cached auth state to prevent loading flash
+    const initialUser = auth.currentUser;
+    const [user, setUser] = useState(initialUser);
+    const [loading, setLoading] = useState(!initialUser); // Don't show loading if user already cached
     const [demoSeeded, setDemoSeeded] = useState(false);
 
     useEffect(() => {
@@ -24,10 +30,22 @@ export function AuthProvider({ children }) {
                     console.warn('Failed to set browserLocalPersistence', err2?.message || err2);
                 }
             }
-            unsubscribe = onAuthStateChanged(auth, (user) => {
+            unsubscribe = onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     // Set user ID for storage scoping
                     setStorageUserId(user.uid);
+                    
+                    // Set logger email FIRST before any logging
+                    setLoggerUserEmail(user.email);
+                    
+                    // Log auth state restored (only once per session to avoid duplicates)
+                    if (!sessionRestoreLogged) {
+                        sessionRestoreLogged = true;
+                        logInfo(LogCategory.AUTH, 'Session restored', {
+                            userId: user.uid,
+                            email: user.email,
+                        });
+                    }
                     
                     // Seed demo data for new users
                     if (needsDemoSeeding()) {
@@ -39,7 +57,10 @@ export function AuthProvider({ children }) {
                 } else {
                     // Clear user ID on logout
                     clearStorageUserId();
+                    setLoggerUserEmail(null);
                     setDemoSeeded(false);
+                    // Reset session restore flag on logout so next login is logged
+                    sessionRestoreLogged = false;
                 }
                 setUser(user);
                 setLoading(false);
@@ -49,15 +70,30 @@ export function AuthProvider({ children }) {
     }, []);
 
     const loginWithGoogle = async () => {
-        return await signInWithPopup(auth, googleProvider);
+        const result = await signInWithPopup(auth, googleProvider);
+        // Log successful Google login with IP
+        await logAuthEvent('login_google', result.user, {
+            isNewUser: result._tokenResponse?.isNewUser || false,
+        });
+        return result;
     }
     const loginWithEmail = async (email, password) => {
-        return await signInWithEmailAndPassword(auth, email, password);
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        // Log successful email login with IP
+        await logAuthEvent('login_email', result.user);
+        return result;
     }
     const registerWithEmail = async (email, password) => {
-        return await createUserWithEmailAndPassword(auth, email, password);
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        // Log new user registration with IP
+        await logAuthEvent('register', result.user);
+        return result;
     }
     const logout = async () => {
+        // Log logout before clearing user
+        if (user) {
+            await logAuthEvent('logout', user);
+        }
         clearStorageUserId();
         return await signOut(auth);
     }
