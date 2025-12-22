@@ -205,20 +205,27 @@ export class GeminiLiveSession {
    * Send initial setup message with system prompt and tools
    */
   sendSetupMessage() {
-    const studentNames = this.studentList.map(s => s.name).join(', ');
+    // Build student list with roll numbers for the prompt
+    const studentListWithRolls = this.studentList.map(s => 
+      `Roll ${s.rollNo || '?'}: ${s.name}`
+    ).join(', ');
     
-    // Build tools array with proper format
+    // Build tools array with proper format - now supports roll numbers
     const tools = [{
       functionDeclarations: [
         {
           name: 'mark_student_present',
-          description: 'Mark a student as present in the attendance. Call this when the teacher says a student is present, here, or attending.',
+          description: 'Mark a student as present. Call when teacher says a name or roll number is present/here/attending.',
           parameters: {
             type: 'OBJECT',
             properties: {
               student_name: {
                 type: 'STRING',
-                description: 'The name of the student to mark present'
+                description: 'The name of the student to mark present (use the actual name, not the roll number)'
+              },
+              roll_number: {
+                type: 'NUMBER',
+                description: 'Optional: The roll number if teacher said roll number instead of name'
               }
             },
             required: ['student_name']
@@ -226,13 +233,17 @@ export class GeminiLiveSession {
         },
         {
           name: 'mark_student_absent',
-          description: 'Mark a student as absent in the attendance. Call this when the teacher says a student is absent, not here, or missing.',
+          description: 'Mark a student as absent. Call when teacher says a name or roll number is absent/not here/missing.',
           parameters: {
             type: 'OBJECT',
             properties: {
               student_name: {
                 type: 'STRING',
-                description: 'The name of the student to mark absent'
+                description: 'The name of the student to mark absent (use the actual name, not the roll number)'
+              },
+              roll_number: {
+                type: 'NUMBER',
+                description: 'Optional: The roll number if teacher said roll number instead of name'
               }
             },
             required: ['student_name']
@@ -273,14 +284,19 @@ CRITICAL: You MUST transcribe and respond in ENGLISH ONLY. If you receive audio 
 
 Listen to the teacher's voice and mark attendance in real-time using the provided tools.
 
-Students in this class: ${studentNames}
+Students in this class (Roll No: Name): ${studentListWithRolls}
 
 Instructions:
-- When you hear a student's name followed by "present", "here", "attending", call mark_student_present
-- When you hear a student's name followed by "absent", "not here", "missing", call mark_student_absent  
+- When you hear a student's name followed by "present", "here", "attending", call mark_student_present with the student's full name
+- When you hear "roll number X" or "roll X" followed by "present"/"here", look up the name for that roll number and call mark_student_present with both name and roll_number
+- When you hear a student's name followed by "absent", "not here", "missing", call mark_student_absent
+- When you hear "roll number X" followed by "absent", look up the name and call mark_student_absent
 - When you hear "everyone present" or "all present", call mark_all_present
-- Call tools immediately as you recognize names - don't wait
-- Fuzzy match student names - the teacher might use nicknames or partial names.`
+- IMPORTANT: Match spoken variations like "role", "roll", "number" to roll numbers
+- Match number words: "one"=1, "two"=2, "three"=3, "four"=4, "five"=5, "six"=6, etc.
+- Call tools immediately as you recognize names or roll numbers - don't wait
+- Fuzzy match student names - teacher might use nicknames or partial names
+- If unsure between two students, pick the closest match`
           }]
         },
         // Enable input audio transcription with explicit English language
@@ -413,9 +429,7 @@ Instructions:
   }
 
   /**
-   * Handle tool calls from Gemini - uses shared tools from chatToolsDefinition
-   * This enables multi-step tool calling where Gemini can call searchTopic,
-   * get results, then call updateProgress with the correct indices.
+   * Handle tool calls from Gemini - attendance tools handled locally, others use shared chatToolsDefinition
    */
   handleToolCall(toolCall) {
     const functionCalls = toolCall.functionCalls || [];
@@ -426,7 +440,13 @@ Instructions:
       // Parse arguments
       const args = typeof fc.args === 'string' ? JSON.parse(fc.args) : fc.args;
       
-      // Use the shared handleChatToolCall which uses the same tool functions as text chat
+      // Handle attendance-specific tools locally (with fuzzy matching)
+      if (fc.name === 'mark_student_present' || fc.name === 'mark_student_absent' || fc.name === 'mark_all_present') {
+        this.handleAttendanceToolCall(fc.id, fc.name, args);
+        continue;
+      }
+      
+      // Use the shared handleChatToolCall for other tools (syllabus, progress, etc.)
       const { action, result } = handleChatToolCall({
         id: fc.id,
         name: fc.name,
@@ -442,17 +462,109 @@ Instructions:
         result: result
       });
 
-      // Send tool response back to Gemini so it can continue with multi-step calls
-      // This is critical for the searchTopic -> updateProgress flow
+      // Send tool response back to Gemini
       this.sendToolResponse(fc.id, fc.name, result);
     }
   }
 
   /**
-   * Fuzzy match student name from the list
+   * Handle attendance-specific tool calls with fuzzy matching
    */
-  fuzzyMatchStudent(spokenName) {
-    const lower = spokenName.toLowerCase().trim();
+  handleAttendanceToolCall(callId, name, args) {
+    let result = {};
+    let matchedStudent = null;
+    let confidence = 'low';
+    
+    if (name === 'mark_student_present' || name === 'mark_student_absent') {
+      // Try to match student by roll number first, then by name
+      matchedStudent = this.fuzzyMatchStudent(args.student_name, args.roll_number);
+      
+      if (matchedStudent) {
+        const status = name === 'mark_student_present' ? 'present' : 'absent';
+        result = { 
+          success: true, 
+          studentId: matchedStudent.studentId,
+          studentName: matchedStudent.name,
+          rollNo: matchedStudent.rollNo,
+          status: status,
+          message: `Marked ${matchedStudent.name} (Roll ${matchedStudent.rollNo}) as ${status}`
+        };
+        confidence = 'high';
+        console.log(`✅ Matched "${args.student_name}" → ${matchedStudent.name} (Roll ${matchedStudent.rollNo})`);
+      } else {
+        result = { 
+          success: false, 
+          error: `Could not find student matching "${args.student_name}"`,
+          searchedName: args.student_name,
+          searchedRoll: args.roll_number
+        };
+        console.log(`❌ No match for "${args.student_name}"`);
+      }
+    } else if (name === 'mark_all_present') {
+      const exceptions = (args.exceptions || []).map(n => n.toLowerCase());
+      const markedStudents = this.studentList.filter(s => 
+        !exceptions.some(ex => s.name.toLowerCase().includes(ex))
+      );
+      result = {
+        success: true,
+        count: markedStudents.length,
+        exceptions: exceptions,
+        message: `Marked ${markedStudents.length} students as present`
+      };
+      confidence = 'high';
+    }
+    
+    // Emit tool call event to UI with matched student info
+    this.onToolCall({
+      id: callId,
+      name: name,
+      args: args,
+      matchedStudent: matchedStudent,
+      confidence: confidence,
+      display: result.message || result.error,
+      result: result
+    });
+    
+    // Send tool response back to Gemini
+    this.sendToolResponse(callId, name, result);
+  }
+
+  /**
+   * Match student by roll number
+   */
+  matchByRollNumber(rollNumber) {
+    if (rollNumber === undefined || rollNumber === null) return null;
+    const num = parseInt(rollNumber, 10);
+    if (isNaN(num)) return null;
+    return this.studentList.find(s => s.rollNo === num);
+  }
+
+  /**
+   * Fuzzy match student name from the list, with roll number support
+   */
+  fuzzyMatchStudent(spokenName, rollNumber = null) {
+    // First try roll number if provided
+    if (rollNumber !== undefined && rollNumber !== null) {
+      const byRoll = this.matchByRollNumber(rollNumber);
+      if (byRoll) return byRoll;
+    }
+    
+    const lower = (spokenName || '').toLowerCase().trim();
+    if (!lower) return null;
+    
+    // Check if the spoken name contains a roll number pattern
+    const rollPatterns = [
+      /roll\s*(?:number|no|num|#)?\s*(\d+)/i,
+      /(\d+)\s*(?:number|no)?/i
+    ];
+    for (const pattern of rollPatterns) {
+      const rollMatch = lower.match(pattern);
+      if (rollMatch) {
+        const num = parseInt(rollMatch[1], 10);
+        const byRoll = this.matchByRollNumber(num);
+        if (byRoll) return byRoll;
+      }
+    }
     
     // Exact match
     let match = this.studentList.find(s => 

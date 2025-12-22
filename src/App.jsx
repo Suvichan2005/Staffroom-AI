@@ -1,11 +1,14 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useRef } from "react";
 
 // Context Providers
 import { LayoutProvider } from "./context/LayoutContext";
 import { AIProvider } from "./context/AIContext";
 import { useAuth } from "./context/AuthContext";
+
+// Activity Logging
+import { logInfo, LogCategory } from "./services/activityLogger";
 
 // Original Pages
 import Login from "./pages/Login";
@@ -28,6 +31,7 @@ import ClassesPage from "./pages/ClassesPage";
 import SchedulePage from "./pages/SchedulePage";
 import DebugIntegrations from "./pages/DebugIntegrations";
 import ChatPage from "./pages/ChatPage";
+import LogsPage from "./pages/LogsPage";
 
 // New Dashboard Components
 import { ResponsiveDashboard } from "./components/dashboard";
@@ -39,12 +43,31 @@ import { ResponsiveLayout } from './components/layout';
 import './styles/tokens.css';
 
 /**
- * Scroll to top on route change
+ * Scroll to top on route change and log navigation
  */
 function ScrollToTop() {
   const { pathname } = useLocation();
+  const { user, loading } = useAuth();
+  const previousPath = useRef(null);
+  const isInitialLoad = useRef(true);
   
   useEffect(() => {
+    // Skip logging on initial page load (prevents "anonymous" logs)
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      previousPath.current = pathname;
+    } else if (previousPath.current !== pathname && !loading) {
+      // Only log navigation for actual page changes, not initial load
+      logInfo(LogCategory.NAVIGATION, `Visited page: ${pathname}`, {
+        path: pathname,
+        previousPath: previousPath.current,
+        userEmail: user?.email || 'anonymous',
+        userId: user?.uid || 'anonymous',
+        displayName: user?.displayName || 'anonymous',
+      });
+      previousPath.current = pathname;
+    }
+    
     // Scroll window to top
     window.scrollTo(0, 0);
     // Also scroll main content areas if they exist
@@ -52,7 +75,7 @@ function ScrollToTop() {
     // Force scroll to top of document
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
-  }, [pathname]);
+  }, [pathname, user, loading]);
   
   return null;
 }
@@ -273,6 +296,13 @@ export default function App() {
                 <AppLayout>
                   <ChatPage />
                 </AppLayout>
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin Logs Page - suvanshagar@gmail.com only */}
+            <Route path="/logs" element={
+              <ProtectedRoute>
+                <LogsPage />
               </ProtectedRoute>
             } />
             

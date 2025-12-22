@@ -15,6 +15,7 @@ import {
   notifications,
   getUnreadNotifications
 } from '../data/dummyData';
+import { logGeminiCall, logAction, LogCategory } from './activityLogger';
 
 /**
  * AI Service for School Companion
@@ -87,20 +88,34 @@ function extractRetryDelay(error) {
  * Core AI call function with retry logic
  */
 async function callGemini(prompt, usePro = false, retryCount = 0) {
+  const startTime = Date.now();
+  const modelName = usePro ? MODELS.PRO : MODELS.TEXT;
+  
   if (!genAI) {
     console.warn('Using mock response - no API key');
-    return getMockResponse(prompt);
+    const mockResponse = getMockResponse(prompt);
+    logGeminiCall('callGemini', { prompt: prompt.substring(0, 200), model: modelName, isMock: true }, mockResponse, Date.now() - startTime);
+    return mockResponse;
   }
 
   try {
     const model = genAI.getGenerativeModel({ 
-      model: usePro ? MODELS.PRO : MODELS.TEXT,
+      model: modelName,
       generationConfig
     });
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    return response.text();
+    const text = response.text();
+    
+    // Log successful call
+    logGeminiCall('callGemini', { 
+      promptPreview: prompt.substring(0, 200), 
+      model: modelName,
+      retryCount 
+    }, text, Date.now() - startTime);
+    
+    return text;
   } catch (error) {
     console.error('Gemini API Error:', error);
     
@@ -117,6 +132,13 @@ async function callGemini(prompt, usePro = false, retryCount = 0) {
       await sleep(delay);
       return callGemini(prompt, usePro, retryCount + 1);
     }
+    
+    // Log error
+    logGeminiCall('callGemini', { 
+      promptPreview: prompt.substring(0, 200), 
+      model: modelName,
+      retryCount 
+    }, null, Date.now() - startTime, error);
     
     // Final fallback to mock if all retries exhausted
     if (isRateLimitError(error)) {
@@ -1534,10 +1556,10 @@ function simpleFallbackParse(text, currentCourseId, currentSectionId) {
 }
 
 /**
- * Parse attendance voice command
- * @param {string} transcript - "Mark Rahul and Priya absent, everyone else present"
+ * Parse attendance voice command (supports names and roll numbers)
+ * @param {string} transcript - "Mark Rahul and Priya absent, everyone else present" or "roll number 2 present"
  * @param {string} classId - The class ID (e.g. "6A")
- * @param {Array} studentList - List of student objects { studentId, name }
+ * @param {Array} studentList - List of student objects { studentId, name, rollNo }
  */
 export async function parseAttendanceVoice(transcript, classId, studentList) {
   const text = (transcript || '').trim();
@@ -1561,51 +1583,73 @@ export async function parseAttendanceVoice(transcript, classId, studentList) {
       generationConfig: { responseMimeType: "application/json" }
     });
 
-    const studentNames = studentList.map(s => s.name).join(', ');
+    // Build student list with roll numbers
+    const studentListWithRolls = studentList.map(s => 
+      `Roll ${s.rollNo || '?'}: ${s.name}`
+    ).join(', ');
 
     const prompt = `
 Parse this attendance voice command for Class ${classId}:
 "${text}"
 
-Students in class: ${studentNames}
+Students (Roll No: Name): ${studentListWithRolls}
 
 Return JSON with:
 {
-  "present": ["Student Name 1", "Student Name 2"],
-  "absent": ["Student Name 3"],
-  "late": ["Student Name 4"],
+  "present": [{"name": "Student Name", "rollNo": 1}, ...],
+  "absent": [{"name": "Student Name", "rollNo": 2}, ...],
+  "late": [{"name": "Student Name", "rollNo": 3}, ...],
   "unmentioned_status": "present" | "absent" | "unknown"
 }
 
 Rules:
-- Fuzzy match names from the student list.
-- If user says "everyone present except X", unmentioned_status is "present".
-- If user says "only X present", unmentioned_status is "absent".
-- If user just lists names (e.g. "Rahul, Priya"), infer status from context words like "absent", "not here".
+- Match both names AND roll numbers (e.g., "roll number 2 present" → find student with rollNo 2)
+- Handle spoken number words: "one"=1, "two"=2, "three"=3, "four"=4, "five"=5, etc.
+- Handle variations: "roll", "role", "roll number", "number"
+- Fuzzy match names from the student list
+- If user says "everyone present except X", unmentioned_status is "present"
+- If user says "only X present", unmentioned_status is "absent"
+- Always include both name and rollNo in the output
 `;
 
     const result = await model.generateContent(prompt);
     const json = JSON.parse(result.response.text());
 
-    // Map names back to IDs
+    // Map names/roll numbers back to IDs
     const updates = {};
 
-    // Helper to find student ID by name
-    const findId = (name) => {
-      const lower = name.toLowerCase();
-      const student = studentList.find(s => s.name.toLowerCase().includes(lower));
-      return student ? student.studentId : null;
+    // Helper to find student by name or roll number
+    const findStudent = (entry) => {
+      // If entry has rollNo, try that first
+      if (entry.rollNo !== undefined && entry.rollNo !== null) {
+        const byRoll = studentList.find(s => s.rollNo === entry.rollNo);
+        if (byRoll) return byRoll;
+      }
+      
+      // Try by name
+      const name = (entry.name || entry).toString().toLowerCase();
+      
+      // Check for roll number pattern in name string
+      const rollMatch = name.match(/roll\s*(?:number|no|num|#)?\s*(\d+)/i);
+      if (rollMatch) {
+        const num = parseInt(rollMatch[1], 10);
+        const byRoll = studentList.find(s => s.rollNo === num);
+        if (byRoll) return byRoll;
+      }
+      
+      // Fuzzy name match
+      return studentList.find(s => s.name.toLowerCase().includes(name) || name.includes(s.name.toLowerCase()));
     };
 
     // Process explicit lists
-    (json.present || []).forEach(name => {
-      const id = findId(name);
-      if (id) updates[id] = true;
+    (json.present || []).forEach(entry => {
+      const student = findStudent(entry);
+      if (student) updates[student.studentId] = true;
     });
 
-    (json.absent || []).forEach(name => {
-      const id = findId(name);
-      if (id) updates[id] = false;
+    (json.absent || []).forEach(entry => {
+      const student = findStudent(entry);
+      if (student) updates[student.studentId] = false;
     });
 
     // Handle unmentioned
@@ -1950,6 +1994,7 @@ function getMockBriefing() {
  * @returns {Promise<string>} - AI response
  */
 export async function   processChat(message, conversationHistory = [], context = {}) {
+  const startTime = Date.now();
   const text = (message || '').trim();
   
   if (!text) {
@@ -1959,6 +2004,13 @@ export async function   processChat(message, conversationHistory = [], context =
   console.log('[processChat] Input:', text);
   console.log('[processChat] Context:', context);
   console.log('[processChat] History length:', conversationHistory.length);
+  
+  // Log the chat action
+  logAction('chat_message', { 
+    messagePreview: text.substring(0, 100),
+    hasContext: !!context.urlContext,
+    historyLength: conversationHistory.length 
+  });
 
   // If no API key, use simple fallback
   if (!genAI) {
@@ -2173,6 +2225,14 @@ EXAMPLE RESPONSES:
     const finalText = response.response.text();
     console.log('[Chat] Final response:', finalText);
     
+    // Log successful chat completion
+    logGeminiCall('processChat', {
+      messagePreview: text.substring(0, 100),
+      model: MODELS.TEXT,
+      toolsUsed: iterations > 1,
+      iterations,
+    }, finalText, Date.now() - startTime);
+    
     // If navigation was requested, return object with both text and navigation
     if (navigationIntent) {
       return {
@@ -2185,6 +2245,12 @@ EXAMPLE RESPONSES:
     
   } catch (error) {
     console.error('Chat processing error:', error);
+    
+    // Log error
+    logGeminiCall('processChat', {
+      messagePreview: text.substring(0, 100),
+      model: MODELS.TEXT,
+    }, null, Date.now() - startTime, error);
     
     // Handle rate limit errors with user-friendly message
     if (isRateLimitError(error)) {

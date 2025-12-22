@@ -63,6 +63,8 @@ export default function ProfilePage() {
                     src={teacher.photoURL} 
                     alt={teacher.name}
                     className="w-24 h-24 rounded-2xl object-cover border-4 border-white shadow-lg"
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
                   />
                 ) : (
                   <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-3xl font-bold text-white border-4 border-white shadow-lg">

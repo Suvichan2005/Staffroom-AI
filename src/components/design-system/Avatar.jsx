@@ -97,6 +97,8 @@ export function Avatar({
             src={src}
             alt={alt || name || 'Avatar'}
             className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+            crossOrigin="anonymous"
             onError={(e) => {
               e.target.style.display = 'none';
               e.target.nextSibling?.classList.remove('hidden');

@@ -4,17 +4,23 @@ import {
   Bell, Moon, Sun, Globe, Lock, User, Palette, 
   Monitor, Smartphone, Volume2, VolumeX, Shield,
   ChevronRight, Check, LogOut, Trash2, HelpCircle,
-  Mail, MessageSquare, RefreshCcw
+  Mail, MessageSquare, RefreshCcw, Activity
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageShell } from '../components/layout';
 import { useAuth } from '../context/AuthContext';
 import { resetDemoState, seedDemoDataForUser } from '../data/dummyData';
 import { resetUserNamespace, markUserInitialized } from '../utils/userScopedStorage';
+// Activity Logs disabled - uncomment when needed
+// import ActivityLogsViewer from '../components/dev/ActivityLogsViewer';
 
 /**
  * Settings Page - App preferences and configuration
  */
+
+// Admin emails that can view activity logs (uncomment when ActivityLogsViewer is enabled)
+// const ADMIN_EMAILS = ['suvanshagar@gmail.com'];
+
 export default function SettingsPage() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -27,6 +33,9 @@ export default function SettingsPage() {
   });
   const [language, setLanguage] = useState('en');
   const [resetting, setResetting] = useState(false);
+  
+  // Check if current user is admin (uncomment when ActivityLogsViewer is enabled)
+  // const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
 
   const handleSignOut = async () => {
     try {
@@ -346,6 +355,18 @@ export default function SettingsPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Activity Logs Section - Admin Only (disabled for now)
+        {isAdmin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <ActivityLogsViewer />
+          </motion.div>
+        )}
+        */}
 
         {/* Version Info */}
         <div className="text-center py-4">

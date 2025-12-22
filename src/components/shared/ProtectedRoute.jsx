@@ -4,15 +4,15 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-screen grid place-items-center">
-        <div className="text-center">Loading authentication...</div>
-      </div>
-    );
+  
+  // Only show loading if we truly don't know the auth state
+  if (loading && !user) {
+    return null; // Don't flash "Loading..." - just show blank briefly
   }
+  
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+  
   return children;
 }
