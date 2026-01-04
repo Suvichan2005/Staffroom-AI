@@ -6,7 +6,12 @@
  * 2. OpenAI Whisper API (more accurate, requires API key)
  */
 
+import { transcribeAudio, blobToBase64 } from './aiApiClient';
+
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+
+// In production, we use Firebase Cloud Functions proxy (API keys are server-side)
+const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
 
 /**
  * Check if browser supports Web Speech API
@@ -139,6 +144,27 @@ export function startBrowserTranscription(options = {}) {
  * @returns {Promise<object>} - { transcript, confidence }
  */
 export async function transcribeWithWhisper(audioBlob) {
+  // Use proxy in production (API keys are server-side)
+  if (USE_PROXY) {
+    try {
+      const audio = await blobToBase64(audioBlob);
+      const result = await transcribeAudio({
+        audio,
+        mimeType: audioBlob.type || 'audio/webm'
+      });
+      
+      return {
+        transcript: result.text,
+        confidence: 0.95,
+        method: 'whisper-proxy'
+      };
+    } catch (error) {
+      console.error('Whisper Proxy error:', error);
+      throw error;
+    }
+  }
+  
+  // Direct API call (development mode)
   if (!OPENAI_API_KEY) {
     throw new Error('OpenAI API key not configured. Using browser transcription instead.');
   }

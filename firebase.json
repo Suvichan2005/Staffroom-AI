@@ -8,9 +8,38 @@
     ],
     "rewrites": [
       {
+        "source": "/api/ai/generate",
+        "function": "aiGenerate"
+      },
+      {
+        "source": "/api/ai/transcribe",
+        "function": "transcribe"
+      },
+      {
+        "source": "/api/ai/live-token",
+        "function": "getLiveToken"
+      },
+      {
+        "source": "/api/health",
+        "function": "health"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs22",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log"
     ]
   }
 }

@@ -1,0 +1,117 @@
+rules_version = '2';
+
+/**
+ * Firestore Security Rules for Staffroom AI
+ * 
+ * SECURITY PRINCIPLE: Deny by default, explicitly allow specific operations
+ * 
+ * Collections:
+ * - logs1: Activity logs (auth, navigation, AI calls, errors)
+ * 
+ * Access Control:
+ * - Authenticated users can create their own logs
+ * - Users can only read their own logs
+ * - Admins (specific emails) can read all logs
+ * - No one can update/delete logs (audit trail integrity)
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // HELPER FUNCTIONS
+    // =========================================================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user owns the document (by email)
+    function isOwner(userEmail) {
+      return isAuthenticated() && request.auth.token.email == userEmail;
+    }
+    
+    // Check if user is an admin
+    // Add your admin email addresses here
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email in [
+          'admin@staffroom.ai',
+          'suvichan2005@gmail.com'
+          // Add more admin emails as needed
+        ]
+      );
+    }
+    
+    // Validate log entry structure
+    function isValidLogEntry() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['timestamp', 'category', 'userEmail']) &&
+             data.category in ['auth', 'navigation', 'ai', 'action', 'api', 'error', 'gemini'] &&
+             data.userEmail is string &&
+             data.userEmail.size() > 0 &&
+             data.userEmail.size() < 256;
+    }
+    
+    // Ensure userEmail matches authenticated user
+    function logBelongsToUser() {
+      return request.resource.data.userEmail == request.auth.token.email;
+    }
+    
+    // =========================================================================
+    // LOGS COLLECTION (logs1)
+    // =========================================================================
+    
+    match /logs1/{logId} {
+      // CREATE: Authenticated users can create logs for themselves only
+      allow create: if isAuthenticated() 
+                    && logBelongsToUser()
+                    && isValidLogEntry();
+      
+      // READ: Users can read their own logs, admins can read all
+      allow read: if isOwner(resource.data.userEmail) || isAdmin();
+      
+      // UPDATE: Never allowed (audit trail integrity)
+      allow update: if false;
+      
+      // DELETE: Only admins can delete (for GDPR compliance, cleanup)
+      allow delete: if isAdmin();
+    }
+    
+    // =========================================================================
+    // USERS COLLECTION (if added in future)
+    // =========================================================================
+    
+    match /users/{userId} {
+      // Users can read/write their own profile
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Admins can read any profile
+      allow read: if isAdmin();
+    }
+    
+    // =========================================================================
+    // ATTENDANCE COLLECTION (if added in future)
+    // =========================================================================
+    
+    match /attendance/{recordId} {
+      // Teachers can create/read attendance records
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated();
+      
+      // Only the creator or admin can update/delete
+      allow update, delete: if isAuthenticated() && 
+        (resource.data.teacherEmail == request.auth.token.email || isAdmin());
+    }
+    
+    // =========================================================================
+    // DENY ALL OTHER ACCESS
+    // =========================================================================
+    
+    // Default deny for any collection not explicitly defined
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

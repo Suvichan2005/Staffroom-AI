@@ -1,0 +1,28 @@
+{
+  "name": "staffroom-ai-functions",
+  "version": "1.0.0",
+  "description": "Firebase Cloud Functions for Staffroom AI - secure API proxy",
+  "main": "index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^5.0.0",
+    "@google/generative-ai": "^0.24.1",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0"
+  },
+  "private": true
+}
