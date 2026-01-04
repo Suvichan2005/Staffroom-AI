@@ -7,6 +7,9 @@ import { LayoutProvider } from "./context/LayoutContext";
 import { AIProvider } from "./context/AIContext";
 import { useAuth } from "./context/AuthContext";
 
+// Error Boundary
+import ErrorBoundary from "./components/shared/ErrorBoundary";
+
 // Activity Logging
 import { logInfo, LogCategory } from "./services/activityLogger";
 
@@ -136,18 +139,19 @@ function PublicRoute({ children }) {
 
 export default function App() {
   return (
-    <LayoutProvider>
-      <AIProvider>
-        <div className="min-h-screen bg-black-50 text-black-900">
-        <ScrollToTop />
-        <Toaster 
-          position="top-right" 
-          toastOptions={{ 
-            duration: 2400,
-            style: {
-              background: '#fff',
-              color: '#1e293b',
-              borderRadius: '12px',
+    <ErrorBoundary>
+      <LayoutProvider>
+        <AIProvider>
+          <div className="min-h-screen bg-black-50 text-black-900">
+          <ScrollToTop />
+          <Toaster 
+            position="top-right" 
+            toastOptions={{ 
+              duration: 2400,
+              style: {
+                background: '#fff',
+                color: '#1e293b',
+                borderRadius: '12px',
               boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
             },
           }} 
@@ -323,8 +327,9 @@ export default function App() {
               </AppLayout>
             } />
           </Routes>
-      </div>
-      </AIProvider>
-    </LayoutProvider>
+        </div>
+        </AIProvider>
+      </LayoutProvider>
+    </ErrorBoundary>
   );
 }

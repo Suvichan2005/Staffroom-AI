@@ -5,6 +5,18 @@ import App from "./App";
 import { TeacherProvider } from "./context/TeacherContext";
 import "./index.css";
 import { AuthProvider } from "./context/AuthContext";
+import { 
+  initErrorMonitoring, 
+  handleGlobalError, 
+  handleUnhandledRejection 
+} from "./services/errorMonitoring";
+
+// Initialize error monitoring (Sentry if configured)
+initErrorMonitoring();
+
+// Global error handlers
+window.onerror = handleGlobalError;
+window.onunhandledrejection = handleUnhandledRejection;
 
 // Demo recording: force global date to 24 November 2025
 // Toggle this to `false` after recording.

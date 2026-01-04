@@ -104,16 +104,8 @@ export default function Login() {
             <div className="w-full border-t border-slate-200"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-2 text-slate-500">Or use demo credentials</span>
+            <span className="bg-white px-2 text-slate-500">Or sign in with email</span>
           </div>
-        </div>
-
-        {/* Demo Credentials Info - now secondary */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
-          <p className="text-xs text-amber-700">
-            <span className="font-semibold">Demo:</span> agarwal@demo.com / demo1234
-            <span className="block mt-1 text-amber-600">(Shared state – not recommended for testing)</span>
-          </p>
         </div>
 
         <form onSubmit={handleEmailLogin} className="flex flex-col gap-3">

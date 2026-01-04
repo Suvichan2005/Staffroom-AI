@@ -10,12 +10,44 @@
  */
 
 import { handleChatToolCall } from './chatToolsDefinition';
+import { getLiveSessionToken } from './aiApiClient';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+// In production, we fetch the WebSocket URL from the secure proxy
+// to avoid exposing API keys in the client bundle
+const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
+
 // Use gemini-2.0-flash-exp for Live API - cheapest model that supports audio→tool calling
 // Audio input: $2.10/1M, Text output: $1.50/1M (~$0.41/hour for attendance)
 const LIVE_API_MODEL = 'gemini-2.0-flash-exp';
-const LIVE_API_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
+
+// Direct URL (only used in development mode with local API key)
+const LIVE_API_URL_DIRECT = GEMINI_API_KEY 
+  ? `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`
+  : null;
+
+/**
+ * Get the WebSocket URL for Gemini Live
+ * In production, fetches from Cloud Function. In dev, uses direct URL.
+ */
+async function getLiveApiUrl() {
+  if (USE_PROXY) {
+    try {
+      const { wsUrl } = await getLiveSessionToken();
+      return wsUrl;
+    } catch (error) {
+      console.error('Failed to get live session token:', error);
+      throw new Error('Unable to start live session - please try again');
+    }
+  }
+  
+  if (!LIVE_API_URL_DIRECT) {
+    throw new Error('Gemini API key not configured for live sessions');
+  }
+  
+  return LIVE_API_URL_DIRECT;
+}
 
 /**
  * Audio processing utilities for PCM conversion
@@ -131,17 +163,21 @@ export class GeminiLiveSession {
    * Connect to Gemini Live API
    */
   async connect() {
-    if (!GEMINI_API_KEY) {
-      throw new Error('VITE_GEMINI_API_KEY is required for Gemini Live API');
+    // Get the WebSocket URL (from proxy in prod, direct in dev)
+    let wsUrl;
+    try {
+      wsUrl = await getLiveApiUrl();
+    } catch (error) {
+      throw new Error(error.message || 'Failed to get live session URL');
     }
 
     console.log('🔌 Connecting to Gemini Live API...');
-    console.log('📍 URL:', LIVE_API_URL.replace(GEMINI_API_KEY, 'API_KEY_HIDDEN'));
+    console.log('📍 URL:', wsUrl.replace(/key=[^&]+/, 'key=HIDDEN'));
     console.log('🤖 Model:', LIVE_API_MODEL);
 
     return new Promise((resolve, reject) => {
       try {
-        this.ws = new WebSocket(LIVE_API_URL);
+        this.ws = new WebSocket(wsUrl);
         
         // Set a connection timeout
         const connectionTimeout = setTimeout(() => {

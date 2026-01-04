@@ -16,6 +16,7 @@ import {
   getUnreadNotifications
 } from '../data/dummyData';
 import { logGeminiCall, logAction, LogCategory } from './activityLogger';
+import { callAIGenerate } from './aiApiClient';
 
 /**
  * AI Service for School Companion
@@ -30,12 +31,16 @@ import { logGeminiCall, logAction, LogCategory } from './activityLogger';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-if (!GEMINI_API_KEY) {
+// In production, we use Firebase Cloud Functions proxy (API keys are server-side)
+// In development, you can use direct API calls with VITE_GEMINI_API_KEY
+const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
+
+if (!USE_PROXY && !GEMINI_API_KEY) {
   console.warn('⚠️  VITE_GEMINI_API_KEY not found. AI features will use mock responses.');
 }
 
-// Initialize Gemini
-const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+// Initialize Gemini (only needed for direct API calls in dev)
+const genAI = (!USE_PROXY && GEMINI_API_KEY) ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 
 // Models
 const MODELS = {
@@ -91,6 +96,46 @@ async function callGemini(prompt, usePro = false, retryCount = 0) {
   const startTime = Date.now();
   const modelName = usePro ? MODELS.PRO : MODELS.TEXT;
   
+  // Use proxy in production (API keys are server-side)
+  if (USE_PROXY) {
+    try {
+      const result = await callAIGenerate({
+        prompt,
+        // Note: The proxy uses gemini-1.5-flash, system instruction can be added if needed
+      });
+      
+      const text = result.text || '';
+      logGeminiCall('callGemini', { 
+        promptPreview: prompt.substring(0, 200), 
+        model: 'proxy',
+        retryCount 
+      }, text, Date.now() - startTime);
+      
+      return text;
+    } catch (error) {
+      console.error('AI Proxy Error:', error);
+      
+      // Handle rate limit with retry
+      if (error.message?.includes('Rate limit') && retryCount < RATE_LIMIT_CONFIG.maxRetries) {
+        const delay = RATE_LIMIT_CONFIG.baseDelayMs * Math.pow(2, retryCount);
+        console.warn(`Rate limited. Retrying in ${delay}ms (attempt ${retryCount + 1}/${RATE_LIMIT_CONFIG.maxRetries})`);
+        await sleep(delay);
+        return callGemini(prompt, usePro, retryCount + 1);
+      }
+      
+      logGeminiCall('callGemini', { 
+        promptPreview: prompt.substring(0, 200), 
+        model: 'proxy',
+        retryCount 
+      }, null, Date.now() - startTime, error);
+      
+      // Fallback to mock on error
+      console.warn('Proxy call failed, using mock response');
+      return getMockResponse(prompt);
+    }
+  }
+  
+  // Direct API call (development mode)
   if (!genAI) {
     console.warn('Using mock response - no API key');
     const mockResponse = getMockResponse(prompt);
