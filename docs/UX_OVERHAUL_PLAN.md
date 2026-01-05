@@ -1096,11 +1096,162 @@ The current analytics implementation is sophisticated but premature for MVP. Rec
 
 ---
 
+## Appendix E: Implementation Log
+
+### Phase 1 Progress (January 2026)
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Basic onboarding wizard (individual mode) | ✅ DONE | `OnboardingWizard.jsx` - 3-step wizard shows on first login |
+| Role-based navigation filtering | ✅ DONE | `Sidebar.jsx` - Shows nav items based on persona context |
+| Attendance summary confirmation modal | ✅ DONE | `AttendanceEditor.jsx` - Modal with stats before saving |
+| Hide dev pages from production | ✅ DONE | `AdminRoute.jsx` - `/ai-test`, `/logs`, `/_debug` require admin persona |
+| AI suggested prompts (3 per context) | ✅ DONE | Dashboard AI section includes suggested prompts |
+| Dashboard de-emphasis of analytics | ✅ DONE | `Dashboard.jsx` - Redesigned as "Today View" with actions first |
+
+### Phase 2 Progress (January 2026)
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Syllabus auto-save | ✅ DONE | `SyllabusProgress.jsx` - Debounced auto-save with visual feedback |
+| Settings cleanup | ✅ DONE | `SettingsPage.jsx` - Dev options hidden unless admin persona |
+| Grade book matrix view | ✅ DONE | `GradeBookMatrix.jsx` - Students × assessments grid with averages |
+| Topic-to-assessment linking | ⏳ Pending | Deferred to Phase 3 - needs schema work |
+| Rich notes (markdown + images) | ⏳ Pending | |
+| Chat history persistence | ✅ DONE | Already implemented in `chatStorage.js` + `AIContext.jsx` |
+
+### Files Modified
+
+1. **`src/pages/Dashboard.jsx`** - Complete redesign as "Today View"
+   - Hero card shows next class with quick actions
+   - Stats are clickable/actionable
+   - My Classes section with progress bars
+   - AI Quick Actions with suggested prompts
+   - De-emphasized analytics
+
+2. **`src/components/layout/Sidebar.jsx`** - Role-based navigation
+   - Navigation items filtered by persona (teacher/hod/admin)
+   - Persona indicator at bottom when viewing as HOD/Admin
+   - Removed role-switching section from primary nav
+
+3. **`src/pages/ClassPage.jsx`** - Tab URL support
+   - Supports `?tab=attendance`, `?tab=syllabus` query params
+   - Allows deep linking to specific tabs
+
+4. **`src/components/dashboard/UpcomingClasses.jsx`** - Compact mode
+   - Supports `compact` prop for sidebar view
+   - Supports `daysAhead={0}` for today-only schedule
+
+5. **`src/components/shared/OnboardingWizard.jsx`** - NEW
+   - 3-step onboarding wizard
+   - Shows once per user (stored in userScopedStorage)
+   - Explains core features: Attendance, Syllabus, AI
+
+6. **`src/components/shared/AdminRoute.jsx`** - NEW
+   - Route guard for admin-only pages
+   - Redirects non-admins to dashboard
+
+7. **`src/App.jsx`** - Route protection
+   - Dev routes now require admin persona
+
+8. **`src/components/attendance/AttendanceEditor.jsx`** - Confirmation modal
+   - Shows summary before final save (present/absent counts)
+   - Lists absent students for review
+   - Attendance percentage visualization
+
+9. **`src/components/syllabus/SyllabusProgress.jsx`** - Auto-save
+   - Debounced auto-save (2s delay after changes)
+   - Visual save status feedback (saving/saved)
+   - Manual save still available
+
+10. **`src/pages/SettingsPage.jsx`** - Admin-only options
+    - "Reset Demo Data" only visible when admin persona active
+    - Cleaner interface for regular teachers
+
+11. **`src/components/teacher/GradeBookMatrix.jsx`** - NEW
+    - Matrix view: students as rows, assessments as columns
+    - Color-coded grades (green ≥80%, yellow ≥60%, red <60%)
+    - Sortable by name or average
+    - Type filter (assignments vs tests)
+    - Shows class averages and student averages
+    - Legend for grade colors and status icons
+
+12. **`src/pages/Assessments.jsx`** - View toggle added
+    - List/Grade Book toggle button in header
+    - Auto-selects first class when switching to Grade Book
+    - Integrates GradeBookMatrix component
+
+13. **`src/services/firestoreChatService.js`** - NEW (Cross-device chat sync)
+    - Firestore-based chat storage for cross-device persistence
+    - Functions: getAllChatSessionsFromFirestore, saveChatSessionToFirestore, deleteChatSessionFromFirestore
+    - Auto-migration of local storage chats to Firestore on first use
+    - Collection structure: users/{userId}/chatSessions/{sessionId}
+
+14. **`src/context/AIContext.jsx`** - Firestore integration
+    - Chat sessions now sync to Firestore (cross-device)
+    - Loads from Firestore on startup with local fallback
+    - All CRUD operations sync to both local and Firestore
+    - One-time migration of existing local chats
+
+15. **`src/components/shared/AdminRoute.jsx`** - Email whitelist
+    - Added ADMIN_EMAILS whitelist array
+    - suvanshagar@gmail.com can now access /logs directly
+    - Either email whitelist OR admin persona grants access
+
+16. **`firestore.rules`** - Chat session rules
+    - Added chatSessions subcollection rules under users/{userId}
+    - Users can CRUD their own chat sessions
+    - Added suvanshagar@gmail.com to admin list
+
+### Phase 3 Progress (January 2026)
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Admin onboarding wizard | ✅ DONE | `AdminOnboardingWizard.jsx` - 5-step school setup wizard |
+| Teacher invitation flow | ✅ DONE | `TeacherManagement.jsx` - Invite teachers via email, manage subjects |
+| CSV student roster upload | ✅ DONE | `StudentRosterUpload.jsx` - Drag-drop CSV import with validation |
+| Basic timetable upload | ⏳ Pending | |
+| Parent portal structure | ⏳ Pending | Deferred - not MVP critical |
+
+17. **`src/components/shared/AdminOnboardingWizard.jsx`** - NEW
+    - 5-step wizard: School Profile → Class Structure → Invite Teachers → Add Students → Review
+    - Collects: school name, principal, classes/sections, teachers, students
+    - Each step has validation and progress indicator
+    - Animated transitions with Framer Motion
+
+18. **`src/components/admin/TeacherManagement.jsx`** - NEW
+    - Teacher list view with subjects and status
+    - Email invitation system with pending invite tracking
+    - Actions: View profile, Resend invite, Cancel invite, Remove teacher
+    - Search and filter by subject
+    - Storage: `admin:teachers`, `admin:pendingInvites`
+
+19. **`src/components/admin/StudentRosterUpload.jsx`** - NEW
+    - Drag-drop CSV file upload
+    - Template download with required columns (name, rollNumber, class, section)
+    - Preview table with validation (duplicate detection)
+    - Progress tracking for large imports
+    - Storage: `admin:students`, `admin:importedStudentCount`
+
+20. **`src/pages/AdminDashboard.jsx`** - Updated
+    - Added "Teachers" and "Student Roster" tabs to sidebar
+    - Integrated AdminOnboardingWizard modal
+    - School setup prompt banner for new admins
+    - Tab rendering for new components
+
+---
+
 *End of Document*
 
 ---
 
 **Next Steps:**
-1. Review this plan with stakeholders
-2. Prioritize Phase 1 tasks
-3. Begin implementation (only after approval)
+1. ~~Review this plan with stakeholders~~ ✅
+2. ~~Prioritize Phase 1 tasks~~ ✅
+3. ~~Begin implementation (only after approval)~~ ✅ Complete
+4. ~~Phase 1: All tasks complete~~ ✅
+5. ~~Phase 2: All core tasks complete~~ ✅
+6. ~~Deploy Firestore rules~~ ✅ (`firebase deploy --only firestore:rules`)
+7. ~~Phase 3: Core admin features complete~~ ✅
+8. Optional: Timetable upload enhancement
+9. Production testing and feedback collection

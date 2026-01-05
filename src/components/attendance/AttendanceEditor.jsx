@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, X, Users, UserCheck, UserX, Save, Search, Mic } from "lucide-react";
+import { Check, X, Users, UserCheck, UserX, Save, Search, Mic, AlertCircle, CheckCircle2 } from "lucide-react";
 import VoiceAttendanceLogger from "../ai/VoiceAttendanceLogger";
 
 function useLocalDraft(key, initial) {
@@ -21,12 +21,129 @@ function useLocalDraft(key, initial) {
   return [state, save];
 }
 
+/**
+ * AttendanceConfirmationModal - Shows summary before final save
+ */
+function AttendanceConfirmationModal({ 
+  students, 
+  present, 
+  date, 
+  onConfirm, 
+  onCancel 
+}) {
+  const presentStudents = students.filter(s => present[s.studentId]);
+  const absentStudents = students.filter(s => !present[s.studentId]);
+  const attendancePercent = Math.round((presentStudents.length / students.length) * 100);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/60 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
+      >
+        {/* Header */}
+        <div className="p-5 border-b border-black-100">
+          <h3 className="text-lg font-bold text-black-800">Confirm Attendance</h3>
+          <p className="text-sm text-black-500 mt-1">Review before submitting for {date}</p>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="p-5 bg-black-50">
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="bg-white rounded-xl p-3">
+              <p className="text-2xl font-bold text-black-800">{students.length}</p>
+              <p className="text-xs text-black-500">Total</p>
+            </div>
+            <div className="bg-white rounded-xl p-3">
+              <p className="text-2xl font-bold text-green-600">{presentStudents.length}</p>
+              <p className="text-xs text-black-500">Present</p>
+            </div>
+            <div className="bg-white rounded-xl p-3">
+              <p className="text-2xl font-bold text-red-600">{absentStudents.length}</p>
+              <p className="text-xs text-black-500">Absent</p>
+            </div>
+          </div>
+          
+          {/* Attendance percentage bar */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-sm mb-1">
+              <span className="text-black-600">Attendance Rate</span>
+              <span className="font-semibold text-black-800">{attendancePercent}%</span>
+            </div>
+            <div className="h-2 bg-black-200 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all ${
+                  attendancePercent >= 75 ? 'bg-green-500' : 
+                  attendancePercent >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${attendancePercent}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Absent Students List (if any) */}
+        {absentStudents.length > 0 && (
+          <div className="p-5 border-t border-black-100">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertCircle className="w-4 h-4 text-amber-500" />
+              <p className="text-sm font-medium text-black-700">
+                {absentStudents.length} student{absentStudents.length > 1 ? 's' : ''} marked absent:
+              </p>
+            </div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {absentStudents.map((s, i) => (
+                <div key={s.studentId} className="flex items-center gap-2 text-sm text-black-600 py-1">
+                  <div className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-medium">
+                    {i + 1}
+                  </div>
+                  <span>{s.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* All present message */}
+        {absentStudents.length === 0 && (
+          <div className="p-5 border-t border-black-100">
+            <div className="flex items-center gap-3 text-green-700 bg-green-50 rounded-xl p-3">
+              <CheckCircle2 className="w-5 h-5" />
+              <p className="text-sm font-medium">All students are present!</p>
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="p-5 border-t border-black-100 flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-black-100 text-black-700 hover:bg-black-200 transition-colors"
+          >
+            Go Back
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Confirm & Save
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function AttendanceEditor({ classId, date, students, initialPresent = {}, onSave }) {
   const key = `attend:${classId}:${date}`;
   const init = useMemo(() => initialPresent, [classId, date]);
   const [present, setPresent] = useLocalDraft(key, init);
   const [searchQuery, setSearchQuery] = useState('');
   const [showVoice, setShowVoice] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const toggle = (id) => setPresent(prev => ({ ...prev, [id]: !prev[id] }));
   const markAll = (value) => {
@@ -37,9 +154,14 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
     });
   };
 
-  const handleSave = () => {
+  const handleSaveClick = () => {
+    setShowConfirmation(true);
+  };
+
+  const handleConfirm = () => {
     onSave?.(present);
     try { localStorage.removeItem(key); } catch {}
+    setShowConfirmation(false);
   };
 
   const handleVoiceUpdate = (updates) => {
@@ -187,13 +309,26 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
           <span className="font-medium text-red-600 ml-1">{absentCount}</span> absent
         </p>
         <button 
-          onClick={handleSave} 
+          onClick={handleSaveClick} 
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors shadow-lg shadow-indigo-200"
         >
           <Save className="w-4 h-4" />
           Save Attendance
         </button>
       </div>
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmation && (
+          <AttendanceConfirmationModal
+            students={students}
+            present={present}
+            date={date}
+            onConfirm={handleConfirm}
+            onCancel={() => setShowConfirmation(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

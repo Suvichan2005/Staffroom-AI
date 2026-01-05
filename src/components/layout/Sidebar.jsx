@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -14,36 +14,73 @@ import {
   GraduationCap,
   Calendar,
   MessageSquare,
+  Building2,
+  Shield,
 } from 'lucide-react';
 import { useLayout } from '../../context/LayoutContext';
+import { useTeacher } from '../../context/TeacherContext';
 
 /**
  * Desktop Sidebar Navigation
- * Collapsible with sections and active indicators
+ * Role-based filtering with collapsible sections
+ * 
+ * Navigation Structure:
+ * - Teacher: Dashboard, My Classes, Schedule | Assessments, Resources | Profile, Settings
+ * - HOD: Same + Department Overview
+ * - Admin: Separate admin routes
  */
 export default function Sidebar() {
   const { sidebarCollapsed, toggleSidebar } = useLayout();
   const location = useLocation();
   const navigate = useNavigate();
+  const teacherCtx = useTeacher();
+  const persona = teacherCtx?.persona || 'teacher';
 
-  const primaryNav = [
-    { path: '/dashboard', icon: Home, label: 'Dashboard' },
-    { path: '/classes', icon: GraduationCap, label: 'My Classes' },
-    { path: '/schedule', icon: Calendar, label: 'Schedule' },
-    { path: '/assessments', icon: FileText, label: 'Assessments' },
-    { path: '/resources', icon: FolderOpen, label: 'Resources' },
-    { path: '/chat', icon: MessageSquare, label: 'AI Assistant' },
-  ];
+  // Role-based navigation items
+  const navConfig = useMemo(() => {
+    const teacherNav = [
+      { path: '/dashboard', icon: Home, label: 'Dashboard' },
+      { path: '/classes', icon: GraduationCap, label: 'My Classes' },
+      { path: '/schedule', icon: Calendar, label: 'Schedule' },
+    ];
 
-  const roleNav = [
-    { path: '/hod-dashboard', icon: Users, label: 'HOD Dashboard' },
-    { path: '/admin-dashboard', icon: BarChart3, label: 'Admin Dashboard' },
-  ];
+    const toolsNav = [
+      { path: '/assessments', icon: FileText, label: 'Assessments' },
+      { path: '/resources', icon: FolderOpen, label: 'Resources' },
+    ];
 
-  const accountNav = [
-    { path: '/profile', icon: User, label: 'Profile' },
-    { path: '/settings', icon: Settings, label: 'Settings' },
-  ];
+    const accountNav = [
+      { path: '/profile', icon: User, label: 'Profile' },
+      { path: '/settings', icon: Settings, label: 'Settings' },
+    ];
+
+    // HOD-specific nav items
+    const hodNav = [
+      { path: '/hod-dashboard', icon: Building2, label: 'Department' },
+    ];
+
+    // Admin-specific nav items
+    const adminNav = [
+      { path: '/admin-dashboard', icon: Shield, label: 'Admin Panel' },
+    ];
+
+    // Build sections based on persona
+    const sections = [
+      { title: null, items: teacherNav },
+      { title: 'Tools', items: toolsNav },
+    ];
+
+    // Add role-specific section if applicable
+    if (persona === 'hod') {
+      sections.push({ title: 'Department', items: hodNav });
+    } else if (persona === 'admin') {
+      sections.push({ title: 'Administration', items: adminNav });
+    }
+
+    sections.push({ title: 'Account', items: accountNav });
+
+    return sections;
+  }, [persona]);
 
   const NavItem = ({ item }) => {
     const isActive = location.pathname === item.path || 
@@ -118,10 +155,23 @@ export default function Sidebar() {
     >
       {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto py-4 px-2 space-y-6">
-        <NavSection items={primaryNav} />
-        <NavSection title="Role Views" items={roleNav} />
-        <NavSection title="Account" items={accountNav} />
+        {navConfig.map((section, idx) => (
+          <NavSection key={idx} title={section.title} items={section.items} />
+        ))}
       </div>
+
+      {/* Persona indicator at bottom */}
+      {!sidebarCollapsed && persona !== 'teacher' && (
+        <div className="px-3 py-3 border-t border-black-100">
+          <div className={`px-3 py-2 rounded-lg text-xs font-medium ${
+            persona === 'hod' 
+              ? 'bg-purple-50 text-purple-700' 
+              : 'bg-amber-50 text-amber-700'
+          }`}>
+            Viewing as {persona === 'hod' ? 'Head of Dept' : 'Admin'}
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

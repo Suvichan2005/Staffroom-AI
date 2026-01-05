@@ -38,7 +38,8 @@ service cloud.firestore {
       return isAuthenticated() && (
         request.auth.token.email in [
           'admin@staffroom.ai',
-          'suvichan2005@gmail.com'
+          'suvichan2005@gmail.com',
+          'suvanshagar@gmail.com'
           // Add more admin emails as needed
         ]
       );
@@ -89,6 +90,12 @@ service cloud.firestore {
       
       // Admins can read any profile
       allow read: if isAdmin();
+      
+      // Chat sessions subcollection - users can manage their own chats
+      match /chatSessions/{sessionId} {
+        // Users can CRUD their own chat sessions
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+      }
     }
     
     // =========================================================================

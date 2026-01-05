@@ -25,7 +25,7 @@ import Assessments from "./pages/Assessments";
 import SharedResources from "./pages/SharedResources";
 import HODDashboard from "./pages/HODDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import { ProtectedRoute } from "./components/shared";
+import { ProtectedRoute, AdminRoute } from "./components/shared";
 
 // New Pages
 import ProfilePage from "./pages/ProfilePage";
@@ -178,12 +178,13 @@ export default function App() {
                 </AuthLayout>
               </PublicRoute>
             } />
+            {/* AI Test Page - Admin only */}
             <Route path="/ai-test" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <AuthLayout>
                   <AITest />
                 </AuthLayout>
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             
             {/* Dashboard - New responsive design */}
@@ -303,18 +304,20 @@ export default function App() {
               </ProtectedRoute>
             } />
             
-            {/* Admin Logs Page - suvanshagar@gmail.com only */}
+            {/* Admin Logs Page - Admin only */}
             <Route path="/logs" element={
-              <ProtectedRoute>
+              <AdminRoute>
                 <LogsPage />
-              </ProtectedRoute>
+              </AdminRoute>
             } />
             
-            {/* Debug Integrations Page - Dev only */}
+            {/* Debug Integrations Page - Admin only */}
             <Route path="/_debug" element={
-              <AppLayout>
-                <DebugIntegrations />
-              </AppLayout>
+              <AdminRoute>
+                <AppLayout>
+                  <DebugIntegrations />
+                </AppLayout>
+              </AdminRoute>
             } />
             
             {/* 404 */}
