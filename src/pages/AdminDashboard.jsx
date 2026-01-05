@@ -1,22 +1,27 @@
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useMemo, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { 
   BookOpen, UploadCloud, Users, ClipboardList, ActivitySquare,
   TrendingUp, GraduationCap, Building2, Shield, Settings, Bell,
-  CheckCircle2, AlertTriangle, Clock, FileText, ChevronRight
+  CheckCircle2, AlertTriangle, Clock, FileText, ChevronRight, Sparkles,
+  UserPlus, FileSpreadsheet
 } from "lucide-react";
 import { PageShell } from "../components/layout";
 import { getAdminSummary, students, teacherData } from "../data/dummyData";
 import { getSchoolOverviewCharts } from "../data/analyticsData";
 import { loadUserState, saveUserState } from "../utils/userScopedStorage";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, BarChart, Bar, AreaChart, Area } from "recharts";
+import AdminOnboardingWizard from "../components/shared/AdminOnboardingWizard";
+import TeacherManagement from "../components/admin/TeacherManagement";
+import StudentRosterUpload from "../components/admin/StudentRosterUpload";
 
 const SIDEBAR_ITEMS = [
   { id: "overview", label: "School Overview", icon: ActivitySquare },
+  { id: "teachers", label: "Teacher Management", icon: UserPlus },
+  { id: "students", label: "Student Roster", icon: FileSpreadsheet },
   { id: "timetable", label: "Timetable Upload", icon: UploadCloud },
-  { id: "mapping", label: "Teacher Mapping", icon: ClipboardList },
-  { id: "students", label: "Student Management", icon: Users },
+  { id: "mapping", label: "Class Mapping", icon: ClipboardList },
   { id: "logs", label: "System Logs", icon: BookOpen },
 ];
 
@@ -27,6 +32,10 @@ export default function AdminDashboard() {
   const summary = useMemo(() => getAdminSummary(), []);
   const charts = useMemo(() => getSchoolOverviewCharts(), []);
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [showSchoolSetup, setShowSchoolSetup] = useState(false);
+  const [schoolConfigured, setSchoolConfigured] = useState(() => 
+    loadUserState('admin:schoolConfigured', false)
+  );
   const initialMapping = useMemo(
     () =>
       loadUserState("admin:teacherMapping", summary.departments.map((department) => ({
@@ -53,10 +62,55 @@ export default function AdminDashboard() {
     toast.success("Teacher mapping saved.");
   };
 
+  const handleSchoolSetupComplete = (schoolData) => {
+    console.log('[AdminDashboard] School setup complete:', schoolData);
+    saveUserState('admin:schoolConfigured', true);
+    saveUserState('admin:schoolData', schoolData);
+    setSchoolConfigured(true);
+    setShowSchoolSetup(false);
+    toast.success(`${schoolData.schoolName} is now set up!`);
+  };
+
+  // Show setup prompt if school not configured
+  useEffect(() => {
+    if (!schoolConfigured) {
+      // Could auto-show wizard, but let's make it optional
+    }
+  }, [schoolConfigured]);
+
 
 
   const renderOverview = () => (
     <div className="space-y-6">
+      {/* School Setup Prompt (if not configured) */}
+      {!schoolConfigured && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-5 h-5" />
+                <span className="text-sm font-medium text-indigo-100">Getting Started</span>
+              </div>
+              <h3 className="text-xl font-bold mb-2">Set Up Your School</h3>
+              <p className="text-indigo-100 text-sm mb-4">
+                Configure your school profile, class structure, and invite teachers to get started with Staffroom.
+              </p>
+              <button
+                onClick={() => setShowSchoolSetup(true)}
+                className="px-6 py-2.5 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-colors"
+              >
+                Start Setup Wizard
+              </button>
+            </div>
+            <Building2 className="w-16 h-16 text-white/20" />
+          </div>
+        </motion.div>
+      )}
+
       {/* Key Metrics */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
@@ -473,6 +527,16 @@ export default function AdminDashboard() {
 
   return (
     <PageShell width="7xl" className="pt-6">
+      {/* School Setup Wizard Modal */}
+      <AnimatePresence>
+        {showSchoolSetup && (
+          <AdminOnboardingWizard
+            onComplete={handleSchoolSetupComplete}
+            onClose={() => setShowSchoolSetup(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-black-800">Admin Dashboard</h1>
@@ -515,9 +579,10 @@ export default function AdminDashboard() {
         </aside>
         <section className="flex-1 space-y-6">
           {activeTab === "overview" && renderOverview()}
+          {activeTab === "teachers" && <TeacherManagement />}
+          {activeTab === "students" && <StudentRosterUpload />}
           {activeTab === "timetable" && renderTimetable()}
           {activeTab === "mapping" && renderMapping()}
-          {activeTab === "students" && renderStudents()}
           {activeTab === "logs" && renderLogs()}
         </section>
       </div>

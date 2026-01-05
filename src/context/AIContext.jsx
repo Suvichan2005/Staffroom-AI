@@ -16,6 +16,15 @@ import {
   addMessageToSession,
   updateChatTitle,
 } from '../utils/chatStorage';
+import {
+  getAllChatSessionsFromFirestore,
+  getChatSessionFromFirestore,
+  saveChatSessionToFirestore,
+  deleteChatSessionFromFirestore,
+  updateChatTitleInFirestore,
+  syncLocalToFirestore,
+} from '../services/firestoreChatService';
+import { useAuth } from './AuthContext';
 import { 
   teacherData, 
   syllabusList,
@@ -218,25 +227,59 @@ export function AIProvider({ children }) {
     };
   }, []);
 
-  // Initialize or restore chat session on mount
+  // Initialize or restore chat session on mount (using Firestore)
   useEffect(() => {
-    if (!sessionInitializedRef.current) {
+    const initChatFromFirestore = async () => {
+      if (sessionInitializedRef.current) return;
       sessionInitializedRef.current = true;
       
-      // Load chat history
-      const history = getAllChatSessions();
-      setChatHistory(history);
-      
-      // Check if there's a current session ID in storage
-      const storedSessionId = getCurrentSessionId();
-      
-      if (storedSessionId) {
-        // Load existing session
-        const session = getChatSession(storedSessionId);
-        if (session) {
-          setCurrentSessionIdState(storedSessionId);
-          // Convert stored messages to display format
-          const formattedMessages = session.messages.map(msg => ({
+      try {
+        // Load chat history from Firestore
+        const firestoreHistory = await getAllChatSessionsFromFirestore();
+        
+        // If no Firestore data but local data exists, migrate it
+        const localHistory = getAllChatSessions();
+        if (firestoreHistory.length === 0 && localHistory.length > 0) {
+          console.log('[AIContext] Migrating local chat history to Firestore');
+          await syncLocalToFirestore(localHistory);
+          setChatHistory(localHistory);
+        } else {
+          setChatHistory(firestoreHistory);
+        }
+        
+        // Check if there's a current session ID in storage
+        const storedSessionId = getCurrentSessionId();
+        
+        if (storedSessionId && firestoreHistory.length > 0) {
+          // Try to load from Firestore first
+          const session = firestoreHistory.find(s => s.id === storedSessionId) 
+            || await getChatSessionFromFirestore(storedSessionId);
+          if (session) {
+            setCurrentSessionIdState(storedSessionId);
+            // Convert stored messages to display format
+            const formattedMessages = session.messages.map(msg => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp),
+            }));
+            setMessages(formattedMessages.length > 0 ? formattedMessages : [
+              {
+                id: 'welcome',
+                role: 'assistant',
+                content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
+                timestamp: new Date(),
+              },
+            ]);
+            console.log(`[AIContext] Restored session ${storedSessionId} from Firestore`);
+          } else {
+            // Session not found, start new
+            startNewChatSession();
+          }
+        } else if (firestoreHistory.length > 0) {
+          // Load most recent session
+          const mostRecent = firestoreHistory[0];
+          setCurrentSessionIdState(mostRecent.id);
+          setCurrentSessionId(mostRecent.id);
+          const formattedMessages = mostRecent.messages.map(msg => ({
             ...msg,
             timestamp: new Date(msg.timestamp),
           }));
@@ -248,18 +291,23 @@ export function AIProvider({ children }) {
               timestamp: new Date(),
             },
           ]);
-          console.log(`[AIContext] Restored session ${storedSessionId}`);
+          console.log(`[AIContext] Loaded most recent session from Firestore`);
         } else {
-          // Session not found, start new
+          // No sessions at all, start new
           startNewChatSession();
         }
-      } else {
-        // No current session, start new
+        
+        lastPathRef.current = window.location.pathname;
+      } catch (error) {
+        console.error('[AIContext] Error loading from Firestore, falling back to local:', error);
+        // Fallback to local storage
+        const history = getAllChatSessions();
+        setChatHistory(history);
         startNewChatSession();
       }
-      
-      lastPathRef.current = window.location.pathname;
-    }
+    };
+    
+    initChatFromFirestore();
   }, []);
 
   // Session management functions
@@ -268,6 +316,8 @@ export function AIProvider({ children }) {
     const newSession = createNewChatSession(context);
     
     saveChatSession(newSession);
+    // Also save to Firestore
+    saveChatSessionToFirestore(newSession);
     setCurrentSessionId(newSession.id);
     setCurrentSessionIdState(newSession.id);
     
@@ -281,15 +331,22 @@ export function AIProvider({ children }) {
       },
     ]);
     
-    // Refresh history
-    setChatHistory(getAllChatSessions());
+    // Refresh history from Firestore
+    getAllChatSessionsFromFirestore().then(setChatHistory).catch(() => {
+      setChatHistory(getAllChatSessions());
+    });
     
     console.log(`[AIContext] Started new session ${newSession.id}`);
     return newSession.id;
   }, [getContextFromURL]);
 
-  const loadChatSession = useCallback((sessionId) => {
-    const session = getChatSession(sessionId);
+  const loadChatSession = useCallback(async (sessionId) => {
+    // Try Firestore first, fallback to local
+    let session = await getChatSessionFromFirestore(sessionId);
+    if (!session) {
+      session = getChatSession(sessionId);
+    }
+    
     if (session) {
       setCurrentSessionId(sessionId);
       setCurrentSessionIdState(sessionId);
@@ -312,9 +369,15 @@ export function AIProvider({ children }) {
     }
   }, []);
 
-  const deleteChatSessionById = useCallback((sessionId) => {
+  const deleteChatSessionById = useCallback(async (sessionId) => {
+    // Delete from Firestore
+    await deleteChatSessionFromFirestore(sessionId);
+    // Also delete from local
     deleteChatSession(sessionId);
-    setChatHistory(getAllChatSessions());
+    
+    // Refresh history from Firestore
+    const firestoreHistory = await getAllChatSessionsFromFirestore();
+    setChatHistory(firestoreHistory.length > 0 ? firestoreHistory : getAllChatSessions());
     
     // If deleted session was current, start new
     if (sessionId === currentSessionId) {
@@ -322,12 +385,18 @@ export function AIProvider({ children }) {
     }
   }, [currentSessionId, startNewChatSession]);
 
-  const renameChatSession = useCallback((sessionId, newTitle) => {
+  const renameChatSession = useCallback(async (sessionId, newTitle) => {
+    // Update in Firestore
+    await updateChatTitleInFirestore(sessionId, newTitle);
+    // Also update local
     updateChatTitle(sessionId, newTitle);
-    setChatHistory(getAllChatSessions());
+    
+    // Refresh history from Firestore
+    const firestoreHistory = await getAllChatSessionsFromFirestore();
+    setChatHistory(firestoreHistory.length > 0 ? firestoreHistory : getAllChatSessions());
   }, []);
 
-  // Persist messages to current session whenever they change
+  // Persist messages to current session whenever they change (to both local and Firestore)
   useEffect(() => {
     if (currentSessionId && messages.length > 0 && sessionInitializedRef.current) {
       const session = getChatSession(currentSessionId);
@@ -337,6 +406,8 @@ export function AIProvider({ children }) {
           timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp,
         }));
         saveChatSession(session);
+        // Also save to Firestore (debounced by Firestore's internal handling)
+        saveChatSessionToFirestore(session);
       }
     }
   }, [messages, currentSessionId]);

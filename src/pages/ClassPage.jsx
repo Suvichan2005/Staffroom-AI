@@ -73,7 +73,6 @@ export default function ClassPage() {
   const [attendanceVersion, setAttendanceVersion] = useState(0);
   const progressCardRef = useRef(null);
   const attendanceEditorRef = useRef(null);
-  const [activeTab, setActiveTab] = useState("overview");
   const [attendanceExpanded, setAttendanceExpanded] = useState(false);
   
   const clearSaveMessage = () => {
@@ -135,6 +134,25 @@ export default function ClassPage() {
   const isWithinWindow = useClassTimer(schedules, 15);
 
   const [showHistory, setShowHistory] = useState(false);
+
+  // Support tab switching via URL query param
+  const initialTab = useMemo(() => {
+    const tabParam = search.get('tab');
+    if (tabParam && ['overview', 'syllabus', 'attendance', 'assessments'].includes(tabParam)) {
+      return tabParam;
+    }
+    return 'overview';
+  }, [search]);
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
+  
+  // Sync tab with URL changes
+  useEffect(() => {
+    const tabParam = search.get('tab');
+    if (tabParam && ['overview', 'syllabus', 'attendance', 'assessments'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [search]);
 
   // Calculate progress percentage
   const progressPercent = useMemo(() => 

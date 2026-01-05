@@ -9,6 +9,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { PageShell } from '../components/layout';
 import { useAuth } from '../context/AuthContext';
+import { useTeacher } from '../context/TeacherContext';
 import { resetDemoState, seedDemoDataForUser } from '../data/dummyData';
 import { resetUserNamespace, markUserInitialized } from '../utils/userScopedStorage';
 // Activity Logs disabled - uncomment when needed
@@ -23,6 +24,9 @@ import { resetUserNamespace, markUserInitialized } from '../utils/userScopedStor
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
+  const teacherCtx = useTeacher();
+  const persona = teacherCtx?.persona || 'teacher';
+  const isAdmin = persona === 'admin';
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState({
@@ -289,20 +293,22 @@ export default function SettingsPage() {
             <h2 className="text-sm font-semibold text-red-600">Danger Zone</h2>
           </div>
           <div className="p-5 space-y-3">
-            {/* Reset Demo Data */}
-            <button 
-              onClick={handleResetDemoData}
-              disabled={resetting}
-              className="w-full flex items-center justify-between p-4 rounded-xl border border-amber-200 hover:bg-amber-50 transition-colors disabled:opacity-50"
-            >
-              <div className="flex items-center gap-3">
-                <RefreshCcw className={`w-5 h-5 text-amber-500 ${resetting ? 'animate-spin' : ''}`} />
-                <div className="text-left">
-                  <p className="text-sm font-medium text-amber-600">Reset Demo Data</p>
-                  <p className="text-xs text-amber-500">Clear your sandbox and start fresh with demo data</p>
+            {/* Reset Demo Data - Only visible in admin mode */}
+            {isAdmin && (
+              <button 
+                onClick={handleResetDemoData}
+                disabled={resetting}
+                className="w-full flex items-center justify-between p-4 rounded-xl border border-amber-200 hover:bg-amber-50 transition-colors disabled:opacity-50"
+              >
+                <div className="flex items-center gap-3">
+                  <RefreshCcw className={`w-5 h-5 text-amber-500 ${resetting ? 'animate-spin' : ''}`} />
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-amber-600">Reset Demo Data</p>
+                    <p className="text-xs text-amber-500">Clear your sandbox and start fresh with demo data</p>
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            )}
             {/* Sign Out */}
             <button 
               onClick={handleSignOut}

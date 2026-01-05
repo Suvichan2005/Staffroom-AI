@@ -91,6 +91,13 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
     return now >= before && now <= after;
   };
 
+  // Determine the title based on props
+  const title = useMemo(() => {
+    if (showDateSelector) return formatSelectedDate() + "'s Classes";
+    if (daysAhead === 0) return "Today's Schedule";
+    return "Upcoming Classes";
+  }, [showDateSelector, daysAhead, formatSelectedDate]);
+
   return (
     <div className={`sc-card ${className}`.trim()} aria-label="Upcoming classes">
       <div className="flex items-center justify-between mb-3">
@@ -100,9 +107,7 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
               <Clock className="w-4 h-4 text-indigo-600" />
             </div>
           )}
-          <h3 className="sc-heading text-base mb-0">
-            {showDateSelector ? formatSelectedDate() + "'s Classes" : "Upcoming Classes"}
-          </h3>
+          <h3 className="sc-heading text-base mb-0">{title}</h3>
         </div>
         
         {showDateSelector && (

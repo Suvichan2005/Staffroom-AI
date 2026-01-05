@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, Plus, Search, Clock, Users, CheckCircle2, 
   AlertTriangle, Calendar, Edit, Trash2, Eye, GraduationCap,
-  ClipboardList, BookOpen, Award, X, Save, ChevronDown, Sparkles, RefreshCw
+  ClipboardList, BookOpen, Award, X, Save, ChevronDown, Sparkles, RefreshCw,
+  LayoutGrid, List
 } from "lucide-react";
 import { PageShell } from "../components/layout";
 import { 
@@ -23,6 +24,7 @@ import {
 import { useTeacher } from "../context/TeacherContext";
 import { toast } from "react-hot-toast";
 import { generateQuiz } from "../services/aiService";
+import GradeBookMatrix from "../components/teacher/GradeBookMatrix";
 
 export default function Assessments() {
   const teacherCtx = useTeacher();
@@ -35,6 +37,7 @@ export default function Assessments() {
   const [showGradingModal, setShowGradingModal] = useState(false);
   const [selectedAssessment, setSelectedAssessment] = useState(null);
   const [grades, setGrades] = useState({});
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'gradebook'
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -350,15 +353,48 @@ export default function Assessments() {
           <h1 className="text-2xl font-bold text-black-800">Assessments</h1>
           <p className="text-sm text-black-500 mt-1">Manage assignments, tests, and quizzes across all classes</p>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-lg shadow-indigo-200"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Create Assessment</span>
-        </motion.button>
+        <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex items-center bg-black-100 rounded-xl p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                viewMode === 'list' 
+                  ? 'bg-white text-indigo-600 shadow-sm' 
+                  : 'text-black-500 hover:text-black-700'
+              }`}
+            >
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">List</span>
+            </button>
+            <button
+              onClick={() => {
+                setViewMode('gradebook');
+                // Auto-select first class if none selected
+                if (classFilter === 'all' && allClasses.length > 0) {
+                  setClassFilter(allClasses[0].id);
+                }
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                viewMode === 'gradebook' 
+                  ? 'bg-white text-indigo-600 shadow-sm' 
+                  : 'text-black-500 hover:text-black-700'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Grade Book</span>
+            </button>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-lg shadow-indigo-200"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Create Assessment</span>
+          </motion.button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -450,10 +486,11 @@ export default function Assessments() {
         </div>
       </div>
 
-      {/* Assessments List */}
-      <div className="space-y-3">
-        <AnimatePresence mode="popLayout">
-          {filteredAssessments.map((assessment, idx) => (
+      {/* Assessments List or Grade Book */}
+      {viewMode === 'list' ? (
+        <div className="space-y-3">
+          <AnimatePresence mode="popLayout">
+            {filteredAssessments.map((assessment, idx) => (
             <motion.div
               key={assessment.id}
               layout
@@ -566,6 +603,23 @@ export default function Assessments() {
           </div>
         )}
       </div>
+      ) : (
+        /* Grade Book Matrix View */
+        <div className="bg-white rounded-2xl border border-black-200 p-6">
+          {classFilter === 'all' ? (
+            <div className="text-center py-12">
+              <LayoutGrid className="w-12 h-12 mx-auto mb-3 text-black-300" />
+              <p className="text-black-600 font-medium">Select a class to view grades</p>
+              <p className="text-sm text-black-500 mt-1">Choose a specific class from the filter above</p>
+            </div>
+          ) : (
+            <GradeBookMatrix 
+              classId={classFilter} 
+              courseId={allClasses.find(c => c.id === classFilter)?.courseId}
+            />
+          )}
+        </div>
+      )}
 
       {/* Create Assessment Modal */}
       <AnimatePresence>

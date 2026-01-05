@@ -308,19 +308,63 @@ export default function SyllabusProgress({
   onSave,
   editable = false,
   statusMessage = "",
+  autoSave = true, // New prop: enable auto-save (default true)
+  autoSaveDelay = 2000, // Debounce delay in ms
 }) {
   const [localProgress, setLocalProgress] = useState(() => buildNormalizedProgress(syllabus, progressMap));
   const [isDirty, setIsDirty] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState(''); // 'saving', 'saved', ''
   const [expandedChapters, setExpandedChapters] = useState({});
   const [editingPage, setEditingPage] = useState(null); // { chapterIndex, topicIndex, buttonEl }
   const [editingNotes, setEditingNotes] = useState(null); // { chapterIndex, topicIndex }
   const [confirmingDone, setConfirmingDone] = useState(null); // { chapterIndex, topicIndex }
+  const autoSaveTimeoutRef = useRef(null);
+  const savedStatusTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (!editable || !isDirty) {
       setLocalProgress(buildNormalizedProgress(syllabus, progressMap));
     }
   }, [syllabus, progressMap, editable, isDirty]);
+
+  // Auto-save effect with debounce
+  useEffect(() => {
+    if (!autoSave || !editable || !onSave || !isDirty) return;
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    // Set new debounced save
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      setAutoSaveStatus('saving');
+      onSave(localProgress);
+      setIsDirty(false);
+      
+      // Show "saved" status briefly
+      setTimeout(() => {
+        setAutoSaveStatus('saved');
+        savedStatusTimeoutRef.current = setTimeout(() => {
+          setAutoSaveStatus('');
+        }, 2000);
+      }, 300);
+    }, autoSaveDelay);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [localProgress, isDirty, autoSave, editable, onSave, autoSaveDelay]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) clearTimeout(autoSaveTimeoutRef.current);
+      if (savedStatusTimeoutRef.current) clearTimeout(savedStatusTimeoutRef.current);
+    };
+  }, []);
 
   // Auto-expand chapters with ongoing topics
   useEffect(() => {
@@ -505,8 +549,27 @@ export default function SyllabusProgress({
 
   const handleSave = () => {
     if (!editable || !onSave || !isDirty) return;
+    // Clear any pending auto-save
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    setAutoSaveStatus('saving');
     onSave(localProgress);
     setIsDirty(false);
+    setTimeout(() => {
+      setAutoSaveStatus('saved');
+      savedStatusTimeoutRef.current = setTimeout(() => {
+        setAutoSaveStatus('');
+      }, 2000);
+    }, 300);
+  };
+
+  // Get save button text based on status
+  const getSaveButtonContent = () => {
+    if (autoSaveStatus === 'saving') return 'Saving...';
+    if (autoSaveStatus === 'saved') return '✓ Saved';
+    if (autoSave && isDirty) return 'Auto-saving...';
+    return 'Save Progress';
   };
 
   // Get last covered topic
@@ -563,21 +626,25 @@ export default function SyllabusProgress({
             <button
               type="button"
               onClick={handleSave}
-              disabled={!isDirty}
+              disabled={!isDirty && autoSaveStatus !== 'saved'}
               className={`ml-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                isDirty
-                  ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
-                  : "bg-black-200 text-black-500 cursor-not-allowed"
+                autoSaveStatus === 'saved'
+                  ? "bg-green-100 text-green-700"
+                  : autoSaveStatus === 'saving' || (autoSave && isDirty)
+                    ? "bg-indigo-100 text-indigo-600"
+                    : isDirty
+                      ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
+                      : "bg-black-200 text-black-500 cursor-not-allowed"
               }`}
             >
-              Save Progress
+              {getSaveButtonContent()}
             </button>
           )}
           <span className="sc-badge">{overallPercent}%</span>
         </div>
       </div>
 
-      {statusMessage && !isDirty && (
+      {statusMessage && !isDirty && !autoSaveStatus && (
         <motion.p
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
