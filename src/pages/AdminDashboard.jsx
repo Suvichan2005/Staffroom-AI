@@ -5,7 +5,7 @@ import {
   BookOpen, UploadCloud, Users, ClipboardList, ActivitySquare,
   TrendingUp, GraduationCap, Building2, Shield, Settings, Bell,
   CheckCircle2, AlertTriangle, Clock, FileText, ChevronRight, Sparkles,
-  UserPlus, FileSpreadsheet
+  UserPlus, FileSpreadsheet, Calendar
 } from "lucide-react";
 import { PageShell } from "../components/layout";
 import { getAdminSummary, students, teacherData } from "../data/dummyData";
@@ -15,12 +15,13 @@ import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, PieChart, 
 import AdminOnboardingWizard from "../components/shared/AdminOnboardingWizard";
 import TeacherManagement from "../components/admin/TeacherManagement";
 import StudentRosterUpload from "../components/admin/StudentRosterUpload";
+import TimetableManager from "../components/admin/TimetableManager";
 
 const SIDEBAR_ITEMS = [
   { id: "overview", label: "School Overview", icon: ActivitySquare },
   { id: "teachers", label: "Teacher Management", icon: UserPlus },
   { id: "students", label: "Student Roster", icon: FileSpreadsheet },
-  { id: "timetable", label: "Timetable Upload", icon: UploadCloud },
+  { id: "timetable", label: "Timetable Manager", icon: Calendar },
   { id: "mapping", label: "Class Mapping", icon: ClipboardList },
   { id: "logs", label: "System Logs", icon: BookOpen },
 ];
@@ -581,7 +582,7 @@ export default function AdminDashboard() {
           {activeTab === "overview" && renderOverview()}
           {activeTab === "teachers" && <TeacherManagement />}
           {activeTab === "students" && <StudentRosterUpload />}
-          {activeTab === "timetable" && renderTimetable()}
+          {activeTab === "timetable" && <TimetableManager />}
           {activeTab === "mapping" && renderMapping()}
           {activeTab === "logs" && renderLogs()}
         </section>

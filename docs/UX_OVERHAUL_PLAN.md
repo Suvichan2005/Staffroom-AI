@@ -1210,7 +1210,7 @@ The current analytics implementation is sophisticated but premature for MVP. Rec
 | Admin onboarding wizard | ✅ DONE | `AdminOnboardingWizard.jsx` - 5-step school setup wizard |
 | Teacher invitation flow | ✅ DONE | `TeacherManagement.jsx` - Invite teachers via email, manage subjects |
 | CSV student roster upload | ✅ DONE | `StudentRosterUpload.jsx` - Drag-drop CSV import with validation |
-| Basic timetable upload | ⏳ Pending | |
+| Timetable manager | ✅ DONE | `TimetableManager.jsx` - Visual grid editor + CSV import/export |
 | Parent portal structure | ⏳ Pending | Deferred - not MVP critical |
 
 17. **`src/components/shared/AdminOnboardingWizard.jsx`** - NEW
@@ -1233,11 +1233,71 @@ The current analytics implementation is sophisticated but premature for MVP. Rec
     - Progress tracking for large imports
     - Storage: `admin:students`, `admin:importedStudentCount`
 
-20. **`src/pages/AdminDashboard.jsx`** - Updated
-    - Added "Teachers" and "Student Roster" tabs to sidebar
+20. **`src/components/admin/TimetableManager.jsx`** - NEW
+    - Visual grid: Days × Time slots with subject/teacher cells
+    - Click to edit mode with inline cell editor
+    - Color-coded subjects for quick identification
+    - CSV import with template download
+    - Export current timetable to CSV
+    - Per-class timetable management
+    - Break/lunch slot detection
+
+21. **`src/pages/AdminDashboard.jsx`** - Updated
+    - Added "Teachers", "Student Roster", and "Timetable Manager" tabs to sidebar
     - Integrated AdminOnboardingWizard modal
     - School setup prompt banner for new admins
-    - Tab rendering for new components
+    - Tab rendering for all new components
+
+### Phase 4 Progress (January 2026)
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Feature tooltips and help | ✅ DONE | `FeatureTooltips.jsx` - Context-aware tips with floating help button |
+| Loading states & skeletons | ✅ DONE | `Skeletons.jsx` - Full skeleton component library |
+| Error handling improvements | ✅ DONE | `errorHandler.js` - Toast notifications, error classification |
+| Keyboard shortcuts | ✅ DONE | `useKeyboardShortcuts.jsx` - Global navigation shortcuts |
+| Performance optimization | ⏳ Pending | Bundle size warning - needs code splitting |
+
+22. **`src/components/shared/FeatureTooltips.jsx`** - NEW
+    - TooltipProvider context for managing tooltip state
+    - FeatureTooltip inline component with pulse animation for unseen tips
+    - FloatingHelpButton shows context-aware tips per page
+    - GuidedTour component for first-time user walkthrough
+    - FEATURE_TIPS definitions for all major features
+    - Remembers seen tooltips in user storage
+
+23. **`src/components/shared/Skeletons.jsx`** - NEW
+    - Base Skeleton with shimmer animation
+    - SkeletonText, SkeletonCard, SkeletonStatCard
+    - SkeletonTable, SkeletonList, SkeletonChart
+    - Page-level skeletons: DashboardSkeleton, ClassPageSkeleton, SyllabusSkeleton
+    - LoadingOverlay, Spinner, EmptyState components
+
+24. **`src/utils/errorHandler.js`** - NEW
+    - ErrorType classification (network, auth, validation, etc.)
+    - User-friendly error messages with recovery options
+    - showErrorToast, showSuccessToast, showWarningToast, showInfoToast
+    - withErrorHandling wrapper for async functions
+    - useAsyncHandler hook for operations with loading states
+    - Global error and network status listeners
+
+25. **`src/hooks/useKeyboardShortcuts.jsx`** - NEW
+    - KeyboardShortcutsProvider with global shortcut handling
+    - Navigation shortcuts: g+d (dashboard), g+c (classes), etc.
+    - Action shortcuts: / (focus chat), Ctrl+K (command palette), Escape (close)
+    - ? shows keyboard shortcuts modal
+    - Sequence detection for multi-key shortcuts (g+d)
+    - Respects input field focus
+
+26. **`src/App.jsx`** - Updated
+    - Added TooltipProvider wrapper
+    - Added KeyboardShortcutsProvider wrapper
+    - All providers now properly nested
+
+27. **`src/components/layout/ResponsiveLayout.jsx`** - Updated
+    - Added FloatingHelpButton to all pages
+    - Context detection based on current route
+    - Help button hidden on auth pages
 
 ---
 
@@ -1248,10 +1308,11 @@ The current analytics implementation is sophisticated but premature for MVP. Rec
 **Next Steps:**
 1. ~~Review this plan with stakeholders~~ ✅
 2. ~~Prioritize Phase 1 tasks~~ ✅
-3. ~~Begin implementation (only after approval)~~ ✅ Complete
+3. ~~Begin implementation (only after approval)~ ✅ Complete
 4. ~~Phase 1: All tasks complete~~ ✅
 5. ~~Phase 2: All core tasks complete~~ ✅
 6. ~~Deploy Firestore rules~~ ✅ (`firebase deploy --only firestore:rules`)
 7. ~~Phase 3: Core admin features complete~~ ✅
-8. Optional: Timetable upload enhancement
-9. Production testing and feedback collection
+8. ~~Phase 4: Polish features complete~~ ✅
+9. Optional: Performance optimization (code splitting)
+10. Production testing and feedback collection
