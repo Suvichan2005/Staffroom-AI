@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import React, { Suspense, useEffect, useRef } from "react";
+import React, { Suspense, useEffect, useRef, lazy } from "react";
 
 // Context Providers
 import { LayoutProvider } from "./context/LayoutContext";
@@ -13,34 +13,44 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 // Activity Logging
 import { logInfo, LogCategory } from "./services/activityLogger";
 
-// Original Pages
+// Core pages (loaded immediately for fast initial load)
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import AITest from "./pages/AITest";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
-import CoursePage from "./pages/CoursePage";
-import ClassPage from "./pages/ClassPage";
-import Assessments from "./pages/Assessments";
-import SharedResources from "./pages/SharedResources";
-import HODDashboard from "./pages/HODDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import { ProtectedRoute, AdminRoute } from "./components/shared";
 
-// New Pages
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import ClassesPage from "./pages/ClassesPage";
-import SchedulePage from "./pages/SchedulePage";
-import DebugIntegrations from "./pages/DebugIntegrations";
-import ChatPage from "./pages/ChatPage";
-import LogsPage from "./pages/LogsPage";
+// Lazy-loaded pages (code split for smaller initial bundle)
+const ClassPage = lazy(() => import("./pages/ClassPage"));
+const ClassesPage = lazy(() => import("./pages/ClassesPage"));
+const CoursePage = lazy(() => import("./pages/CoursePage"));
+const Assessments = lazy(() => import("./pages/Assessments"));
+const SharedResources = lazy(() => import("./pages/SharedResources"));
+const HODDashboard = lazy(() => import("./pages/HODDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SchedulePage = lazy(() => import("./pages/SchedulePage"));
+const ChatPage = lazy(() => import("./pages/ChatPage"));
+
+// Dev/Admin pages (rarely accessed, always lazy)
+const AITest = lazy(() => import("./pages/AITest"));
+const DebugIntegrations = lazy(() => import("./pages/DebugIntegrations"));
+const LogsPage = lazy(() => import("./pages/LogsPage"));
+
+// Shared components
+import { ProtectedRoute, AdminRoute } from "./components/shared";
 
 // New Dashboard Components
 import { ResponsiveDashboard } from "./components/dashboard";
 
 // New Layout Components
 import { ResponsiveLayout } from './components/layout';
+
+// Feature Tooltips
+import { TooltipProvider } from './components/shared/FeatureTooltips';
+
+// Keyboard Shortcuts
+import { KeyboardShortcutsProvider } from './hooks/useKeyboardShortcuts';
 
 // Styles
 import './styles/tokens.css';
@@ -142,6 +152,8 @@ export default function App() {
     <ErrorBoundary>
       <LayoutProvider>
         <AIProvider>
+          <TooltipProvider>
+          <KeyboardShortcutsProvider>
           <div className="min-h-screen bg-black-50 text-black-900">
           <ScrollToTop />
           <Toaster 
@@ -331,6 +343,8 @@ export default function App() {
             } />
           </Routes>
         </div>
+        </KeyboardShortcutsProvider>
+        </TooltipProvider>
         </AIProvider>
       </LayoutProvider>
     </ErrorBoundary>

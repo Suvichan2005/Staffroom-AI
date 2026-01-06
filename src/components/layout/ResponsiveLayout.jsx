@@ -1,7 +1,18 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import MobileLayout from './MobileLayout';
 import DesktopLayout from './DesktopLayout';
+import { FloatingHelpButton } from '../shared/FeatureTooltips';
+
+// Map routes to help contexts
+const HELP_CONTEXTS = {
+  '/dashboard': 'dashboard',
+  '/class': 'classPage',
+  '/assessments': 'assessments',
+  '/hod': 'hod',
+  '/admin': 'dashboard'
+};
 
 /**
  * Responsive Layout Component
@@ -24,6 +35,20 @@ export default function ResponsiveLayout({
   hideChatbox,
 }) {
   const { isMobile } = useMediaQuery();
+  const location = useLocation();
+  
+  // Determine help context based on current route
+  const getHelpContext = () => {
+    for (const [route, context] of Object.entries(HELP_CONTEXTS)) {
+      if (location.pathname.startsWith(route)) {
+        return context;
+      }
+    }
+    return 'dashboard';
+  };
+
+  // Don't show help button on auth pages
+  const showHelp = !hideNav;
 
   if (isMobile) {
     return (
@@ -35,6 +60,7 @@ export default function ResponsiveLayout({
         hideChatbox={hideChatbox}
       >
         {children}
+        {showHelp && <FloatingHelpButton context={getHelpContext()} />}
       </MobileLayout>
     );
   }
@@ -42,6 +68,7 @@ export default function ResponsiveLayout({
   return (
     <DesktopLayout hideNav={hideNav} hideChatbox={hideChatbox}>
       {children}
+      {showHelp && <FloatingHelpButton context={getHelpContext()} />}
     </DesktopLayout>
   );
 }
