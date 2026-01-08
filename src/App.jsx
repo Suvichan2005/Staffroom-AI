@@ -31,6 +31,7 @@ const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SchedulePage = lazy(() => import("./pages/SchedulePage"));
 const ChatPage = lazy(() => import("./pages/ChatPage"));
+const ClassManagementPage = lazy(() => import("./pages/ClassManagementPage"));
 
 // Dev/Admin pages (rarely accessed, always lazy)
 const AITest = lazy(() => import("./pages/AITest"));
@@ -63,7 +64,7 @@ function ScrollToTop() {
   const { user, loading } = useAuth();
   const previousPath = useRef(null);
   const isInitialLoad = useRef(true);
-  
+
   useEffect(() => {
     // Skip logging on initial page load (prevents "anonymous" logs)
     if (isInitialLoad.current) {
@@ -80,7 +81,7 @@ function ScrollToTop() {
       });
       previousPath.current = pathname;
     }
-    
+
     // Scroll window to top
     window.scrollTo(0, 0);
     // Also scroll main content areas if they exist
@@ -89,7 +90,7 @@ function ScrollToTop() {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   }, [pathname, user, loading]);
-  
+
   return null;
 }
 
@@ -153,198 +154,207 @@ export default function App() {
       <LayoutProvider>
         <AIProvider>
           <TooltipProvider>
-          <KeyboardShortcutsProvider>
-          <div className="min-h-screen bg-black-50 text-black-900">
-          <ScrollToTop />
-          <Toaster 
-            position="top-right" 
-            toastOptions={{ 
-              duration: 2400,
-              style: {
-                background: '#fff',
-                color: '#1e293b',
-                borderRadius: '12px',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-            },
-          }} 
-        />
-        
-        <Routes>
-            {/* Landing & Auth - No nav */}
-            <Route path="/" element={
-              <AuthLayout>
-                <Landing />
-              </AuthLayout>
-            } />
-            <Route path="/login" element={
-              <PublicRoute>
-                <AuthLayout>
-                  <Login />
-                </AuthLayout>
-              </PublicRoute>
-            } />
-            <Route path="/register" element={
-              <PublicRoute>
-                <AuthLayout>
-                  <Register />
-                </AuthLayout>
-              </PublicRoute>
-            } />
-            {/* AI Test Page - Admin only */}
-            <Route path="/ai-test" element={
-              <AdminRoute>
-                <AuthLayout>
-                  <AITest />
-                </AuthLayout>
-              </AdminRoute>
-            } />
-            
-            {/* Dashboard - New responsive design */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <ResponsiveDashboard />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Classic Dashboard - Original design */}
-            <Route path="/dashboard/classic" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <Dashboard />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Course Page */}
-            <Route path="/course/:courseId" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <CoursePage />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Class Page - Original route */}
-            <Route path="/course/:courseId/class/:classId" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <ClassPage />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Assessments */}
-            <Route path="/assessments" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <Assessments />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Shared Resources */}
-            <Route path="/resources" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <SharedResources />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* HOD Dashboard */}
-            <Route path="/hod-dashboard" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <HODDashboard />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Admin Dashboard */}
-            <Route path="/admin-dashboard" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <AdminDashboard />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Classes Page - for BottomNav */}
-            <Route path="/classes" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <ClassesPage />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Schedule Page - for BottomNav */}
-            <Route path="/schedule" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <SchedulePage />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Profile Page */}
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <ProfilePage />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Settings Page */}
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <SettingsPage />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* AI Chat Page - Full page chat experience */}
-            <Route path="/chat" element={
-              <ProtectedRoute>
-                <AppLayout>
-                  <ChatPage />
-                </AppLayout>
-              </ProtectedRoute>
-            } />
-            
-            {/* Admin Logs Page - Admin only */}
-            <Route path="/logs" element={
-              <AdminRoute>
-                <LogsPage />
-              </AdminRoute>
-            } />
-            
-            {/* Debug Integrations Page - Admin only */}
-            <Route path="/_debug" element={
-              <AdminRoute>
-                <AppLayout>
-                  <DebugIntegrations />
-                </AppLayout>
-              </AdminRoute>
-            } />
-            
-            {/* 404 */}
-            <Route path="*" element={
-              <AppLayout>
-                <div className="p-6 text-center">
-                  <h1 className="text-2xl font-bold text-black-800 mb-2">Page Not Found</h1>
-                  <p className="text-black-600">The page you're looking for doesn't exist.</p>
-                </div>
-              </AppLayout>
-            } />
-          </Routes>
-        </div>
-        </KeyboardShortcutsProvider>
-        </TooltipProvider>
+            <KeyboardShortcutsProvider>
+              <div className="min-h-screen bg-black-50 text-black-900">
+                <ScrollToTop />
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 2400,
+                    style: {
+                      background: '#fff',
+                      color: '#1e293b',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    },
+                  }}
+                />
+
+                <Routes>
+                  {/* Landing & Auth - No nav */}
+                  <Route path="/" element={
+                    <AuthLayout>
+                      <Landing />
+                    </AuthLayout>
+                  } />
+                  <Route path="/login" element={
+                    <PublicRoute>
+                      <AuthLayout>
+                        <Login />
+                      </AuthLayout>
+                    </PublicRoute>
+                  } />
+                  <Route path="/register" element={
+                    <PublicRoute>
+                      <AuthLayout>
+                        <Register />
+                      </AuthLayout>
+                    </PublicRoute>
+                  } />
+                  {/* AI Test Page - Admin only */}
+                  <Route path="/ai-test" element={
+                    <AdminRoute>
+                      <AuthLayout>
+                        <AITest />
+                      </AuthLayout>
+                    </AdminRoute>
+                  } />
+
+                  {/* Dashboard - New responsive design */}
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <ResponsiveDashboard />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Classic Dashboard - Original design */}
+                  <Route path="/dashboard/classic" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Dashboard />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Course Page */}
+                  <Route path="/course/:courseId" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <CoursePage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Class Page - Original route */}
+                  <Route path="/course/:courseId/class/:classId" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <ClassPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Assessments */}
+                  <Route path="/assessments" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <Assessments />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Shared Resources */}
+                  <Route path="/resources" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <SharedResources />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* HOD Dashboard */}
+                  <Route path="/hod-dashboard" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <HODDashboard />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Admin Dashboard */}
+                  <Route path="/admin-dashboard" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <AdminDashboard />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Class Management Page */}
+                  <Route path="/manage-classes" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <ClassManagementPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Classes Page - for BottomNav */}
+                  <Route path="/classes" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <ClassesPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Schedule Page - for BottomNav */}
+                  <Route path="/schedule" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <SchedulePage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Profile Page */}
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <ProfilePage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Settings Page */}
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <SettingsPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* AI Chat Page - Full page chat experience */}
+                  <Route path="/chat" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <ChatPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Admin Logs Page - Admin only */}
+                  <Route path="/logs" element={
+                    <AdminRoute>
+                      <LogsPage />
+                    </AdminRoute>
+                  } />
+
+                  {/* Debug Integrations Page - Admin only */}
+                  <Route path="/_debug" element={
+                    <AdminRoute>
+                      <AppLayout>
+                        <DebugIntegrations />
+                      </AppLayout>
+                    </AdminRoute>
+                  } />
+
+                  {/* 404 */}
+                  <Route path="*" element={
+                    <AppLayout>
+                      <div className="p-6 text-center">
+                        <h1 className="text-2xl font-bold text-black-800 mb-2">Page Not Found</h1>
+                        <p className="text-black-600">The page you're looking for doesn't exist.</p>
+                      </div>
+                    </AppLayout>
+                  } />
+                </Routes>
+              </div>
+            </KeyboardShortcutsProvider>
+          </TooltipProvider>
         </AIProvider>
       </LayoutProvider>
     </ErrorBoundary>
