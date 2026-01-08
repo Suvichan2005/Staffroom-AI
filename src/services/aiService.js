@@ -107,29 +107,32 @@ function extractRetryDelay(error) {
 
 /**
  * Core AI call function with retry logic
+ * Supports Azure OpenAI, Gemini, and mock responses
  */
 async function callGemini(prompt, usePro = false, retryCount = 0) {
   const startTime = Date.now();
   const modelName = usePro ? MODELS.PRO : MODELS.TEXT;
   
-  // Use proxy in production (API keys are server-side)
-  if (USE_PROXY) {
+  // Use unified AI client for Azure or when proxy is enabled
+  // This handles both production (proxy) and dev (direct Azure calls)
+  if (USE_PROXY || AI_PROVIDER === 'azure') {
     try {
+      const useCase = usePro ? 'analysis' : 'chat';
       const result = await callAIGenerate({
         prompt,
-        // Note: The proxy uses gemini-1.5-flash, system instruction can be added if needed
+        useCase,
       });
       
       const text = result.text || '';
       logGeminiCall('callGemini', { 
         promptPreview: prompt.substring(0, 200), 
-        model: 'proxy',
+        model: AI_PROVIDER === 'azure' ? `azure-${useCase}` : 'proxy',
         retryCount 
       }, text, Date.now() - startTime);
       
       return text;
     } catch (error) {
-      console.error('AI Proxy Error:', error);
+      console.error('AI API Error:', error);
       
       // Handle rate limit with retry
       if (error.message?.includes('Rate limit') && retryCount < RATE_LIMIT_CONFIG.maxRetries) {
@@ -141,17 +144,17 @@ async function callGemini(prompt, usePro = false, retryCount = 0) {
       
       logGeminiCall('callGemini', { 
         promptPreview: prompt.substring(0, 200), 
-        model: 'proxy',
+        model: AI_PROVIDER,
         retryCount 
       }, null, Date.now() - startTime, error);
       
       // Fallback to mock on error
-      console.warn('Proxy call failed, using mock response');
+      console.warn('AI call failed, using mock response');
       return getMockResponse(prompt);
     }
   }
   
-  // Direct API call (development mode)
+  // Direct Gemini API call (development mode with Gemini)
   if (!genAI) {
     console.warn('Using mock response - no API key');
     const mockResponse = getMockResponse(prompt);
