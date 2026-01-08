@@ -20,27 +20,43 @@ import { callAIGenerate } from './aiApiClient';
 
 /**
  * AI Service for School Companion
- * Wraps Google Gemini API for various AI features
  * 
- * Features:
- * - Voice transcript parsing with function calling
- * - Quiz/Assignment generation
- * - Student analysis
- * - Daily briefing generation
+ * Supports multiple AI providers:
+ * - Azure OpenAI (GPT-4.1 series) - Primary for Imagine Cup
+ * - Google Gemini - Fallback
+ * - Mock responses - Development/testing
+ * 
+ * Provider is selected via VITE_AI_PROVIDER environment variable.
  */
 
+// Provider configuration
+const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const AZURE_CONFIGURED = !!(import.meta.env.VITE_AZURE_OPENAI_ENDPOINT && import.meta.env.VITE_AZURE_OPENAI_API_KEY);
 
 // In production, we use Firebase Cloud Functions proxy (API keys are server-side)
-// In development, you can use direct API calls with VITE_GEMINI_API_KEY
+// In development, you can use direct API calls with API keys
 const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
 
-if (!USE_PROXY && !GEMINI_API_KEY) {
-  console.warn('⚠️  VITE_GEMINI_API_KEY not found. AI features will use mock responses.');
+// Check provider availability
+const isProviderReady = () => {
+  if (USE_PROXY) return true; // Proxy handles provider selection server-side
+  if (AI_PROVIDER === 'azure') return AZURE_CONFIGURED;
+  if (AI_PROVIDER === 'gemini') return !!GEMINI_API_KEY;
+  if (AI_PROVIDER === 'mock') return true;
+  return false;
+};
+
+if (!isProviderReady()) {
+  console.warn(`⚠️  AI Provider "${AI_PROVIDER}" not configured. AI features will use mock responses.`);
+} else {
+  console.log(`✅ AI Provider: ${AI_PROVIDER}${USE_PROXY ? ' (via proxy)' : ''}`);
 }
 
-// Initialize Gemini (only needed for direct API calls in dev)
-const genAI = (!USE_PROXY && GEMINI_API_KEY) ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+// Initialize Gemini (only needed for direct Gemini API calls in dev)
+const genAI = (!USE_PROXY && AI_PROVIDER === 'gemini' && GEMINI_API_KEY) 
+  ? new GoogleGenerativeAI(GEMINI_API_KEY) 
+  : null;
 
 // Models
 const MODELS = {
@@ -2026,6 +2042,179 @@ function getMockBriefing() {
 }
 
 // ============================================================================
+// AZURE CHAT PROCESSING
+// ============================================================================
+
+/**
+ * Process chat message using Azure OpenAI with function calling
+ * This is an alternative to the Gemini chat processing
+ */
+async function processAzureChat(text, conversationHistory, context, startTime) {
+  console.log('[processAzureChat] Processing with Azure OpenAI');
+  
+  // Get temporal context
+  const temporal = getTemporalContext();
+  
+  // Build system instruction (same as Gemini)
+  const systemInstruction = `You are a helpful AI teaching assistant for a school management app. You help teachers with:
+- Tracking syllabus progress
+- Finding the next topic to teach
+- Viewing schedules and attendance
+- Managing assignments
+- Identifying students at risk
+
+TEMPORAL CONTEXT (CURRENT TIME):
+📅 ${temporal.summary}
+${temporal.currentClass ? `🔴 You are IN CLASS right now with ${temporal.currentClass.classId}!` : ''}
+${temporal.todaySessions.length > 0 ? `Today's full schedule: ${temporal.todaySessions.map(s => `${s.classId} (${s.startTime})`).join(', ')}` : ''}
+
+CRITICAL CONTEXT RULES:
+1. The teacher is CURRENTLY VIEWING: ${context.urlContext?.sectionId ? `Section ${context.urlContext.sectionId} of ${context.urlContext?.courseId || 'a course'}` : 'the main dashboard'}
+2. When the user asks about "the page", "where I left off", "current topic", etc. WITHOUT specifying a section, USE THE CURRENT PAGE CONTEXT (${context.urlContext?.sectionId || 'unknown'})
+3. If user asks "what's next?" or "what should I teach?" - consider BOTH the current class (if in one) AND the page context
+4. ALWAYS check conversation history for context when user uses pronouns like "it", "that", "this"
+5. If user says "mark it as done" or "mark it complete", find the LAST topic mentioned in conversation and mark THAT topic
+
+TOOL USAGE RULES:
+1. Use the available tools to get real data - don't make up information
+2. When the user mentions a section like "8B" or "6A", use it in your tool calls
+3. If user asks about progress/page WITHOUT specifying section, use URL section: ${context.urlContext?.sectionId || 'ask for clarification'}
+4. For updateProgress: you need sectionId, chapterIndex, and topicIndex - get these from getSyllabus or searchTopic first
+
+RESPONSE RULES:
+1. Keep responses concise and use markdown formatting
+2. When reporting progress, ALWAYS include: topic name, chapter name, page range, and current page if in progress
+3. If you're unsure about a section or topic, ask for clarification
+4. Available sections: ${teacherData.courses.flatMap(c => c.sections.map(s => `${s.id} (${c.title})`)).join(', ')}`;
+
+  // Build history in Azure format
+  const history = conversationHistory.slice(-10).map(m => ({
+    role: m.role === 'assistant' ? 'assistant' : 'user',
+    content: m.content
+  }));
+  
+  // Call Azure via aiApiClient
+  try {
+    const response = await callAIGenerate({
+      prompt: text,
+      systemInstruction,
+      tools: [{ functionDeclarations: chatToolDeclarations }],
+      history,
+      useCase: 'tools' // Use gpt-4.1-mini for function calling
+    });
+    
+    console.log('[processAzureChat] Initial response:', response);
+    
+    // Handle function calls iteratively
+    let finalResponse = response;
+    let iterations = 0;
+    const maxIterations = 5;
+    
+    while (finalResponse.functionCalls && finalResponse.functionCalls.length > 0 && iterations < maxIterations) {
+      iterations++;
+      console.log(`[processAzureChat] Processing ${finalResponse.functionCalls.length} function calls (iteration ${iterations})`);
+      
+      // Execute all function calls
+      const toolResults = [];
+      for (const call of finalResponse.functionCalls) {
+        const { name, args } = call;
+        console.log(`[processAzureChat] Calling tool: ${name}`, args);
+        
+        const fn = toolFunctions[name];
+        let result;
+        
+        if (fn) {
+          try {
+            switch (name) {
+              case 'getAvailableCourses':
+                result = fn();
+                break;
+              case 'getSyllabus':
+                result = fn(args.courseId, args.subject, args.sectionId);
+                break;
+              case 'searchTopic':
+                result = fn(args.searchQuery, args.filterSubject, args.filterSectionId);
+                break;
+              case 'getProgress':
+                result = fn(args.sectionId);
+                break;
+              case 'getNextTopic':
+                result = fn(args.sectionId);
+                break;
+              case 'getSchedule':
+                result = fn(args.daysAhead);
+                break;
+              case 'getAttendance':
+                result = fn(args.sectionId);
+                break;
+              case 'getAssignments':
+                result = fn(args.sectionId);
+                break;
+              case 'getStudentsAtRisk':
+                result = fn();
+                break;
+              case 'updateProgress':
+                result = fn(args.sectionId, args.chapterIndex, args.topicIndex, args.status, { currentPage: args.currentPage, notes: args.notes });
+                break;
+              case 'findTopicByPage':
+                result = fn(args.sectionId, args.pageNumber);
+                break;
+              case 'navigateTo':
+                result = fn(args.destination, { courseId: args.courseId, sectionId: args.sectionId });
+                break;
+              default:
+                result = { error: `Unknown function: ${name}` };
+            }
+          } catch (err) {
+            console.error(`[processAzureChat] Error calling ${name}:`, err);
+            result = { error: err.message };
+          }
+        } else {
+          result = { error: `Unknown function: ${name}` };
+        }
+        
+        console.log(`[processAzureChat] Tool result for ${name}:`, result);
+        toolResults.push({
+          name,
+          result: JSON.stringify(result)
+        });
+      }
+      
+      // Build new history with tool results
+      const newHistory = [
+        ...history,
+        { role: 'user', content: text },
+        { role: 'assistant', content: JSON.stringify(finalResponse.functionCalls) },
+        { role: 'user', content: `Tool results:\n${toolResults.map(t => `${t.name}: ${t.result}`).join('\n')}` }
+      ];
+      
+      // Call Azure again with tool results
+      finalResponse = await callAIGenerate({
+        prompt: 'Based on the tool results above, provide a helpful response to the user.',
+        systemInstruction,
+        tools: [{ functionDeclarations: chatToolDeclarations }],
+        history: newHistory,
+        useCase: 'tools'
+      });
+    }
+    
+    // Log successful chat
+    logGeminiCall('processAzureChat', {
+      messagePreview: text.substring(0, 100),
+      model: 'azure-gpt-4.1-mini',
+      toolsUsed: iterations > 0,
+      iterations,
+    }, finalResponse.text, Date.now() - startTime);
+    
+    return finalResponse.text || "I processed your request but couldn't generate a response.";
+    
+  } catch (error) {
+    console.error('[processAzureChat] Error:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
 // LLM-FIRST CHAT AGENT
 // ============================================================================
 
@@ -2057,13 +2246,21 @@ export async function   processChat(message, conversationHistory = [], context =
     historyLength: conversationHistory.length 
   });
 
-  // If no API key, use simple fallback
-  if (!genAI) {
-    console.warn('No Gemini API key, using fallback response');
+  // Check if we can make AI calls (proxy mode or direct API access)
+  const canUseAI = USE_PROXY || isProviderReady();
+  
+  if (!canUseAI) {
+    console.warn(`[processChat] AI not available (provider: ${AI_PROVIDER}), using fallback response`);
     return getFallbackResponse(text, context, conversationHistory);
   }
 
   try {
+    // Route to Azure provider if configured
+    if (AI_PROVIDER === 'azure') {
+      return await processAzureChat(text, conversationHistory, context, startTime);
+    }
+    
+    // Gemini path (original code)
     // Build conversation history for context (last 10 messages)
     // IMPORTANT: Gemini requires history to start with 'user' role, not 'model'
     // Filter out leading assistant/model messages (like welcome message)

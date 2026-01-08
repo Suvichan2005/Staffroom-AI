@@ -163,13 +163,15 @@ export function trackError(error, context = {}) {
     });
   }
   
-  // Log to Firestore (async, non-blocking)
-  logToFirestore(LogCategory.ERROR, `[${category}] ${errorObj.message}`, {
-    ...errorData,
-    userId,
-  }).catch(() => {
+  // Log to Firestore (non-blocking) - logToFirestore returns a log entry, not a promise
+  try {
+    logToFirestore(LogCategory.ERROR, `[${category}] ${errorObj.message}`, {
+      ...errorData,
+      userId,
+    });
+  } catch {
     // Silent fail for error logging
-  });
+  }
   
   return errorData;
 }
@@ -285,12 +287,16 @@ export function captureUserFeedback(errorId, feedback, email = null) {
     });
   }
   
-  // Also log to Firestore
-  logToFirestore(LogCategory.ACTION, 'User feedback submitted', {
-    errorId,
-    feedback,
-    email,
-  }).catch(() => {});
+  // Also log to Firestore - logToFirestore returns a log entry, not a promise
+  try {
+    logToFirestore(LogCategory.ACTION, 'User feedback submitted', {
+      errorId,
+      feedback,
+      email,
+    });
+  } catch {
+    // Silent fail for feedback logging
+  }
 }
 
 // ============================================================================
