@@ -3,6 +3,11 @@ import { Mic, MicOff, Loader2, Check, X, UserCheck, UserX, Square, Zap, Wifi, Wi
 import { startBrowserTranscription, isSpeechRecognitionSupported } from '../../services/voiceService';
 import { parseAttendanceVoice } from '../../services/aiService';
 import { GeminiLiveSession, isGeminiLiveAvailable } from '../../services/geminiLiveService';
+import { AzureRealtimeSession, isAzureRealtimeAvailable } from '../../services/providers/azureRealtimeProvider';
+
+// Check AI provider from environment
+const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
+const USE_AZURE = AI_PROVIDER === 'azure';
 
 /**
  * Voice Attendance Logger Component
@@ -10,7 +15,7 @@ import { GeminiLiveSession, isGeminiLiveAvailable } from '../../services/geminiL
  * Allows teachers to mark attendance via voice input
  * Features:
  * - Standard mode: Record → Process → Update (manual stop)
- * - Live AI mode: Real-time Gemini streaming with instant tool calls
+ * - Live AI mode: Real-time streaming with instant tool calls (Azure or Gemini)
  * 
  * Usage: <VoiceAttendanceLogger classId="6A" students={studentList} onUpdate={callback} />
  */
@@ -33,8 +38,8 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
   const recognitionRef = useRef(null);
   const liveSessionRef = useRef(null);
 
-  // Check if Live API is available - determines which mode to use
-  const canUseLiveAPI = isGeminiLiveAvailable();
+  // Check if Live API is available - Azure Realtime or Gemini based on provider
+  const canUseLiveAPI = USE_AZURE ? isAzureRealtimeAvailable() : isGeminiLiveAvailable();
   
   // Automatically choose mode: Live API first, fallback to standard
   const shouldUseLiveAPI = canUseLiveAPI && !useStandardMode;
@@ -46,7 +51,12 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
         recognitionRef.current.manualStop?.();
       }
       if (liveSessionRef.current) {
-        liveSessionRef.current.disconnect();
+        // Use disconnect or stop depending on provider
+        if (liveSessionRef.current.disconnect) {
+          liveSessionRef.current.disconnect();
+        } else if (liveSessionRef.current.stop) {
+          liveSessionRef.current.stop();
+        }
       }
     };
   }, []);
@@ -131,14 +141,14 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
       setTranscript('');
       setInterimTranscript('');
 
-      const session = new GeminiLiveSession({
+      const sessionOptions = {
         classId,
         studentList: students,
         onTranscript: (data) => {
           console.log('📝 Transcript update:', data);
           // Handle input transcription (what the user said)
           if (data.type === 'input') {
-            setTranscript(data.combined);
+            setTranscript(data.combined || data.transcript || '');
             setInterimTranscript('');
           } 
           // Handle model responses
@@ -149,7 +159,7 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
           else if (data.type === 'interim') {
             setInterimTranscript(data.text);
           } else {
-            setTranscript(data.combined);
+            setTranscript(data.combined || data.transcript || '');
             setInterimTranscript('');
           }
         },
@@ -166,10 +176,26 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
             setIsRecording(true);
           }
         }
-      });
+      };
+
+      // Create session based on provider
+      let session;
+      if (USE_AZURE && isAzureRealtimeAvailable()) {
+        console.log('[VoiceAttendance] Using Azure OpenAI Realtime API');
+        session = new AzureRealtimeSession(sessionOptions);
+      } else {
+        console.log('[VoiceAttendance] Using Gemini Live');
+        session = new GeminiLiveSession(sessionOptions);
+      }
 
       await session.connect();
-      await session.startStreaming();
+      
+      // Start streaming (Azure uses start(), Gemini uses startStreaming())
+      if (session.startStreaming) {
+        await session.startStreaming();
+      } else if (session.start) {
+        await session.start();
+      }
       
       liveSessionRef.current = session;
       setLiveSession(session);
@@ -184,10 +210,23 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
   };
 
   // Stop Live AI session
-  const stopLiveSession = () => {
+  const stopLiveSession = async () => {
     if (liveSessionRef.current) {
-      liveSessionRef.current.disconnect();
-      liveSessionRef.current = null;
+      const session = liveSessionRef.current;
+      liveSessionRef.current = null; // Prevent double-stop
+      
+      // Stop session and wait for final processing
+      // Azure uses async stop() that processes remaining text
+      // Gemini uses disconnect()
+      try {
+        if (session.stop) {
+          await session.stop();
+        } else if (session.disconnect) {
+          session.disconnect();
+        }
+      } catch (err) {
+        console.error('Error stopping session:', err);
+      }
     }
     setLiveSession(null);
     setIsRecording(false);

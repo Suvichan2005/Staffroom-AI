@@ -86,11 +86,18 @@ async function callAzureDirect({ messages, tools, options, useCase }) {
   // Use Vite proxy to bypass CORS (configured in vite.config.js)
   const url = `/azure-proxy/openai/deployments/${deployment}/chat/completions?api-version=${AZURE_API_VERSION}`;
   
+  // Check if this is a reasoning model (o-series or gpt-5) - they don't support temperature
+  const isReasoningModel = deployment.startsWith('o') || deployment.includes('gpt-5');
+  
   const body = {
     messages,
-    temperature: options?.temperature ?? 1,
     max_completion_tokens: options?.maxTokens ?? 2048, // GPT-4.1+ uses max_completion_tokens
   };
+  
+  // Only add temperature for non-reasoning models
+  if (!isReasoningModel) {
+    body.temperature = options?.temperature ?? 0.7;
+  }
   
   if (tools && tools.length > 0) {
     body.tools = tools;

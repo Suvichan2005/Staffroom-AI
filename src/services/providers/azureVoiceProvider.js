@@ -6,6 +6,7 @@
  */
 
 import { toAzureToolFormat, parseAzureToolCalls } from './types.js';
+import { handleChatToolCall } from '../chatToolsDefinition.js';
 
 // Azure Speech Configuration from environment
 const AZURE_SPEECH_KEY = import.meta.env.VITE_AZURE_SPEECH_KEY;
@@ -45,27 +46,39 @@ async function getSpeechToken() {
 }
 
 /**
- * Call Azure OpenAI for tool detection
+ * Call Azure OpenAI for chat response (with optional tool calls)
  */
-async function callAzureOpenAIForTools(text, tools, systemPrompt) {
+async function callAzureOpenAIForChat(text, tools, systemPrompt) {
   const url = USE_PROXY 
     ? '/api/ai/azure/generate'
-    : `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-08-01-preview`;
+    : `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-12-01-preview`;
   
   const headers = USE_PROXY
     ? { 'Content-Type': 'application/json' }
     : { 'Content-Type': 'application/json', 'api-key': AZURE_OPENAI_API_KEY };
+  
+  // Check if deployment is a reasoning model (gpt-5, o-series) that doesn't support temperature
+  const isReasoningModel = AZURE_OPENAI_DEPLOYMENT.startsWith('o') || 
+    AZURE_OPENAI_DEPLOYMENT.includes('gpt-5');
   
   const body = {
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: text },
     ],
-    tools: toAzureToolFormat(tools),
-    tool_choice: 'auto',
-    temperature: 0.1,
-    max_tokens: 256,
+    max_completion_tokens: 512,
   };
+  
+  // Add tools if provided
+  if (tools && tools.length > 0) {
+    body.tools = toAzureToolFormat(tools);
+    body.tool_choice = 'auto';
+  }
+  
+  // Only add temperature for non-reasoning models
+  if (!isReasoningModel) {
+    body.temperature = 0.7;
+  }
   
   const response = await fetch(url, {
     method: 'POST',
@@ -74,13 +87,129 @@ async function callAzureOpenAIForTools(text, tools, systemPrompt) {
   });
   
   if (!response.ok) {
-    throw new Error(`Azure OpenAI error: ${response.status}`);
+    const errorBody = await response.text();
+    console.error('[AzureSpeech] Chat API error:', response.status, errorBody);
+    throw new Error(`Azure OpenAI error: ${response.status} - ${errorBody}`);
+  }
+  
+  const result = await response.json();
+  const message = result.choices?.[0]?.message;
+  
+  return {
+    text: message?.content || '',
+    toolCalls: parseAzureToolCalls(message?.tool_calls || []),
+  };
+}
+
+/**
+ * Call Azure OpenAI for tool detection only
+ */
+async function callAzureOpenAIForTools(text, tools, systemPrompt) {
+  const url = USE_PROXY 
+    ? '/api/ai/azure/generate'
+    : `${AZURE_OPENAI_ENDPOINT}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-12-01-preview`;
+  
+  const headers = USE_PROXY
+    ? { 'Content-Type': 'application/json' }
+    : { 'Content-Type': 'application/json', 'api-key': AZURE_OPENAI_API_KEY };
+  
+  // Check if deployment is a reasoning model (gpt-5, o-series) that doesn't support temperature
+  const isReasoningModel = AZURE_OPENAI_DEPLOYMENT.startsWith('o') || 
+    AZURE_OPENAI_DEPLOYMENT.includes('gpt-5');
+  
+  const body = {
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: text },
+    ],
+    tools: toAzureToolFormat(tools),
+    tool_choice: 'auto',
+    max_completion_tokens: 256,
+  };
+  
+  // Only add temperature for non-reasoning models
+  if (!isReasoningModel) {
+    body.temperature = 0.1;
+  }
+  
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+  
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error('[AzureSpeech] OpenAI API error:', response.status, errorBody);
+    throw new Error(`Azure OpenAI error: ${response.status} - ${errorBody}`);
   }
   
   const result = await response.json();
   const message = result.choices?.[0]?.message;
   
   return parseAzureToolCalls(message?.tool_calls || []);
+}
+
+/**
+ * Normalize tools from various formats to standard format
+ * Handles Gemini Live format: [{ functionDeclarations: [...] }]
+ * And standard format: [{ name, description, parameters }]
+ */
+function normalizeToolsFormat(tools) {
+  if (!tools || !Array.isArray(tools) || tools.length === 0) {
+    return [];
+  }
+  
+  // Check if it's Gemini Live format (array with functionDeclarations object)
+  if (tools[0]?.functionDeclarations) {
+    // Unwrap Gemini Live format
+    return tools[0].functionDeclarations.map(fd => ({
+      name: fd.name,
+      description: fd.description,
+      parameters: normalizeParameters(fd.parameters),
+    }));
+  }
+  
+  // Already in standard format
+  return tools.map(tool => ({
+    name: tool.name,
+    description: tool.description,
+    parameters: normalizeParameters(tool.parameters),
+  }));
+}
+
+/**
+ * Normalize parameters from Gemini format (TYPE in caps) to standard JSON Schema
+ */
+function normalizeParameters(params) {
+  if (!params) {
+    return { type: 'object', properties: {}, required: [] };
+  }
+  
+  const normalized = {
+    type: (params.type || 'object').toLowerCase(),
+    required: params.required || [],
+    properties: {},
+  };
+  
+  if (params.properties) {
+    for (const [key, value] of Object.entries(params.properties)) {
+      normalized.properties[key] = {
+        type: (value.type || 'string').toLowerCase(),
+        description: value.description,
+      };
+      if (value.enum) {
+        normalized.properties[key].enum = value.enum;
+      }
+      if (value.items) {
+        normalized.properties[key].items = { 
+          type: (value.items.type || 'string').toLowerCase() 
+        };
+      }
+    }
+  }
+  
+  return normalized;
 }
 
 /**
@@ -104,7 +233,8 @@ class AzureSpeechStreamingSession {
     this.studentList = options.studentList || [];
     this.classId = options.classId || '';
     this.systemPrompt = options.systemPrompt || null;
-    this.tools = options.tools || [];
+    // Normalize tools from any format (Gemini Live or standard)
+    this.tools = normalizeToolsFormat(options.tools || []);
     
     // Transcript accumulator
     this.currentTranscript = '';
@@ -245,7 +375,13 @@ Only call tools when you're confident about the attendance action.`;
     this.recognizer.recognizing = (s, e) => {
       if (e.result.reason === sdk.ResultReason.RecognizingSpeech) {
         this.currentTranscript = e.result.text;
-        this.onTranscript(this.currentTranscript, false);
+        // Format for AIContext: { type: 'input', transcript, combined }
+        this.onTranscript({
+          type: 'input',
+          transcript: this.currentTranscript,
+          combined: this.finalTranscript + (this.finalTranscript ? ' ' : '') + this.currentTranscript,
+          isFinal: false,
+        });
       }
     };
     
@@ -254,8 +390,14 @@ Only call tools when you're confident about the attendance action.`;
         const text = e.result.text;
         if (text) {
           this.finalTranscript += (this.finalTranscript ? ' ' : '') + text;
-          this.onTranscript(text, true);
-          this.processForToolCalls(text);
+          // Format for AIContext: { type: 'input', transcript, combined }
+          this.onTranscript({
+            type: 'input',
+            transcript: text,
+            combined: this.finalTranscript,
+            isFinal: true,
+          });
+          this.processTranscript(text);
         }
       }
     };
@@ -299,8 +441,14 @@ Only call tools when you're confident about the attendance action.`;
         if (result.isFinal) {
           finalText += result[0].transcript;
           this.finalTranscript += (this.finalTranscript ? ' ' : '') + result[0].transcript;
-          this.onTranscript(result[0].transcript, true);
-          this.processForToolCalls(result[0].transcript);
+          // Format for AIContext: { type: 'input', transcript, combined }
+          this.onTranscript({
+            type: 'input',
+            transcript: result[0].transcript,
+            combined: this.finalTranscript,
+            isFinal: true,
+          });
+          this.processTranscript(result[0].transcript);
         } else {
           interimTranscript += result[0].transcript;
         }
@@ -308,7 +456,13 @@ Only call tools when you're confident about the attendance action.`;
       
       if (interimTranscript) {
         this.currentTranscript = interimTranscript;
-        this.onTranscript(interimTranscript, false);
+        // Format for AIContext: { type: 'input', transcript, combined }
+        this.onTranscript({
+          type: 'input',
+          transcript: interimTranscript,
+          combined: this.finalTranscript + (this.finalTranscript ? ' ' : '') + interimTranscript,
+          isFinal: false,
+        });
       }
     };
     
@@ -335,33 +489,76 @@ Only call tools when you're confident about the attendance action.`;
   }
 
   /**
-   * Process transcript for tool calls
+   * Process transcript for AI response and tool calls
+   * Uses accumulated transcript to handle rapid-fire recognition events
    */
-  async processForToolCalls(text) {
-    // Avoid reprocessing same text
-    if (text === this.lastProcessedText) return;
-    this.lastProcessedText = text;
+  async processTranscript(text) {
+    // Add to pending text buffer
+    if (!this.pendingText) this.pendingText = '';
+    if (!this.processedText) this.processedText = '';
     
-    // Debounce tool detection
+    // Only add text we haven't seen before
+    if (!this.processedText.includes(text)) {
+      this.pendingText += (this.pendingText ? ' ' : '') + text;
+    }
+    
+    // Skip if no new text
+    if (!this.pendingText.trim()) return;
+    
+    // Debounce processing - shorter delay for responsiveness
     if (this.toolDetectionTimeout) {
       clearTimeout(this.toolDetectionTimeout);
     }
     
     this.toolDetectionTimeout = setTimeout(async () => {
+      const textToProcess = this.pendingText.trim();
+      if (!textToProcess) return;
+      
+      // Mark as processed and clear pending
+      this.processedText += (this.processedText ? ' ' : '') + textToProcess;
+      this.pendingText = '';
+      
+      console.log('[AzureSpeech] Processing:', textToProcess);
+      
       try {
         const tools = this.tools.length > 0 ? this.tools : this.buildDefaultTools();
         const systemPrompt = this.systemPrompt || this.buildDefaultSystemPrompt();
         
-        const toolCalls = await callAzureOpenAIForTools(text, tools, systemPrompt);
+        // Call Azure OpenAI for both response and tool calls
+        const { text: responseText, toolCalls } = await callAzureOpenAIForChat(textToProcess, tools, systemPrompt);
         
+        // Send AI response as model transcript
+        if (responseText) {
+          this.onTranscript({
+            type: 'model',
+            text: responseText,
+          });
+        }
+        
+        // Process tool calls
         for (const tc of toolCalls) {
-          this.onToolCall(tc);
+          console.log('[AzureSpeech] Executing tool:', tc.name, tc.arguments);
+          // Execute the tool using handleChatToolCall
+          const { action, result } = handleChatToolCall({
+            name: tc.name,
+            args: tc.arguments,
+            id: tc.id,
+          });
+          
+          // Pass the executed result to the callback
+          this.onToolCall({
+            id: tc.id,
+            name: tc.name,
+            args: tc.arguments,
+            display: action?.display,
+            result: result,
+          });
         }
       } catch (error) {
-        console.error('[AzureSpeech] Tool detection error:', error);
-        // Don't propagate tool detection errors to avoid disrupting transcription
+        console.error('[AzureSpeech] Processing error:', error);
+        // Don't propagate errors to avoid disrupting transcription
       }
-    }, 300); // 300ms debounce
+    }, 200); // Shorter debounce for better responsiveness
   }
 
   /**
@@ -369,6 +566,10 @@ Only call tools when you're confident about the attendance action.`;
    */
   async connect() {
     this.onStatusChange('connecting');
+    
+    // Reset processing state
+    this.pendingText = '';
+    this.processedText = '';
     
     const method = await this.initRecognizer();
     console.log(`[AzureSpeech] Initialized with method: ${method}`);
@@ -399,13 +600,56 @@ Only call tools when you're confident about the attendance action.`;
   }
 
   /**
-   * Stop streaming
+   * Stop streaming and process any remaining text
    */
   async stop() {
     this.isStreaming = false;
     
-    if (this.toolDetectionTimeout) {
+    // Process any pending text before stopping
+    if (this.pendingText && this.pendingText.trim()) {
+      console.log('[AzureSpeech] Processing final pending text:', this.pendingText);
+      // Clear any pending timeout
+      if (this.toolDetectionTimeout) {
+        clearTimeout(this.toolDetectionTimeout);
+        this.toolDetectionTimeout = null;
+      }
+      
+      // Process immediately
+      const textToProcess = this.pendingText.trim();
+      this.pendingText = '';
+      
+      try {
+        const tools = this.tools.length > 0 ? this.tools : this.buildDefaultTools();
+        const systemPrompt = this.systemPrompt || this.buildDefaultSystemPrompt();
+        
+        const { text: responseText, toolCalls } = await callAzureOpenAIForChat(textToProcess, tools, systemPrompt);
+        
+        if (responseText) {
+          this.onTranscript({ type: 'model', text: responseText });
+        }
+        
+        for (const tc of toolCalls) {
+          console.log('[AzureSpeech] Final tool execution:', tc.name, tc.arguments);
+          const { action, result } = handleChatToolCall({
+            name: tc.name,
+            args: tc.arguments,
+            id: tc.id,
+          });
+          
+          this.onToolCall({
+            id: tc.id,
+            name: tc.name,
+            args: tc.arguments,
+            display: action?.display,
+            result: result,
+          });
+        }
+      } catch (error) {
+        console.error('[AzureSpeech] Final processing error:', error);
+      }
+    } else if (this.toolDetectionTimeout) {
       clearTimeout(this.toolDetectionTimeout);
+      this.toolDetectionTimeout = null;
     }
     
     if (this.recognizer) {
@@ -529,6 +773,14 @@ class AzureVoiceProvider {
   createStreamingSession(options) {
     return new AzureSpeechStreamingSession(options);
   }
+}
+
+/**
+ * Check if Azure Speech is available
+ * @returns {boolean}
+ */
+export function isAzureSpeechAvailable() {
+  return !!(AZURE_SPEECH_KEY && AZURE_OPENAI_ENDPOINT && AZURE_OPENAI_API_KEY);
 }
 
 // Export singleton instance

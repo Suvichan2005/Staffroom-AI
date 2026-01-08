@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { useNavigate } from 'react-router-dom';
 import { parseVoiceTranscript, generateDailyBriefing, generateQuiz, generateAssignment, processChat } from '../services/aiService';
 import { GeminiLiveSession } from '../services/geminiLiveService';
+import { AzureRealtimeSession, isAzureRealtimeAvailable } from '../services/providers/azureRealtimeProvider';
 import { getToolsByContext, handleChatToolCall } from '../services/chatToolsDefinition';
 import { initializeAllPlugins, getChatPlugins, createPluginAPI } from '../plugins';
 import {
@@ -50,6 +51,10 @@ import {
  * Enhanced with plugin system for extensible chat features
  */
 const AIContext = createContext(null);
+
+// Determine which AI/Voice provider to use
+const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
+const USE_AZURE_VOICE = AI_PROVIDER === 'azure';
 
 export function AIProvider({ children }) {
   // Chat UI state
@@ -640,7 +645,8 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
       // Get combined tools (attendance + syllabus)
       const tools = getToolsByContext('combined');
       
-      const session = new GeminiLiveSession({
+      // Common session options
+      const sessionOptions = {
         classId: 'GlobalChat',
         studentList: students || [],
         systemPrompt: buildVoiceSystemPrompt(),
@@ -648,19 +654,17 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
         onTranscript: (data) => {
           if (data.type === 'input') {
             // Show live transcription - but NOT in input box (separate from text mode)
-            setLiveTranscript(data.combined);
-            liveTranscriptRef.current = data.combined; // Track in ref for callbacks
+            setLiveTranscript(data.combined || data.transcript || '');
+            liveTranscriptRef.current = data.combined || data.transcript || '';
           } else if (data.type === 'model' && data.text) {
             // When model starts responding, first add the user message if not added
             const currentTranscript = liveTranscriptRef.current;
             if (currentTranscript && currentTranscript.trim()) {
               setMessages(prev => {
-                // Check if we already have this user message
                 const lastUserMsg = prev.filter(m => m.role === 'user').slice(-1)[0];
                 if (lastUserMsg && lastUserMsg.content === currentTranscript.trim()) {
-                  return prev; // Already added
+                  return prev;
                 }
-                // Add user message
                 return [
                   ...prev,
                   {
@@ -672,7 +676,6 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
                   }
                 ];
               });
-              // Clear ref so we don't add again
               liveTranscriptRef.current = '';
             }
             
@@ -702,7 +705,7 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
           }
         },
         onToolCall: (toolCall) => {
-          // Tool call already processed by geminiLiveService.handleToolCall
+          // Tool call already processed by voice service
           // toolCall contains: { id, name, args, display, result }
           const displayText = toolCall.display || `${toolCall.name || 'Tool'} executed`;
           addAssistantMessage(`✓ ${displayText}`, {
@@ -712,9 +715,10 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
             result: toolCall.result
           });
           
-          // Handle navigation if the tool result includes a navigate path
-          if (toolCall.result?.action === 'navigate' && toolCall.result?.path) {
-            // Small delay to let the message appear first
+          // Handle navigation if the tool result includes a path
+          // navigateTo returns { success: true, path: '/...', message: '...' }
+          if (toolCall.result?.success && toolCall.result?.path) {
+            console.log('[Voice] Navigating to:', toolCall.result.path);
             setTimeout(() => {
               window.location.href = toolCall.result.path;
             }, 500);
@@ -728,12 +732,11 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
             );
           });
           
-          // Clear transcript display (ref already cleared when user msg added)
+          // Clear transcript display
           setLiveTranscript('');
           liveTranscriptRef.current = '';
           
-          // Auto-stop recording after turn completes to allow text input
-          // This prevents UI from being stuck in recording mode
+          // Auto-stop recording after turn completes
           if (geminiLiveSessionRef.current) {
             setTimeout(() => {
               if (geminiLiveSessionRef.current) {
@@ -746,22 +749,38 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
           }
         },
         onStatusChange: (status) => {
-          console.log('[Chat Gemini Live] Status:', status);
+          console.log(`[Voice ${USE_AZURE_VOICE ? 'Azure' : 'Gemini'}] Status:`, status);
           setLiveStatus(status);
         },
         onError: (error) => {
-          console.error('Gemini Live error:', error);
+          console.error('Voice session error:', error);
           addAssistantMessage(`⚠️ Connection error: ${error.message}`);
           setIsRecording(false);
           setLiveStatus('disconnected');
         },
-      });
+      };
+      
+      // Create session based on provider
+      let session;
+      if (USE_AZURE_VOICE && isAzureRealtimeAvailable()) {
+        console.log('[Voice] Using Azure OpenAI Realtime API');
+        session = new AzureRealtimeSession(sessionOptions);
+      } else {
+        console.log('[Voice] Using Gemini Live');
+        session = new GeminiLiveSession(sessionOptions);
+      }
       
       await session.connect();
       geminiLiveSessionRef.current = session;
-      await session.startStreaming();
+      
+      // Start streaming (Azure uses start(), Gemini uses startStreaming())
+      if (session.startStreaming) {
+        await session.startStreaming();
+      } else if (session.start) {
+        await session.start();
+      }
     } catch (error) {
-      console.error('Failed to start Gemini Live:', error);
+      console.error('Failed to start voice recording:', error);
       addAssistantMessage(`Error: Could not start voice recording. ${error.message}`);
       setIsRecording(false);
       setLiveStatus('disconnected');
@@ -769,10 +788,24 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
   }, [addAssistantMessage, students, buildVoiceSystemPrompt]);
 
   // Stop Gemini Live recording
-  const stopGeminiLiveRecording = useCallback(() => {
+  const stopGeminiLiveRecording = useCallback(async () => {
     if (geminiLiveSessionRef.current) {
-      geminiLiveSessionRef.current.disconnect();
-      geminiLiveSessionRef.current = null;
+      const session = geminiLiveSessionRef.current;
+      geminiLiveSessionRef.current = null; // Prevent double-stop
+      
+      // Stop session and wait for final processing
+      // Azure uses async stop() that processes remaining text
+      // Gemini uses disconnect()
+      try {
+        if (session.stop) {
+          await session.stop();
+        } else if (session.disconnect) {
+          session.disconnect();
+        }
+      } catch (err) {
+        console.error('Error stopping voice session:', err);
+      }
+      
       setIsRecording(false);
       setLiveStatus('disconnected');
       setLiveTranscript('');
@@ -792,9 +825,9 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
   }, [useLiveAPI, startGeminiLiveRecording]);
 
   // Stop voice recording
-  const stopRecording = useCallback(() => {
+  const stopRecording = useCallback(async () => {
     if (useLiveAPI) {
-      stopGeminiLiveRecording();
+      await stopGeminiLiveRecording();
     } else if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsRecording(false);
