@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import { IconButton } from './Button';
+import { IconButton, Button } from './Button';
 
 /**
  * Modal Component - Accessible dialog overlay
@@ -41,7 +41,7 @@ export function Modal({
       document.addEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'hidden';
     }
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
@@ -63,13 +63,13 @@ export function Modal({
   };
 
   const modalVariants = {
-    hidden: { 
-      opacity: 0, 
+    hidden: {
+      opacity: 0,
       scale: 0.95,
       y: 20,
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       y: 0,
       transition: {
@@ -119,7 +119,7 @@ export function Modal({
               className={`
                 w-full ${sizes[size]} ${className}
                 bg-white rounded-2xl shadow-2xl
-                flex flex-col max-h-[calc(100vh-2rem)]
+                flex flex-col max-h-[90vh] overflow-hidden
               `}
               onClick={(e) => e.stopPropagation()}
             >
@@ -159,7 +159,7 @@ export function Modal({
               )}
 
               {/* Content */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6">
                 {children}
               </div>
 
@@ -192,7 +192,6 @@ export function ConfirmModal({
   variant = 'primary',
   loading = false,
 }) {
-  const { Button } = require('./Button');
 
   return (
     <Modal

@@ -19,10 +19,10 @@ import React from 'react';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { 
-      hasError: false, 
-      error: null, 
-      errorInfo: null 
+    this.state = {
+      hasError: false,
+      error: null,
+      errorInfo: null
     };
   }
 
@@ -34,9 +34,9 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Log the error
     console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+
     this.setState({ errorInfo });
-    
+
     // Track error with monitoring service
     try {
       const { trackRenderError } = require('../../services/errorMonitoring');
@@ -69,30 +69,30 @@ class ErrorBoundary extends React.Component {
           <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-6 text-center">
             {/* Error Icon */}
             <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-              <svg 
-                className="w-8 h-8 text-red-500" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="w-8 h-8 text-red-500"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                 />
               </svg>
             </div>
-            
+
             <h1 className="text-xl font-semibold text-slate-800 mb-2">
               Something went wrong
             </h1>
-            
+
             <p className="text-slate-600 text-sm mb-6">
-              We're sorry, but something unexpected happened. 
+              We're sorry, but something unexpected happened.
               Please try again or return to the home page.
             </p>
-            
+
             {/* Error details (dev mode only) */}
             {import.meta.env.DEV && this.state.error && (
               <details className="mb-6 text-left">
@@ -105,7 +105,7 @@ class ErrorBoundary extends React.Component {
                 </pre>
               </details>
             )}
-            
+
             <div className="flex gap-3 justify-center">
               <button
                 onClick={this.handleRetry}
@@ -165,7 +165,7 @@ export class InlineErrorBoundary extends React.Component {
       return (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
           <span className="font-medium">Error loading component.</span>
-          <button 
+          <button
             onClick={() => this.setState({ hasError: false })}
             className="ml-2 underline hover:no-underline"
           >

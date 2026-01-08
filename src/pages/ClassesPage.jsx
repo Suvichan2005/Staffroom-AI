@@ -1,15 +1,16 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
+import {
   BookOpen, Users, Clock, ChevronRight, Search, Filter,
-  Calendar, TrendingUp, CheckCircle, Circle, ArrowUpRight
+  Calendar, TrendingUp, CheckCircle, Circle, ArrowUpRight,
+  Settings, Plus
 } from 'lucide-react';
-import { 
-  teacherData, 
-  getSyllabusByRef, 
-  normalizeSectionProgress, 
-  loadStoredProgress, 
+import {
+  teacherData,
+  getSyllabusByRef,
+  normalizeSectionProgress,
+  loadStoredProgress,
   calculateTopicProgressPercent,
   getUpcomingSessions
 } from '../data/dummyData';
@@ -43,8 +44,8 @@ export default function ClassesPage() {
           studentCount: 30, // Default
         };
       });
-      
-      const avgProgress = sectionsWithProgress.length 
+
+      const avgProgress = sectionsWithProgress.length
         ? Math.round(sectionsWithProgress.reduce((sum, s) => sum + s.progress, 0) / sectionsWithProgress.length)
         : 0;
 
@@ -69,7 +70,7 @@ export default function ClassesPage() {
     return coursesWithSections.filter(course => {
       const matchesSearch = course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         course.sections.some(s => s.id.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesFilter = filterSubject === 'all' || 
+      const matchesFilter = filterSubject === 'all' ||
         course.syllabus?.subject?.toLowerCase() === filterSubject.toLowerCase();
       return matchesSearch && matchesFilter;
     });
@@ -120,6 +121,13 @@ export default function ClassesPage() {
                 </option>
               ))}
             </select>
+            <button
+              onClick={() => navigate('/manage-classes')}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Manage</span>
+            </button>
           </div>
         </motion.div>
 
@@ -169,14 +177,14 @@ export default function ClassesPage() {
               className="bg-white rounded-2xl border border-black-200 overflow-hidden"
             >
               {/* Course Header */}
-              <div 
+              <div
                 className="p-4 cursor-pointer hover:bg-black-50 transition-colors"
                 onClick={() => navigate(`/course/${course.id}`)}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
-                    <img 
-                      src={course.imageUrl} 
+                    <img
+                      src={course.imageUrl}
                       alt={course.title}
                       className="w-full h-full object-cover"
                     />
