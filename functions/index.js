@@ -15,6 +15,9 @@
  * Set secrets using Firebase CLI:
  *   firebase functions:secrets:set GEMINI_API_KEY
  *   firebase functions:secrets:set OPENAI_API_KEY
+ *   firebase functions:secrets:set AZURE_OPENAI_API_KEY
+ *   firebase functions:secrets:set AZURE_OPENAI_ENDPOINT
+ *   firebase functions:secrets:set AZURE_SPEECH_KEY
  */
 
 const { onRequest } = require("firebase-functions/v2/https");
@@ -26,6 +29,13 @@ const OpenAI = require("openai");
 // Define secrets (these are injected at runtime)
 const geminiApiKey = defineSecret("GEMINI_API_KEY");
 const openaiApiKey = defineSecret("OPENAI_API_KEY");
+
+// Azure secrets
+const azureOpenaiApiKey = defineSecret("AZURE_OPENAI_API_KEY");
+const azureOpenaiEndpoint = defineSecret("AZURE_OPENAI_ENDPOINT");
+const azureOpenaiDeployment = defineSecret("AZURE_OPENAI_DEPLOYMENT");
+const azureSpeechKey = defineSecret("AZURE_SPEECH_KEY");
+const azureSpeechRegion = defineSecret("AZURE_SPEECH_REGION");
 
 // Set global options for all functions
 setGlobalOptions({
@@ -409,5 +419,350 @@ exports.health = onRequest(
       timestamp: new Date().toISOString(),
       version: "1.0.0",
     });
+  }
+);
+
+// ============================================================================
+// AZURE OPENAI GENERATE FUNCTION
+// ============================================================================
+
+exports.azureGenerate = onRequest(
+  {
+    cors: false,
+    memory: "256MiB",
+    timeoutSeconds: 60,
+    secrets: [azureOpenaiApiKey, azureOpenaiEndpoint, azureOpenaiDeployment],
+  },
+  async (req, res) => {
+    // Handle CORS
+    setCorsHeaders(req, res);
+    
+    if (req.method === "OPTIONS") {
+      return res.status(204).send("");
+    }
+    
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+    
+    // Rate limiting
+    const clientIP = getClientIP(req);
+    if (!checkRateLimit(clientIP)) {
+      return res.status(429).json({
+        error: "Rate limit exceeded",
+        message: "Too many requests. Please wait a minute.",
+      });
+    }
+    
+    try {
+      const { messages, tools, options, useCase, model } = req.body;
+      
+      if (!messages || !Array.isArray(messages)) {
+        return res.status(400).json({ error: "Messages array is required" });
+      }
+      
+      // Get Azure configuration from secrets
+      const apiKey = azureOpenaiApiKey.value();
+      const endpoint = azureOpenaiEndpoint.value();
+      const defaultDeployment = azureOpenaiDeployment.value() || "gpt-4.1-mini";
+      
+      // Model selection based on use case (cost-optimized Jan 2026)
+      // gpt-4.1-nano: ₹9/₹36 (cheapest), gpt-4.1-mini: ₹36/₹144, 
+      // gpt-4.1: ₹180/₹720, o4-mini: ₹99/₹396 (reasoning)
+      const MODEL_MAP = {
+        'chat': 'gpt-4.1-nano',
+        'quiz': 'gpt-4.1-nano',
+        'briefing': 'gpt-4.1-nano',
+        'simple': 'gpt-4.1-nano',
+        'analysis': 'gpt-4.1-mini',
+        'syllabus': 'gpt-4.1-mini',
+        'tools': 'gpt-4.1-mini',
+        'attendance': 'gpt-4.1-mini',
+        'reasoning': 'o4-mini',
+        'complex': 'o4-mini',
+        'premium': 'gpt-4.1',
+      };
+      
+      const deployment = model || MODEL_MAP[useCase] || defaultDeployment;
+      console.log(`[azureGenerate] Using model: ${deployment} for useCase: ${useCase || 'default'}`);
+      
+      if (!apiKey || !endpoint) {
+        console.error("Azure OpenAI not configured");
+        return res.status(500).json({ error: "Azure AI service not configured" });
+      }
+      
+      // Build request
+      const apiVersion = "2024-12-01-preview";
+      const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+      
+      const body = {
+        messages: messages.map(m => ({
+          role: m.role,
+          content: m.content,
+          ...(m.tool_calls && { tool_calls: m.tool_calls }),
+          ...(m.tool_call_id && { tool_call_id: m.tool_call_id }),
+        })),
+        temperature: options?.temperature ?? 0.7,
+        max_tokens: options?.maxTokens ?? 2048,
+        top_p: options?.topP ?? 0.95,
+      };
+      
+      if (tools && tools.length > 0) {
+        body.tools = tools;
+        body.tool_choice = "auto";
+      }
+      
+      if (options?.responseFormat === "json") {
+        body.response_format = { type: "json_object" };
+      }
+      
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": apiKey,
+        },
+        body: JSON.stringify(body),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Azure OpenAI error:", errorData);
+        
+        if (response.status === 429) {
+          return res.status(429).json({ error: "Azure AI service quota exceeded" });
+        }
+        
+        return res.status(500).json({ error: "Azure AI generation failed" });
+      }
+      
+      const result = await response.json();
+      
+      return res.status(200).json({
+        choices: result.choices,
+        usage: result.usage,
+      });
+      
+    } catch (error) {
+      console.error("Azure Generate Error:", error);
+      return res.status(500).json({
+        error: "Azure AI generation failed",
+        message: "Please try again later",
+      });
+    }
+  }
+);
+
+// ============================================================================
+// AZURE SPEECH TOKEN
+// ============================================================================
+
+exports.azureSpeechToken = onRequest(
+  {
+    cors: false,
+    memory: "128MiB",
+    timeoutSeconds: 10,
+    secrets: [azureSpeechKey, azureSpeechRegion],
+  },
+  async (req, res) => {
+    setCorsHeaders(req, res);
+    
+    if (req.method === "OPTIONS") {
+      return res.status(204).send("");
+    }
+    
+    if (!["GET", "POST"].includes(req.method)) {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+    
+    const clientIP = getClientIP(req);
+    if (!checkRateLimit(clientIP)) {
+      return res.status(429).json({ error: "Rate limit exceeded" });
+    }
+    
+    try {
+      const speechKey = azureSpeechKey.value();
+      const region = azureSpeechRegion.value() || "eastus";
+      
+      if (!speechKey) {
+        console.error("Azure Speech key not configured");
+        return res.status(500).json({ error: "Speech service not configured" });
+      }
+      
+      // Get authorization token from Azure
+      const tokenUrl = `https://${region}.api.cognitive.microsoft.com/sts/v1.0/issueToken`;
+      
+      const tokenResponse = await fetch(tokenUrl, {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": speechKey,
+          "Content-Length": "0",
+        },
+      });
+      
+      if (!tokenResponse.ok) {
+        throw new Error(`Token request failed: ${tokenResponse.status}`);
+      }
+      
+      const token = await tokenResponse.text();
+      
+      return res.status(200).json({
+        token,
+        region,
+        expiresIn: 600, // 10 minutes
+      });
+      
+    } catch (error) {
+      console.error("Azure Speech Token Error:", error);
+      return res.status(500).json({ error: "Failed to get speech token" });
+    }
+  }
+);
+
+// ============================================================================
+// AZURE SPEECH TRANSCRIPTION
+// ============================================================================
+
+exports.azureTranscribe = onRequest(
+  {
+    cors: false,
+    memory: "512MiB",
+    timeoutSeconds: 120,
+    secrets: [azureSpeechKey, azureSpeechRegion],
+  },
+  async (req, res) => {
+    setCorsHeaders(req, res);
+    
+    if (req.method === "OPTIONS") {
+      return res.status(204).send("");
+    }
+    
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+    
+    const clientIP = getClientIP(req);
+    if (!checkRateLimit(clientIP)) {
+      return res.status(429).json({ error: "Rate limit exceeded" });
+    }
+    
+    try {
+      const { audio, mimeType, language } = req.body;
+      
+      if (!audio || typeof audio !== "string") {
+        return res.status(400).json({ error: "Audio data is required" });
+      }
+      
+      const speechKey = azureSpeechKey.value();
+      const region = azureSpeechRegion.value() || "eastus";
+      
+      if (!speechKey) {
+        console.error("Azure Speech key not configured");
+        return res.status(500).json({ error: "Speech service not configured" });
+      }
+      
+      // Convert base64 to buffer
+      const audioBuffer = Buffer.from(audio, "base64");
+      
+      // Call Azure Speech REST API
+      const speechUrl = `https://${region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=${language || "en-IN"}`;
+      
+      const contentType = mimeType || "audio/wav";
+      
+      const response = await fetch(speechUrl, {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": speechKey,
+          "Content-Type": contentType,
+        },
+        body: audioBuffer,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Transcription failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      return res.status(200).json({
+        text: result.DisplayText || "",
+        confidence: result.NBest?.[0]?.Confidence || 0.9,
+        success: true,
+      });
+      
+    } catch (error) {
+      console.error("Azure Transcription Error:", error);
+      return res.status(500).json({
+        error: "Transcription failed",
+        message: "Please try again later",
+      });
+    }
+  }
+);
+
+// ============================================================================
+// AZURE HEALTH CHECK
+// ============================================================================
+
+exports.azureHealth = onRequest(
+  {
+    cors: true,
+    memory: "128MiB",
+    timeoutSeconds: 10,
+    secrets: [azureOpenaiApiKey, azureOpenaiEndpoint],
+  },
+  async (req, res) => {
+    try {
+      const apiKey = azureOpenaiApiKey.value();
+      const endpoint = azureOpenaiEndpoint.value();
+      
+      const configured = !!(apiKey && endpoint);
+      
+      res.status(200).json({
+        status: configured ? "healthy" : "not_configured",
+        provider: "azure",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: "error",
+        provider: "azure",
+        error: error.message,
+      });
+    }
+  }
+);
+
+// ============================================================================
+// AZURE SPEECH HEALTH CHECK
+// ============================================================================
+
+exports.azureSpeechHealth = onRequest(
+  {
+    cors: true,
+    memory: "128MiB",
+    timeoutSeconds: 10,
+    secrets: [azureSpeechKey, azureSpeechRegion],
+  },
+  async (req, res) => {
+    try {
+      const speechKey = azureSpeechKey.value();
+      const region = azureSpeechRegion.value();
+      
+      const configured = !!(speechKey && region);
+      
+      res.status(200).json({
+        status: configured ? "healthy" : "not_configured",
+        provider: "azure-speech",
+        region: region || "not_set",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        status: "error",
+        provider: "azure-speech",
+        error: error.message,
+      });
+    }
   }
 );
