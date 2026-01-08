@@ -20,8 +20,28 @@
         "function": "getLiveToken"
       },
       {
+        "source": "/api/ai/azure/generate",
+        "function": "azureGenerate"
+      },
+      {
+        "source": "/api/ai/azure/transcribe",
+        "function": "azureTranscribe"
+      },
+      {
+        "source": "/api/ai/azure/speech-token",
+        "function": "azureSpeechToken"
+      },
+      {
         "source": "/api/health",
         "function": "health"
+      },
+      {
+        "source": "/api/health/azure",
+        "function": "azureHealth"
+      },
+      {
+        "source": "/api/health/azure-speech",
+        "function": "azureSpeechHealth"
       },
       {
         "source": "**",
