@@ -129,7 +129,7 @@ async function callAzureOpenAIForTools(text, tools, systemPrompt) {
   
   // Only add temperature for non-reasoning models
   if (!isReasoningModel) {
-    body.temperature = 0.1;
+    body.temperature = 0.7;
   }
   
   const response = await fetch(url, {
