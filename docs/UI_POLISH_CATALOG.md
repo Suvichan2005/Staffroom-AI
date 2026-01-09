@@ -336,7 +336,7 @@ const STATUS_META = {
   "not-started": { 
     label: "Not Started", 
     icon: Circle, 
-    badgeClass: "bg-black-200 text-black-700",
+    badgeClass: "bg-black text-black-700",
     iconClass: "text-black-400"
   },
   "ongoing": { 

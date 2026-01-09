@@ -606,7 +606,7 @@ export default function CoursePage() {
                   <span className="text-xs text-black-500">50-79%</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-black-200" />
+                  <div className="w-4 h-4 rounded bg-black" />
                   <span className="text-xs text-black-500">&lt;50%</span>
                 </div>
               </div>

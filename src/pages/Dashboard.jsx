@@ -254,14 +254,14 @@ export default function Dashboard() {
                     stat.action 
                       ? 'border-black-200 hover:border-indigo-300 hover:shadow-md cursor-pointer' 
                       : 'border-black-200 cursor-default'
-                  } ${stat.urgent ? 'ring-2 ring-amber-200' : ''}`}
+                  } ${stat.urgent ? 'ring-2 ring-yellow-200' : ''}`}
                 >
                   <div className={`inline-flex p-2 rounded-lg mb-2 ${
-                    stat.color === 'amber' ? 'bg-amber-100' :
+                    stat.color === 'amber' ? 'bg-yellow-100' :
                     stat.color === 'green' ? 'bg-green-100' : 'bg-indigo-100'
                   }`}>
                     <Icon className={`w-4 h-4 ${
-                      stat.color === 'amber' ? 'text-amber-600' :
+                      stat.color === 'amber' ? 'text-yellow-600' :
                       stat.color === 'green' ? 'text-green-600' : 'text-indigo-600'
                     }`} />
                   </div>
@@ -312,7 +312,7 @@ export default function Dashboard() {
                           {course.title.replace('Grade ', 'G')}
                         </p>
                         <div className="flex items-center gap-2 mt-1">
-                          <div className="flex-1 h-1.5 bg-black-200 rounded-full overflow-hidden">
+                          <div className="flex-1 h-1.5 bg-black rounded-full overflow-hidden">
                             <div 
                               className="h-full bg-indigo-500 rounded-full"
                               style={{ width: `${progress}%` }}

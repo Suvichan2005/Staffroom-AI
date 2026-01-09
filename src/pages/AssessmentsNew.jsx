@@ -157,7 +157,7 @@ export default function Assessments() {
   const getTypeColor = (type) => {
     const colors = {
       'quiz': 'bg-purple-100 text-purple-700',
-      'unit-test': 'bg-amber-100 text-amber-700',
+      'unit-test': 'bg-yellow-100 text-yellow-700',
       'mid-term': 'bg-red-100 text-red-700',
       'final': 'bg-red-100 text-red-700',
       'project': 'bg-green-100 text-green-700',

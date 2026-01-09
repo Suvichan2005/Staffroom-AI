@@ -140,7 +140,7 @@ export default function CoursePage() {
           const colors = {
             indigo: 'bg-indigo-50 text-indigo-600',
             green: 'bg-green-50 text-green-600',
-            amber: 'bg-amber-50 text-amber-600',
+            amber: 'bg-yellow-50 text-yellow-600',
             purple: 'bg-purple-50 text-purple-600',
           };
           return (
@@ -394,9 +394,9 @@ export default function CoursePage() {
                                   const getHeatColor = (p) => {
                                     if (p === 100) return 'bg-green-500';
                                     if (p >= 75) return 'bg-green-400';
-                                    if (p >= 50) return 'bg-amber-400';
-                                    if (p >= 25) return 'bg-amber-300';
-                                    if (p > 0) return 'bg-amber-200';
+                                    if (p >= 50) return 'bg-yellow-400';
+                                    if (p >= 25) return 'bg-yellow-300';
+                                    if (p > 0) return 'bg-yellow-200';
                                     return 'bg-neutral-100';
                                   };
                                   
@@ -424,11 +424,11 @@ export default function CoursePage() {
                           <span>0%</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <div className="w-4 h-4 rounded bg-amber-300" />
+                          <div className="w-4 h-4 rounded bg-yellow-300" />
                           <span>25-50%</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <div className="w-4 h-4 rounded bg-amber-400" />
+                          <div className="w-4 h-4 rounded bg-yellow-400" />
                           <span>50-75%</span>
                         </div>
                         <div className="flex items-center gap-1">

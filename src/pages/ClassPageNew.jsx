@@ -241,7 +241,7 @@ export default function ClassPage() {
           const colors = {
             indigo: 'bg-indigo-50 text-indigo-600',
             green: 'bg-green-50 text-green-600',
-            amber: 'bg-amber-50 text-amber-600',
+            amber: 'bg-yellow-50 text-yellow-600',
             purple: 'bg-purple-50 text-purple-600',
           };
           return (
@@ -351,8 +351,8 @@ export default function ClassPage() {
                 className="w-full flex items-center justify-between p-3 bg-neutral-50 hover:bg-neutral-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <BarChart2 className="w-4 h-4 text-amber-600" />
+                  <div className="w-8 h-8 rounded-lg bg-yellow-100 flex items-center justify-center">
+                    <BarChart2 className="w-4 h-4 text-yellow-600" />
                   </div>
                   <span className="font-medium text-sm text-neutral-700">Analytics & History</span>
                 </div>
@@ -438,7 +438,7 @@ function CollapsibleSection({
     indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200' },
     green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200' },
     purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200' },
-    amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
+    amber: { bg: 'bg-yellow-50', text: 'text-yellow-600', border: 'border-yellow-200' },
   };
   const color = colors[accentColor];
   

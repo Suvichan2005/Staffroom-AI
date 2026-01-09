@@ -297,7 +297,7 @@ export default function Dashboard() {
                   disabled={!stat.action}
                   className={`relative p-4 ${colors.bg} rounded-xl transition-all text-left ${
                     stat.action ? 'hover:shadow-md cursor-pointer' : 'cursor-default'
-                  } ${stat.urgent ? 'ring-2 ring-amber-300' : ''}`}
+                  } ${stat.urgent ? 'ring-2 ring-yellow-300' : ''}`}
                 >
                   <div className={`inline-flex p-2 rounded-lg mb-2 ${colors.icon.split(' ')[0]}`}>
                     <Icon className={`w-4 h-4 ${colors.icon.split(' ')[1]}`} />
