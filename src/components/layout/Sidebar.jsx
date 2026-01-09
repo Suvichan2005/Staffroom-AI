@@ -3,19 +3,13 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Home,
-  FileText,
-  Users,
-  BarChart3,
-  FolderOpen,
-  ChevronLeft,
-  Menu,
   User,
   Settings,
   GraduationCap,
   Calendar,
-  MessageSquare,
   Building2,
   Shield,
+  FileText,
 } from 'lucide-react';
 import { useLayout } from '../../context/LayoutContext';
 import { useTeacher } from '../../context/TeacherContext';
@@ -25,7 +19,7 @@ import { useTeacher } from '../../context/TeacherContext';
  * Role-based filtering with collapsible sections
  * 
  * Navigation Structure:
- * - Teacher: Dashboard, My Classes, Schedule | Assessments, Resources | Profile, Settings
+ * - Teacher: Dashboard, My Classes, Schedule, Assessments | Profile, Settings
  * - HOD: Same + Department Overview
  * - Admin: Separate admin routes
  */
@@ -38,15 +32,12 @@ export default function Sidebar() {
 
   // Role-based navigation items
   const navConfig = useMemo(() => {
-    const teacherNav = [
+    // Core teacher navigation
+    const mainNav = [
       { path: '/dashboard', icon: Home, label: 'Dashboard' },
       { path: '/classes', icon: GraduationCap, label: 'My Classes' },
       { path: '/schedule', icon: Calendar, label: 'Schedule' },
-    ];
-
-    const toolsNav = [
       { path: '/assessments', icon: FileText, label: 'Assessments' },
-      { path: '/resources', icon: FolderOpen, label: 'Resources' },
     ];
 
     const accountNav = [
@@ -54,30 +45,25 @@ export default function Sidebar() {
       { path: '/settings', icon: Settings, label: 'Settings' },
     ];
 
-    // HOD-specific nav items
-    const hodNav = [
-      { path: '/hod-dashboard', icon: Building2, label: 'Department' },
-    ];
-
-    // Admin-specific nav items
-    const adminNav = [
-      { path: '/admin-dashboard', icon: Shield, label: 'Admin Panel' },
-    ];
-
     // Build sections based on persona
     const sections = [
-      { title: null, items: teacherNav },
-      { title: 'Tools', items: toolsNav },
+      { title: null, items: mainNav },
     ];
 
-    // Add role-specific section if applicable
+    // Add role-specific section only if applicable
     if (persona === 'hod') {
-      sections.push({ title: 'Department', items: hodNav });
+      sections.push({ 
+        title: 'Department', 
+        items: [{ path: '/hod-dashboard', icon: Building2, label: 'Department' }] 
+      });
     } else if (persona === 'admin') {
-      sections.push({ title: 'Administration', items: adminNav });
+      sections.push({ 
+        title: 'Admin', 
+        items: [{ path: '/admin-dashboard', icon: Shield, label: 'Admin Panel' }] 
+      });
     }
 
-    sections.push({ title: 'Account', items: accountNav });
+    sections.push({ title: null, items: accountNav });
 
     return sections;
   }, [persona]);

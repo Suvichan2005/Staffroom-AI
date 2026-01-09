@@ -15,34 +15,27 @@ import { logInfo, LogCategory } from "./services/activityLogger";
 
 // Core pages (loaded immediately for fast initial load)
 import Login from "./pages/Login";
-import Register from "./pages/Register";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 
 // Lazy-loaded pages (code split for smaller initial bundle)
 const ClassPage = lazy(() => import("./pages/ClassPage"));
-const ClassesPage = lazy(() => import("./pages/ClassesPage"));
 const CoursePage = lazy(() => import("./pages/CoursePage"));
+const ClassesPage = lazy(() => import("./pages/ClassesPage"));
+const ClassManagementPage = lazy(() => import("./pages/ClassManagementPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const SchedulePage = lazy(() => import("./pages/SchedulePage"));
+
+// Hidden/Role-gated pages (accessible but not in main nav)
 const Assessments = lazy(() => import("./pages/Assessments"));
 const SharedResources = lazy(() => import("./pages/SharedResources"));
 const HODDashboard = lazy(() => import("./pages/HODDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const ProfilePage = lazy(() => import("./pages/ProfilePage"));
-const SettingsPage = lazy(() => import("./pages/SettingsPage"));
-const SchedulePage = lazy(() => import("./pages/SchedulePage"));
-const ChatPage = lazy(() => import("./pages/ChatPage"));
-const ClassManagementPage = lazy(() => import("./pages/ClassManagementPage"));
-
-// Dev/Admin pages (rarely accessed, always lazy)
-const AITest = lazy(() => import("./pages/AITest"));
-const DebugIntegrations = lazy(() => import("./pages/DebugIntegrations"));
 const LogsPage = lazy(() => import("./pages/LogsPage"));
 
 // Shared components
 import { ProtectedRoute, AdminRoute } from "./components/shared";
-
-// New Dashboard Components
-import { ResponsiveDashboard } from "./components/dashboard";
 
 // New Layout Components
 import { ResponsiveLayout } from './components/layout';
@@ -102,7 +95,7 @@ function PageLoader() {
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="flex flex-col items-center gap-3">
         <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-        <p className="text-sm text-black-500">Loading...</p>
+        <p className="text-sm text-neutral-500">Loading...</p>
       </div>
     </div>
   );
@@ -136,7 +129,6 @@ function AuthLayout({ children }) {
  * PublicRoute - redirects authenticated users away from auth pages
  */
 function PublicRoute({ children }) {
-  // useAuth returns auth helpers; check common user fields
   let auth;
   try {
     auth = useAuth();
@@ -155,7 +147,7 @@ export default function App() {
         <AIProvider>
           <TooltipProvider>
             <KeyboardShortcutsProvider>
-              <div className="min-h-screen bg-black-50 text-black-900">
+              <div className="min-h-screen bg-neutral-50 text-neutral-900">
                 <ScrollToTop />
                 <Toaster
                   position="top-right"
@@ -184,33 +176,9 @@ export default function App() {
                       </AuthLayout>
                     </PublicRoute>
                   } />
-                  <Route path="/register" element={
-                    <PublicRoute>
-                      <AuthLayout>
-                        <Register />
-                      </AuthLayout>
-                    </PublicRoute>
-                  } />
-                  {/* AI Test Page - Admin only */}
-                  <Route path="/ai-test" element={
-                    <AdminRoute>
-                      <AuthLayout>
-                        <AITest />
-                      </AuthLayout>
-                    </AdminRoute>
-                  } />
 
-                  {/* Dashboard - New responsive design */}
+                  {/* Dashboard - Main entry point */}
                   <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <ResponsiveDashboard />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } />
-
-                  {/* Classic Dashboard - Original design */}
-                  <Route path="/dashboard/classic" element={
                     <ProtectedRoute>
                       <AppLayout>
                         <Dashboard />
@@ -227,7 +195,7 @@ export default function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* Class Page - Original route */}
+                  {/* Class Page */}
                   <Route path="/course/:courseId/class/:classId" element={
                     <ProtectedRoute>
                       <AppLayout>
@@ -236,52 +204,7 @@ export default function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* Assessments */}
-                  <Route path="/assessments" element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <Assessments />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } />
-
-                  {/* Shared Resources */}
-                  <Route path="/resources" element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <SharedResources />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } />
-
-                  {/* HOD Dashboard */}
-                  <Route path="/hod-dashboard" element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <HODDashboard />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } />
-
-                  {/* Admin Dashboard */}
-                  <Route path="/admin-dashboard" element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <AdminDashboard />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } />
-
-                  {/* Class Management Page */}
-                  <Route path="/manage-classes" element={
-                    <ProtectedRoute>
-                      <AppLayout>
-                        <ClassManagementPage />
-                      </AppLayout>
-                    </ProtectedRoute>
-                  } />
-
-                  {/* Classes Page - for BottomNav */}
+                  {/* Classes Page */}
                   <Route path="/classes" element={
                     <ProtectedRoute>
                       <AppLayout>
@@ -290,7 +213,16 @@ export default function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* Schedule Page - for BottomNav */}
+                  {/* Manage Classes Page */}
+                  <Route path="/manage-classes" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <ClassManagementPage />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Schedule Page */}
                   <Route path="/schedule" element={
                     <ProtectedRoute>
                       <AppLayout>
@@ -317,27 +249,44 @@ export default function App() {
                     </ProtectedRoute>
                   } />
 
-                  {/* AI Chat Page - Full page chat experience */}
-                  <Route path="/chat" element={
+                  {/* Hidden pages - accessible but not in main nav */}
+                  <Route path="/assessments" element={
                     <ProtectedRoute>
                       <AppLayout>
-                        <ChatPage />
+                        <Assessments />
                       </AppLayout>
                     </ProtectedRoute>
                   } />
 
-                  {/* Admin Logs Page - Admin only */}
-                  <Route path="/logs" element={
+                  <Route path="/resources" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <SharedResources />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Role-gated pages */}
+                  <Route path="/hod-dashboard" element={
+                    <ProtectedRoute>
+                      <AppLayout>
+                        <HODDashboard />
+                      </AppLayout>
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/admin-dashboard" element={
                     <AdminRoute>
-                      <LogsPage />
+                      <AppLayout>
+                        <AdminDashboard />
+                      </AppLayout>
                     </AdminRoute>
                   } />
 
-                  {/* Debug Integrations Page - Admin only */}
-                  <Route path="/_debug" element={
+                  <Route path="/logs" element={
                     <AdminRoute>
                       <AppLayout>
-                        <DebugIntegrations />
+                        <LogsPage />
                       </AppLayout>
                     </AdminRoute>
                   } />
@@ -346,8 +295,8 @@ export default function App() {
                   <Route path="*" element={
                     <AppLayout>
                       <div className="p-6 text-center">
-                        <h1 className="text-2xl font-bold text-black-800 mb-2">Page Not Found</h1>
-                        <p className="text-black-600">The page you're looking for doesn't exist.</p>
+                        <h1 className="text-2xl font-bold text-neutral-800 mb-2">Page Not Found</h1>
+                        <p className="text-neutral-600">The page you're looking for doesn't exist.</p>
                       </div>
                     </AppLayout>
                   } />

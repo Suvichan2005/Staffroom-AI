@@ -28,6 +28,7 @@ import { PageShell } from "../components/layout";
 import { GlobalAssistant } from "../components/ai";
 import SmartAISuggestions from "../components/ai/SmartAISuggestions";
 import { AssessmentManager } from "../components/shared";
+import { VoiceHints, CLASS_PAGE_HINTS } from "../components/shared";
 import { loadUserState, saveUserState } from "../utils/userScopedStorage";
 import { useTeacher } from "../context/TeacherContext";
 import { ProgressBar } from "../components/charts";
@@ -69,7 +70,6 @@ export default function ClassPage() {
   );
   const [saveMessage, setSaveMessage] = useState("");
   const saveMessageTimeout = useRef(null);
-  const [showVoiceLog, setShowVoiceLog] = useState(false);
   const [attendanceVersion, setAttendanceVersion] = useState(0);
   const progressCardRef = useRef(null);
   const attendanceEditorRef = useRef(null);
@@ -187,13 +187,6 @@ export default function ClassPage() {
       worstPercent: studentPercents.length ? Math.round(Math.min(...studentPercents)) : 0,
     };
   }, [attendanceByDate, classId]);
-
-  const voiceTranscript = useMemo(() => [
-    { speaker: "Teacher", text: "Start voice log for 6A – recap of Landforms." },
-    { speaker: "Assistant", text: "Logging. Key takeaways from student discussion?" },
-    { speaker: "Teacher", text: "Students struggled with deltas versus estuaries." },
-    { speaker: "Assistant", text: "Noted. Suggest running a quick diagram quiz next class." }
-  ], []);
 
   const quickScrollToProgress = () => {
     // If not on syllabus tab, switch first then scroll after animation
@@ -546,6 +539,13 @@ export default function ClassPage() {
 
             {/* Sidebar */}
             <div className="md:col-span-4 space-y-6">
+              {/* Voice Hints - Help users discover voice commands */}
+              <VoiceHints 
+                hints={CLASS_PAGE_HINTS}
+                collapsible
+                defaultExpanded={false}
+              />
+
               {/* AI Suggestions */}
               <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-5 text-white">
                 <SmartAISuggestions
@@ -743,49 +743,6 @@ export default function ClassPage() {
           mergeTodayOverride={loadUserState(`attendance:final:${classId}:${today}`, null)}
         />
       )}
-
-      {/* Voice Log Modal */}
-      {showVoiceLog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/60 backdrop-blur-sm p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-lg rounded-2xl bg-white shadow-xl"
-          >
-            <div className="flex items-center justify-between px-5 py-4 border-b">
-              <div className="flex items-center gap-2">
-                <Mic className="w-5 h-5 text-indigo-600" />
-                <h4 className="font-semibold text-black-800">Voice Log</h4>
-              </div>
-              <button
-                onClick={() => setShowVoiceLog(false)}
-                className="p-2 hover:bg-black-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-black-500" />
-              </button>
-            </div>
-            <div className="p-5 space-y-3">
-              {voiceTranscript.map((entry, index) => (
-                <div 
-                  key={index} 
-                  className={`p-3 rounded-xl ${
-                    entry.speaker === 'Teacher' 
-                      ? 'bg-indigo-50 border border-indigo-100' 
-                      : 'bg-black-50 border border-black-100'
-                  }`}
-                >
-                  <p className="text-xs uppercase tracking-wide text-black-500 mb-1">{entry.speaker}</p>
-                  <p className="text-sm text-black-700">{entry.text}</p>
-                </div>
-              ))}
-              <p className="text-xs text-black-400 text-center pt-2">
-                Audio capture is simulated. Integrate speech-to-text for real sessions.
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
 
     </PageShell>
   );
