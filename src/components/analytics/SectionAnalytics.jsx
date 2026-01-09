@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   TrendingUp, TrendingDown, Users, BookOpen, Calendar, Award,
@@ -190,7 +190,7 @@ export default function SectionAnalytics({
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                 activeView === view.id
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                  : 'bg-white text-black-600 border border-black-200 hover:bg-black-50'
+                  : 'bg-white text-neutral-600 border border-neutral-200 hover:bg-neutral-50'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -239,11 +239,11 @@ export default function SectionAnalytics({
           {/* Charts Row */}
           <div className="grid md:grid-cols-2 gap-6">
             {/* Attendance Trend Chart */}
-            <div className="bg-white rounded-2xl border border-black-200 p-5">
+            <div className="bg-white rounded-2xl border border-neutral-200 p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-semibold text-black-800">Attendance Trend</h3>
-                  <p className="text-xs text-black-500">Last 14 days</p>
+                  <h3 className="font-semibold text-neutral-800">Attendance Trend</h3>
+                  <p className="text-xs text-neutral-500">Last 14 days</p>
                 </div>
                 {attendanceAnalytics.trend !== 0 && (
                   <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
@@ -278,11 +278,11 @@ export default function SectionAnalytics({
             </div>
 
             {/* Syllabus Progress Distribution */}
-            <div className="bg-white rounded-2xl border border-black-200 p-5">
+            <div className="bg-white rounded-2xl border border-neutral-200 p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-semibold text-black-800">Topic Progress</h3>
-                  <p className="text-xs text-black-500">Distribution by status</p>
+                  <h3 className="font-semibold text-neutral-800">Topic Progress</h3>
+                  <p className="text-xs text-neutral-500">Distribution by status</p>
                 </div>
               </div>
               <div className="flex items-center gap-6">
@@ -303,9 +303,9 @@ export default function SectionAnalytics({
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ background: item.color }} />
-                        <span className="text-sm text-black-600">{item.name}</span>
+                        <span className="text-sm text-neutral-600">{item.name}</span>
                       </div>
-                      <span className="text-sm font-semibold text-black-800">{item.value}</span>
+                      <span className="text-sm font-semibold text-neutral-800">{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -315,8 +315,8 @@ export default function SectionAnalytics({
 
           {/* Chapter Progress */}
           {syllabusAnalytics && (
-            <div className="bg-white rounded-2xl border border-black-200 p-5">
-              <h3 className="font-semibold text-black-800 mb-4">Chapter-wise Progress</h3>
+            <div className="bg-white rounded-2xl border border-neutral-200 p-5">
+              <h3 className="font-semibold text-neutral-800 mb-4">Chapter-wise Progress</h3>
               <div className="space-y-3">
                 {syllabusAnalytics.chapters.map((chapter, index) => (
                   <motion.div
@@ -331,17 +331,17 @@ export default function SectionAnalytics({
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium text-black-700 truncate">{chapter.title}</p>
-                        <span className="text-xs font-semibold text-black-600">{chapter.percent}%</span>
+                        <p className="text-sm font-medium text-neutral-700 truncate">{chapter.title}</p>
+                        <span className="text-xs font-semibold text-neutral-600">{chapter.percent}%</span>
                       </div>
-                      <div className="h-2 bg-black-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
                         <div className="h-full flex">
                           <div className="bg-green-500 transition-all" style={{ width: `${(chapter.done / chapter.topics) * 100}%` }} />
                           <div className="bg-yellow-400 transition-all" style={{ width: `${(chapter.inProgress / chapter.topics) * 100}%` }} />
                         </div>
                       </div>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] text-black-500">{chapter.done}/{chapter.topics} topics done</span>
+                        <span className="text-[10px] text-neutral-500">{chapter.done}/{chapter.topics} topics done</span>
                         {chapter.inProgress > 0 && (
                           <span className="text-[10px] text-yellow-600">{chapter.inProgress} in progress</span>
                         )}
@@ -367,7 +367,7 @@ export default function SectionAnalytics({
                       <span className="text-xs font-bold text-red-600">{student.name?.charAt(0) || 'S'}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-black-800 truncate">{student.name}</p>
+                      <p className="text-sm font-medium text-neutral-800 truncate">{student.name}</p>
                       <p className="text-xs text-red-600">{student.percent}% attendance</p>
                     </div>
                   </div>
@@ -387,7 +387,7 @@ export default function SectionAnalytics({
                 {attendanceAnalytics.perfectAttendance.slice(0, 10).map(student => (
                   <div key={student.studentId} className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-full border border-green-200">
                     <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                    <span className="text-sm text-black-700">{student.name}</span>
+                    <span className="text-sm text-neutral-700">{student.name}</span>
                   </div>
                 ))}
               </div>
@@ -398,10 +398,10 @@ export default function SectionAnalytics({
 
       {/* Attendance Heatmap View */}
       {activeView === 'heatmap' && (
-        <div className="bg-white rounded-2xl border border-black-200 p-5">
+        <div className="bg-white rounded-2xl border border-neutral-200 p-5">
           <div className="mb-4">
-            <h3 className="font-semibold text-black-800">Student Attendance Heatmap</h3>
-            <p className="text-xs text-black-500">Last 14 days • Sorted by attendance (lowest first)</p>
+            <h3 className="font-semibold text-neutral-800">Student Attendance Heatmap</h3>
+            <p className="text-xs text-neutral-500">Last 14 days – Sorted by attendance (lowest first)</p>
           </div>
           
           {heatmapData.matrix.length > 0 ? (
@@ -409,13 +409,13 @@ export default function SectionAnalytics({
               <table className="min-w-full">
                 <thead>
                   <tr>
-                    <th className="text-left text-xs font-medium text-black-500 pb-3 pr-4 sticky left-0 bg-white">Student</th>
+                    <th className="text-left text-xs font-medium text-neutral-500 pb-3 pr-4 sticky left-0 bg-white">Student</th>
                     {heatmapData.dates.map((date, i) => (
-                      <th key={date} className="text-center text-[10px] font-medium text-black-500 pb-3 px-1">
+                      <th key={date} className="text-center text-[10px] font-medium text-neutral-500 pb-3 px-1">
                         {new Date(date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric' })}
                       </th>
                     ))}
-                    <th className="text-center text-xs font-medium text-black-500 pb-3 pl-3">%</th>
+                    <th className="text-center text-xs font-medium text-neutral-500 pb-3 pl-3">%</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -426,10 +426,10 @@ export default function SectionAnalytics({
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: rowIdx * 0.02 }}
                     >
-                      <td className="text-sm text-black-700 py-1.5 pr-4 sticky left-0 bg-white">
+                      <td className="text-sm text-neutral-700 py-1.5 pr-4 sticky left-0 bg-white">
                         <div className="flex items-center gap-2">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                            row.percent < 75 ? 'bg-red-100 text-red-600' : 'bg-black-100 text-black-600'
+                            row.percent < 75 ? 'bg-red-100 text-red-600' : 'bg-neutral-100 text-neutral-600'
                           }`}>
                             {row.name?.charAt(0) || 'S'}
                           </div>
@@ -444,7 +444,7 @@ export default function SectionAnalytics({
                                 ? 'bg-green-500 text-white' 
                                 : cell.status === 'absent' 
                                   ? 'bg-red-500 text-white'
-                                  : 'bg-black-100 text-black-400'
+                                  : 'bg-neutral-100 text-neutral-400'
                             }`}
                             title={`${row.name} - ${cell.shortDate}: ${cell.status === 'none' ? 'No record' : cell.status}`}
                           >
@@ -467,24 +467,24 @@ export default function SectionAnalytics({
             </div>
           ) : (
             <div className="text-center py-12">
-              <Grid3X3 className="w-12 h-12 text-black-300 mx-auto mb-3" />
-              <p className="text-black-500">No attendance data available</p>
+              <Grid3X3 className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+              <p className="text-neutral-500">No attendance data available</p>
             </div>
           )}
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-black-100">
+          <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-neutral-100">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded bg-green-500" />
-              <span className="text-xs text-black-600">Present</span>
+              <span className="text-xs text-neutral-600">Present</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded bg-red-500" />
-              <span className="text-xs text-black-600">Absent</span>
+              <span className="text-xs text-neutral-600">Absent</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-black-100" />
-              <span className="text-xs text-black-600">No Record</span>
+              <div className="w-5 h-5 rounded bg-neutral-100" />
+              <span className="text-xs text-neutral-600">No Record</span>
             </div>
           </div>
         </div>
@@ -492,10 +492,10 @@ export default function SectionAnalytics({
 
       {/* Topic Matrix View */}
       {activeView === 'topics' && (
-        <div className="bg-white rounded-2xl border border-black-200 p-5">
+        <div className="bg-white rounded-2xl border border-neutral-200 p-5">
           <div className="mb-4">
-            <h3 className="font-semibold text-black-800">Topic Progress Matrix</h3>
-            <p className="text-xs text-black-500">Visual overview of all topics across chapters</p>
+            <h3 className="font-semibold text-neutral-800">Topic Progress Matrix</h3>
+            <p className="text-xs text-neutral-500">Visual overview of all topics across chapters</p>
           </div>
           
           {topicHeatmapData ? (
@@ -506,15 +506,15 @@ export default function SectionAnalytics({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: chapterIdx * 0.1 }}
-                  className="p-4 rounded-xl bg-black-50"
+                  className="p-4 rounded-xl bg-neutral-50"
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
                       <span className="text-sm font-bold text-indigo-600">{chapter.index}</span>
                     </div>
                     <div>
-                      <h4 className="font-medium text-black-800">{chapter.title}</h4>
-                      <p className="text-[10px] text-black-500">
+                      <h4 className="font-medium text-neutral-800">{chapter.title}</h4>
+                      <p className="text-[10px] text-neutral-500">
                         {chapter.topics.filter(t => t.status === 'done').length}/{chapter.topics.length} topics completed
                       </p>
                     </div>
@@ -528,7 +528,7 @@ export default function SectionAnalytics({
                             ? 'bg-green-100 text-green-700 border border-green-200'
                             : topic.status === 'in-progress'
                               ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                              : 'bg-white text-black-500 border border-black-200'
+                              : 'bg-white text-neutral-500 border border-neutral-200'
                         }`}
                       >
                         <span className="flex items-center gap-1.5">
@@ -537,9 +537,9 @@ export default function SectionAnalytics({
                           {topic.index}. {topic.title.length > 20 ? topic.title.slice(0, 20) + '...' : topic.title}
                         </span>
                         {/* Tooltip */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-black-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-neutral-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
                           {topic.title}
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black-900" />
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-neutral-900" />
                         </div>
                       </div>
                     ))}
@@ -549,24 +549,24 @@ export default function SectionAnalytics({
             </div>
           ) : (
             <div className="text-center py-12">
-              <Layers className="w-12 h-12 text-black-300 mx-auto mb-3" />
-              <p className="text-black-500">No syllabus data available</p>
+              <Layers className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+              <p className="text-neutral-500">No syllabus data available</p>
             </div>
           )}
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-black-100">
+          <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-neutral-100">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded bg-green-100 border border-green-200" />
-              <span className="text-xs text-black-600">Completed</span>
+              <span className="text-xs text-neutral-600">Completed</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded bg-yellow-100 border border-yellow-200" />
-              <span className="text-xs text-black-600">In Progress</span>
+              <span className="text-xs text-neutral-600">In Progress</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-white border border-black-200" />
-              <span className="text-xs text-black-600">Not Started</span>
+              <div className="w-5 h-5 rounded bg-white border border-neutral-200" />
+              <span className="text-xs text-neutral-600">Not Started</span>
             </div>
           </div>
         </div>
@@ -588,21 +588,21 @@ function MetricCard({ icon: Icon, label, value, subtext, color, trend, alert }) 
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={`p-4 rounded-2xl border ${alert ? 'border-red-200 bg-red-50/50' : 'border-black-200 bg-white'}`}
+      className={`p-4 rounded-2xl border ${alert ? 'border-red-200 bg-red-50/50' : 'border-neutral-200 bg-white'}`}
     >
       <div className={`w-10 h-10 rounded-xl ${colorClasses[color]} flex items-center justify-center mb-3`}>
         <Icon className="w-5 h-5" />
       </div>
       <div className="flex items-end gap-2">
-        <p className="text-2xl font-bold text-black-800">{value}</p>
+        <p className="text-2xl font-bold text-neutral-800">{value}</p>
         {trend !== undefined && trend !== 0 && (
           <span className={`text-xs font-medium mb-1 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
             {trend > 0 ? '+' : ''}{trend.toFixed(1)}%
           </span>
         )}
       </div>
-      <p className="text-xs text-black-500 mt-1">{label}</p>
-      {subtext && <p className="text-[10px] text-black-400">{subtext}</p>}
+      <p className="text-xs text-neutral-500 mt-1">{label}</p>
+      {subtext && <p className="text-[10px] text-neutral-400">{subtext}</p>}
     </motion.div>
   );
 }

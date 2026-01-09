@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -30,7 +30,7 @@ const renderMarkdown = (text) => {
     line = line.replace(/\*(.+?)\*/g, '<em>$1</em>');
     line = line.replace(/_(.+?)_/g, '<em>$1</em>');
     // Code: `text`
-    line = line.replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 bg-black-200 rounded text-xs font-mono">$1</code>');
+    line = line.replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 bg-neutral-200 rounded text-xs font-mono">$1</code>');
     return line;
   };
   
@@ -297,7 +297,7 @@ export default function ChatPage() {
               exit={{ width: 0, opacity: 0 }}
               className="hidden lg:block flex-shrink-0 overflow-hidden"
             >
-              <div className="h-full overflow-y-auto bg-white rounded-2xl border border-black-200 p-4">
+              <div className="h-full overflow-y-auto bg-white rounded-2xl border border-neutral-200 p-4">
                 <ChatHistory />
               </div>
             </motion.div>
@@ -307,18 +307,18 @@ export default function ChatPage() {
         {/* Chat History Modal - Mobile */}
         <AnimatePresence>
           {showHistory && (
-            <div className="lg:hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
+            <div className="lg:hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4">
               <motion.div
                 initial={{ y: '100%', opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: '100%', opacity: 0 }}
                 className="w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl shadow-xl max-h-[80vh] overflow-hidden flex flex-col"
               >
-                <div className="flex items-center justify-between p-4 border-b border-black-100">
+                <div className="flex items-center justify-between p-4 border-b border-neutral-100">
                   <h3 className="text-lg font-semibold">Chat History</h3>
                   <button
                     onClick={() => setShowHistory(false)}
-                    className="p-2 hover:bg-black-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -337,7 +337,7 @@ export default function ChatPage() {
             <button
               key={i}
               onClick={() => handleSuggestionClick(suggestion)}
-              className="flex-shrink-0 px-3 py-2 bg-white border border-black-200 rounded-xl text-sm text-black-700 hover:bg-indigo-50 hover:border-indigo-200 transition-colors"
+              className="flex-shrink-0 px-3 py-2 bg-white border border-neutral-200 rounded-xl text-sm text-neutral-700 hover:bg-indigo-50 hover:border-indigo-200 transition-colors"
             >
               {suggestion}
             </button>
@@ -345,9 +345,9 @@ export default function ChatPage() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col bg-white rounded-2xl lg:rounded-3xl border border-black-200 shadow-sm overflow-hidden min-h-0">
+        <div className="flex-1 flex flex-col bg-white rounded-2xl lg:rounded-3xl border border-neutral-200 shadow-sm overflow-hidden min-h-0">
           {/* Chat Header */}
-          <div className="flex items-center justify-between px-4 lg:px-6 py-3 lg:py-4 border-b border-black-100 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700">
+          <div className="flex items-center justify-between px-4 lg:px-6 py-3 lg:py-4 border-b border-neutral-100 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate(-1)}
@@ -402,15 +402,15 @@ export default function ChatPage() {
           </div>
 
           {/* Messages Container */}
-          <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 bg-gradient-to-b from-black-50 to-white">
+          <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6 bg-gradient-to-b from-neutral-50 to-white">
             {/* Welcome Banner - Show when no messages */}
             {Object.keys(groupedMessages).length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center py-8">
                 <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-4">
                   <Sparkles className="w-10 h-10 text-indigo-600" />
                 </div>
-                <h2 className="text-xl font-bold text-black-800 mb-2">How can I help today?</h2>
-                <p className="text-black-500 text-sm max-w-md mb-6">
+                <h2 className="text-xl font-bold text-neutral-800 mb-2">How can I help today?</h2>
+                <p className="text-neutral-500 text-sm max-w-md mb-6">
                   I can help with your classes, track syllabus progress, analyze attendance, and provide insights about your students.
                 </p>
                 <div className="grid grid-cols-2 gap-2 max-w-sm">
@@ -418,9 +418,9 @@ export default function ChatPage() {
                     <button
                       key={i}
                       onClick={() => handleSuggestionClick(suggestion)}
-                      className="p-3 text-left text-sm bg-white border border-black-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition-colors"
+                      className="p-3 text-left text-sm bg-white border border-neutral-200 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition-colors"
                     >
-                      <span className="text-black-700">{suggestion}</span>
+                      <span className="text-neutral-700">{suggestion}</span>
                     </button>
                   ))}
                 </div>
@@ -431,7 +431,7 @@ export default function ChatPage() {
               <div key={date}>
                 {/* Date Separator */}
                 <div className="flex items-center justify-center mb-4">
-                  <span className="px-4 py-1.5 bg-white border border-black-100 shadow-sm rounded-full text-xs text-black-500 font-medium">
+                  <span className="px-4 py-1.5 bg-white border border-neutral-100 shadow-sm rounded-full text-xs text-neutral-500 font-medium">
                     {date}
                   </span>
                 </div>
@@ -468,7 +468,7 @@ export default function ChatPage() {
                           px-4 py-3 rounded-2xl shadow-sm
                           ${message.role === 'user'
                             ? 'bg-indigo-600 text-white rounded-tr-sm'
-                            : 'bg-white border border-black-100 text-black-800 rounded-tl-sm'
+                            : 'bg-white border border-neutral-100 text-neutral-800 rounded-tl-sm'
                           }
                         `}>
                           <div className="text-sm">
@@ -479,7 +479,7 @@ export default function ChatPage() {
                           </div>
                         </div>
                         <p className={`
-                          text-xs text-black-400 mt-1 
+                          text-xs text-neutral-400 mt-1 
                           ${message.role === 'user' ? 'text-right' : 'text-left'}
                         `}>
                           {formatTime(message.timestamp)}
@@ -501,14 +501,14 @@ export default function ChatPage() {
                 <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm">
                   <Sparkles className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
                 </div>
-                <div className="px-4 py-3 bg-white border border-black-100 rounded-2xl rounded-tl-sm shadow-sm">
+                <div className="px-4 py-3 bg-white border border-neutral-100 rounded-2xl rounded-tl-sm shadow-sm">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
                       <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
-                    <span className="text-sm text-black-500">Thinking...</span>
+                    <span className="text-sm text-neutral-500">Thinking...</span>
                   </div>
                 </div>
               </motion.div>
@@ -518,7 +518,7 @@ export default function ChatPage() {
           </div>
 
           {/* Input Area */}
-          <div className="px-4 lg:px-6 py-3 lg:py-4 border-t border-black-100 bg-white">
+          <div className="px-4 lg:px-6 py-3 lg:py-4 border-t border-neutral-100 bg-white">
             <div className="flex items-end gap-2 lg:gap-3">
               {/* Voice Input */}
               <button
@@ -527,7 +527,7 @@ export default function ChatPage() {
                   p-3 rounded-xl transition-all flex-shrink-0
                   ${isRecording 
                     ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-200' 
-                    : 'bg-black-100 text-black-500 hover:bg-indigo-100 hover:text-indigo-600'
+                    : 'bg-neutral-100 text-neutral-500 hover:bg-indigo-100 hover:text-indigo-600'
                   }
                 `}
                 title={isRecording ? 'Stop recording' : 'Start voice input'}
@@ -543,7 +543,7 @@ export default function ChatPage() {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask me anything about your classes..."
-                  className="w-full px-4 py-3 bg-black-50 border border-black-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white text-sm transition-colors"
+                  className="w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:bg-white text-sm transition-colors"
                   rows={1}
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                 />
@@ -557,7 +557,7 @@ export default function ChatPage() {
                   p-3 rounded-xl transition-all flex-shrink-0
                   ${inputValue.trim() && !isLoading
                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-200 hover:scale-105'
-                    : 'bg-black-100 text-black-400 cursor-not-allowed'
+                    : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
                   }
                 `}
               >
@@ -570,8 +570,8 @@ export default function ChatPage() {
         {/* Sidebar - Hidden on mobile, visible on lg+ */}
         <div className="hidden lg:flex w-80 flex-col gap-4">
           {/* Quick Stats */}
-          <div className="bg-white rounded-2xl border border-black-200 p-5 shadow-sm">
-            <h3 className="font-semibold text-black-800 mb-4 flex items-center gap-2">
+          <div className="bg-white rounded-2xl border border-neutral-200 p-5 shadow-sm">
+            <h3 className="font-semibold text-neutral-800 mb-4 flex items-center gap-2">
               <Zap className="w-4 h-4 text-yellow-500" />
               Quick Stats
             </h3>
@@ -581,11 +581,11 @@ export default function ChatPage() {
                 return (
                   <div 
                     key={i}
-                    className="p-3 rounded-xl bg-gradient-to-br from-black-50 to-black-100 text-center border border-black-100"
+                    className="p-3 rounded-xl bg-gradient-to-br from-neutral-50 to-neutral-100 text-center border border-neutral-100"
                   >
                     <Icon className="w-5 h-5 text-indigo-600 mx-auto mb-1.5" />
-                    <p className="text-lg font-bold text-black-800">{stat.value}</p>
-                    <p className="text-xs text-black-500">{stat.label}</p>
+                    <p className="text-lg font-bold text-neutral-800">{stat.value}</p>
+                    <p className="text-xs text-neutral-500">{stat.label}</p>
                   </div>
                 );
               })}
@@ -593,8 +593,8 @@ export default function ChatPage() {
           </div>
 
           {/* Smart Suggestions */}
-          <div className="bg-white rounded-2xl border border-black-200 p-4 flex-1 overflow-hidden flex flex-col">
-            <h3 className="font-semibold text-black-800 mb-3 flex items-center gap-2">
+          <div className="bg-white rounded-2xl border border-neutral-200 p-4 flex-1 overflow-hidden flex flex-col">
+            <h3 className="font-semibold text-neutral-800 mb-3 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-indigo-600" />
               Smart Suggestions
             </h3>
@@ -612,7 +612,7 @@ export default function ChatPage() {
                       flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors
                       ${isActive 
                         ? 'bg-indigo-600 text-white' 
-                        : 'bg-black-100 text-black-600 hover:bg-black-200'
+                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                       }
                     `}
                   >
@@ -629,10 +629,10 @@ export default function ChatPage() {
                 <button
                   key={i}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className="w-full flex items-center gap-2 p-2.5 rounded-xl bg-black-50 hover:bg-indigo-50 text-left transition-colors group"
+                  className="w-full flex items-center gap-2 p-2.5 rounded-xl bg-neutral-50 hover:bg-indigo-50 text-left transition-colors group"
                 >
-                  <ChevronRight className="w-4 h-4 text-black-400 group-hover:text-indigo-600 transition-colors" />
-                  <span className="text-sm text-black-700 group-hover:text-indigo-700">
+                  <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-indigo-600 transition-colors" />
+                  <span className="text-sm text-neutral-700 group-hover:text-indigo-700">
                     {suggestion}
                   </span>
                 </button>
@@ -677,7 +677,7 @@ export default function ChatPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4"
           >
             <motion.div
               initial={{ scale: 0.95 }}
@@ -690,15 +690,15 @@ export default function ChatPage() {
                   <AlertCircle className="w-6 h-6 text-yellow-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-black-800">Clear Chat History?</h3>
-                  <p className="text-sm text-black-500">This action cannot be undone.</p>
+                  <h3 className="font-semibold text-neutral-800">Clear Chat History?</h3>
+                  <p className="text-sm text-neutral-500">This action cannot be undone.</p>
                 </div>
               </div>
               
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowClearConfirm(false)}
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-black-100 text-black-700 font-medium hover:bg-black-200 transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-neutral-100 text-neutral-700 font-medium hover:bg-neutral-200 transition-colors"
                 >
                   Cancel
                 </button>

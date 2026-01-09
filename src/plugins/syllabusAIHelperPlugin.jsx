@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Syllabus AI Helper Plugin
  * 
- * Wired-in by plugin integration pass — user asked to keep files intact.
+ * Wired-in by plugin integration pass ─ user asked to keep files intact.
  * 
  * Integrates SyllabusAIHelper functionality into the chat interface.
  * Provides AI-powered tools for quiz generation, assignment creation,
@@ -55,7 +55,7 @@ function QuickActionButton({ icon: Icon, label, onClick, active, disabled }) {
         transition-all border
         ${active 
           ? 'bg-purple-100 text-purple-700 border-purple-300' 
-          : 'bg-white text-black-600 border-black-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200'
+          : 'bg-white text-neutral-600 border-neutral-200 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200'
         }
         disabled:opacity-50 disabled:cursor-not-allowed
       `}
@@ -90,13 +90,13 @@ function QuizResultDisplay({ questions, onClose, onSave }) {
       className="space-y-3"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-black-800 flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-neutral-800 flex items-center gap-2">
           <ClipboardList className="w-4 h-4 text-purple-600" />
           Generated Quiz ({questions.length} questions)
         </h4>
         <button
           onClick={onClose}
-          className="p-1 text-black-400 hover:text-black-600"
+          className="p-1 text-neutral-400 hover:text-neutral-600"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -107,15 +107,15 @@ function QuizResultDisplay({ questions, onClose, onSave }) {
         {questions.map((q, idx) => (
           <div 
             key={idx} 
-            className="p-3 bg-white rounded-lg border border-black-200 hover:border-purple-200 transition-colors"
+            className="p-3 bg-white rounded-lg border border-neutral-200 hover:border-purple-200 transition-colors"
           >
             <div className="flex items-start justify-between gap-2">
-              <p className="text-sm font-medium text-black-800">
+              <p className="text-sm font-medium text-neutral-800">
                 {idx + 1}. {q.question}
               </p>
               <button
                 onClick={() => handleCopy(q, idx)}
-                className="p-1 text-black-400 hover:text-purple-600 flex-shrink-0"
+                className="p-1 text-neutral-400 hover:text-purple-600 flex-shrink-0"
                 aria-label="Copy question"
               >
                 {copiedIndex === idx ? (
@@ -132,15 +132,15 @@ function QuizResultDisplay({ questions, onClose, onSave }) {
                   className={`text-xs px-2 py-1 rounded ${
                     key === q.correctAnswer
                       ? 'bg-green-100 text-green-800 font-medium'
-                      : 'bg-black-50 text-black-600'
+                      : 'bg-neutral-50 text-neutral-600'
                   }`}
                 >
                   {key}. {value}
                 </div>
               ))}
             </div>
-            <p className="text-xs text-black-500 mt-2 italic">
-              💡 {q.explanation}
+            <p className="text-xs text-neutral-500 mt-2 italic">
+              ðŸ’¡ {q.explanation}
             </p>
           </div>
         ))}
@@ -171,13 +171,13 @@ function AssignmentResultDisplay({ assignment, onClose, onCreate }) {
       className="space-y-3"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-black-800 flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-neutral-800 flex items-center gap-2">
           <FileText className="w-4 h-4 text-purple-600" />
           {assignment.title}
         </h4>
         <button
           onClick={onClose}
-          className="p-1 text-black-400 hover:text-black-600"
+          className="p-1 text-neutral-400 hover:text-neutral-600"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -185,24 +185,24 @@ function AssignmentResultDisplay({ assignment, onClose, onCreate }) {
       </div>
 
       <div className="space-y-3 max-h-[300px] overflow-y-auto">
-        <div className="p-3 bg-white rounded-lg border border-black-200">
-          <p className="text-xs text-black-500 mb-1">Description</p>
-          <p className="text-sm text-black-800">{assignment.description}</p>
+        <div className="p-3 bg-white rounded-lg border border-neutral-200">
+          <p className="text-xs text-neutral-500 mb-1">Description</p>
+          <p className="text-sm text-neutral-800">{assignment.description}</p>
         </div>
 
-        <div className="p-3 bg-white rounded-lg border border-black-200">
-          <p className="text-xs text-black-500 mb-1">Instructions</p>
-          <p className="text-sm text-black-700 whitespace-pre-line">{assignment.instructions}</p>
+        <div className="p-3 bg-white rounded-lg border border-neutral-200">
+          <p className="text-xs text-neutral-500 mb-1">Instructions</p>
+          <p className="text-sm text-neutral-700 whitespace-pre-line">{assignment.instructions}</p>
         </div>
 
-        <div className="p-3 bg-white rounded-lg border border-black-200">
-          <p className="text-xs text-black-500 mb-2">Rubric</p>
+        <div className="p-3 bg-white rounded-lg border border-neutral-200">
+          <p className="text-xs text-neutral-500 mb-2">Rubric</p>
           <div className="space-y-2">
             {assignment.rubric?.map((r, idx) => (
-              <div key={idx} className="flex justify-between items-start p-2 bg-black-50 rounded">
+              <div key={idx} className="flex justify-between items-start p-2 bg-neutral-50 rounded">
                 <div>
-                  <p className="text-sm font-medium text-black-800">{r.criterion}</p>
-                  <p className="text-xs text-black-500">{r.description}</p>
+                  <p className="text-sm font-medium text-neutral-800">{r.criterion}</p>
+                  <p className="text-xs text-neutral-500">{r.description}</p>
                 </div>
                 <span className="text-sm font-semibold text-purple-600">{r.points} pts</span>
               </div>
@@ -210,9 +210,9 @@ function AssignmentResultDisplay({ assignment, onClose, onCreate }) {
           </div>
         </div>
 
-        <div className="flex gap-4 text-xs text-black-600 p-2 bg-black-50 rounded-lg">
-          <span>⏱️ Est. Time: {assignment.estimatedTime}</span>
-          <span>📅 Due in: {assignment.dueInDays} days</span>
+        <div className="flex gap-4 text-xs text-neutral-600 p-2 bg-neutral-50 rounded-lg">
+          <span>â±ï¸ Est. Time: {assignment.estimatedTime}</span>
+          <span>ðŸ“… Due in: {assignment.dueInDays} days</span>
         </div>
       </div>
 
@@ -239,13 +239,13 @@ function TopicSuggestionDisplay({ suggestion, onClose }) {
       className="space-y-3"
     >
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-black-800 flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-neutral-800 flex items-center gap-2">
           <Lightbulb className="w-4 h-4 text-yellow-500" />
           Next Topic Suggestion
         </h4>
         <button
           onClick={onClose}
-          className="p-1 text-black-400 hover:text-black-600"
+          className="p-1 text-neutral-400 hover:text-neutral-600"
           aria-label="Close"
         >
           <X className="w-4 h-4" />
@@ -253,26 +253,26 @@ function TopicSuggestionDisplay({ suggestion, onClose }) {
       </div>
 
       <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
-        <p className="text-lg font-semibold text-black-800 mb-1">
+        <p className="text-lg font-semibold text-neutral-800 mb-1">
           {suggestion.suggestedTopic}
         </p>
-        <p className="text-sm text-black-700">{suggestion.reasoning}</p>
+        <p className="text-sm text-neutral-700">{suggestion.reasoning}</p>
       </div>
 
-      <div className="p-3 bg-white rounded-lg border border-black-200">
-        <p className="text-xs text-black-500 mb-2">Preparation Tips</p>
+      <div className="p-3 bg-white rounded-lg border border-neutral-200">
+        <p className="text-xs text-neutral-500 mb-2">Preparation Tips</p>
         <ul className="space-y-1">
           {suggestion.preparationTips?.map((tip, idx) => (
-            <li key={idx} className="text-sm text-black-700 flex items-start gap-2">
-              <span className="text-yellow-500">•</span>
+            <li key={idx} className="text-sm text-neutral-700 flex items-start gap-2">
+              <span className="text-yellow-500">–</span>
               <span>{tip}</span>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="text-sm text-black-600 p-2 bg-black-50 rounded-lg">
-        ⏱️ Estimated: {suggestion.estimatedHours || 2} hours
+      <div className="text-sm text-neutral-600 p-2 bg-neutral-50 rounded-lg">
+        â±ï¸ Estimated: {suggestion.estimatedHours || 2} hours
       </div>
     </motion.div>
   );
@@ -480,8 +480,8 @@ function SyllabusAIPanel({ context, onGenerated }) {
           <Sparkles className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h3 className="font-semibold text-black-800">Syllabus AI Helper</h3>
-          <p className="text-sm text-black-500">Generate quizzes, assignments & suggestions</p>
+          <h3 className="font-semibold text-neutral-800">Syllabus AI Helper</h3>
+          <p className="text-sm text-neutral-500">Generate quizzes, assignments & suggestions</p>
         </div>
       </div>
 
@@ -492,14 +492,14 @@ function SyllabusAIPanel({ context, onGenerated }) {
       ) : (
         <>
           {/* Dynamic Course/Chapter/Topic Selection */}
-          <div className="space-y-3 p-3 bg-black-50 rounded-lg border border-black-200">
+          <div className="space-y-3 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
             {/* Course Selection */}
             <div>
-              <label className="block text-xs font-medium text-black-600 mb-1">Course</label>
+              <label className="block text-xs font-medium text-neutral-600 mb-1">Course</label>
               <select
                 value={selectedCourseId}
                 onChange={(e) => handleCourseChange(e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-black-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+                className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
               >
                 <option value="">Select a course...</option>
                 {allCourses.map(course => (
@@ -513,11 +513,11 @@ function SyllabusAIPanel({ context, onGenerated }) {
             {/* Chapter Selection - Only for Quiz/Assignment */}
             {activeTab !== 'suggest' && selectedCourseId && chapters.length > 0 && (
               <div>
-                <label className="block text-xs font-medium text-black-600 mb-1">Chapter</label>
+                <label className="block text-xs font-medium text-neutral-600 mb-1">Chapter</label>
                 <select
                   value={selectedChapterIndex}
                   onChange={(e) => handleChapterChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-black-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
                 >
                   <option value="">Select a chapter...</option>
                   {chapters.map(chapter => (
@@ -532,11 +532,11 @@ function SyllabusAIPanel({ context, onGenerated }) {
             {/* Topic Selection - Only for Quiz/Assignment */}
             {activeTab !== 'suggest' && selectedChapterIndex && topics.length > 0 && (
               <div>
-                <label className="block text-xs font-medium text-black-600 mb-1">Topic</label>
+                <label className="block text-xs font-medium text-neutral-600 mb-1">Topic</label>
                 <select
                   value={selectedTopicIndex}
                   onChange={(e) => { setSelectedTopicIndex(e.target.value); setResult(null); setError(''); }}
-                  className="w-full px-3 py-2 bg-white border border-black-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
+                  className="w-full px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-400"
                 >
                   <option value="">Select a topic...</option>
                   {topics.map(topic => (
@@ -550,18 +550,18 @@ function SyllabusAIPanel({ context, onGenerated }) {
 
             {/* Current Selection Summary */}
             {selectedCourseId && (
-              <div className="pt-2 border-t border-black-200">
+              <div className="pt-2 border-t border-neutral-200">
                 <p className="text-xs text-purple-600 font-medium">
                   {subject} {grade ? `- Grade ${grade}` : ''}
-                  {selectedChapter && ` → ${selectedChapter.title}`}
-                  {selectedTopic && ` → ${selectedTopic.title}`}
+                  {selectedChapter && ` â†’ ${selectedChapter.title}`}
+                  {selectedTopic && ` â†’ ${selectedTopic.title}`}
                 </p>
               </div>
             )}
           </div>
 
           {/* Tabs */}
-          <div className="flex border-b border-black-200">
+          <div className="flex border-b border-neutral-200">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -574,7 +574,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
                     transition-colors border-b-2 -mb-px
                     ${isActive
                       ? 'text-purple-700 border-purple-600 bg-purple-50'
-                      : 'text-black-600 border-transparent hover:text-black-800 hover:bg-black-50'
+                      : 'text-neutral-600 border-transparent hover:text-neutral-800 hover:bg-neutral-50'
                     }
                   `}
                 >
@@ -627,8 +627,8 @@ function SyllabusAIPanel({ context, onGenerated }) {
                 >
                   {/* Quiz Options */}
                   {activeTab === 'quiz' && (
-                    <div className="p-3 bg-black-50 rounded-lg">
-                      <label className="block text-xs text-black-600 mb-2">
+                    <div className="p-3 bg-neutral-50 rounded-lg">
+                      <label className="block text-xs text-neutral-600 mb-2">
                         Number of questions
                       </label>
                       <div className="flex gap-2">
@@ -640,7 +640,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
                               px-4 py-2 rounded-lg text-sm font-medium transition-colors
                               ${questionCount === num
                                 ? 'bg-purple-600 text-white'
-                                : 'bg-white border border-black-200 text-black-700 hover:bg-purple-50'
+                                : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-purple-50'
                               }
                             `}
                           >
@@ -655,7 +655,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
                   {activeTab === 'suggest' && (
                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-800">
-                        💡 AI will analyze your progress and suggest the best next topic to teach based on syllabus sequence and upcoming exams.
+                        ðŸ’¡ AI will analyze your progress and suggest the best next topic to teach based on syllabus sequence and upcoming exams.
                       </p>
                     </div>
                   )}
@@ -694,7 +694,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
 
                   {/* Validation Message */}
                   {!canGenerate && !error && (
-                    <p className="text-xs text-black-500 text-center">
+                    <p className="text-xs text-neutral-500 text-center">
                       {activeTab === 'suggest' 
                         ? 'Select a course to get suggestions'
                         : 'Select course, chapter, and topic to generate'}
@@ -702,7 +702,7 @@ function SyllabusAIPanel({ context, onGenerated }) {
                   )}
 
                   {/* Info */}
-                  <p className="text-xs text-black-400 text-center">
+                  <p className="text-xs text-neutral-400 text-center">
                     Powered by Google Gemini AI
                   </p>
                 </motion.div>
@@ -747,8 +747,8 @@ function SyllabusQuickActions({ context, onMessage, expanded, onToggleExpanded }
         const questions = await generateQuiz({
           subject, grade, chapterTitle: currentChapter, topicTitle: currentTopic, count: 5
         });
-        response = `📝 **Generated Quiz** for ${subject} ${grade ? `Grade ${grade}` : ''}\n` +
-          `Topic: ${currentChapter} → ${currentTopic}\n\n` +
+        response = `ðŸ“ **Generated Quiz** for ${subject} ${grade ? `Grade ${grade}` : ''}\n` +
+          `Topic: ${currentChapter} â†’ ${currentTopic}\n\n` +
           questions.map((q, i) => 
             `**${i + 1}. ${q.question}**\n` +
             Object.entries(q.options).map(([k, v]) => `   ${k}. ${v}`).join('\n') +
@@ -758,21 +758,21 @@ function SyllabusQuickActions({ context, onMessage, expanded, onToggleExpanded }
         const assignment = await generateAssignment({
           subject, grade, chapterTitle: currentChapter, topicTitle: currentTopic, type: 'homework'
         });
-        response = `📄 **${assignment.title}**\n` +
-          `Topic: ${currentChapter} → ${currentTopic}\n\n` +
+        response = `ðŸ“„ **${assignment.title}**\n` +
+          `Topic: ${currentChapter} â†’ ${currentTopic}\n\n` +
           `${assignment.description}\n\n` +
           `**Instructions:**\n${assignment.instructions}\n\n` +
-          `**Rubric:**\n` + assignment.rubric.map(r => `• ${r.criterion}: ${r.points} pts`).join('\n') +
-          `\n\n⏱️ ${assignment.estimatedTime} | 📅 Due in ${assignment.dueInDays} days`;
+          `**Rubric:**\n` + assignment.rubric.map(r => `– ${r.criterion}: ${r.points} pts`).join('\n') +
+          `\n\nâ±ï¸ ${assignment.estimatedTime} | ðŸ“… Due in ${assignment.dueInDays} days`;
       } else if (actionType === 'suggest') {
         const suggestion = await suggestNextTopic({
           subject, grade, completedChapters: [currentChapter], upcomingExams: []
         });
-        response = `💡 **Next Topic Suggestion** for ${subject}\n\n` +
+        response = `ðŸ’¡ **Next Topic Suggestion** for ${subject}\n\n` +
           `**${suggestion.suggestedTopic}**\n\n` +
           `${suggestion.reasoning}\n\n` +
-          `**Preparation Tips:**\n` + (suggestion.preparationTips || []).map(t => `• ${t}`).join('\n') +
-          `\n\n⏱️ Estimated: ${suggestion.estimatedHours || 2} hours`;
+          `**Preparation Tips:**\n` + (suggestion.preparationTips || []).map(t => `– ${t}`).join('\n') +
+          `\n\nâ±ï¸ Estimated: ${suggestion.estimatedHours || 2} hours`;
       }
 
       onMessage?.({
@@ -781,8 +781,8 @@ function SyllabusQuickActions({ context, onMessage, expanded, onToggleExpanded }
       });
     } catch (err) {
       const errorMsg = err.message?.includes('429') || err.message?.includes('quota')
-        ? `⏳ Rate limit reached. Please wait a moment and try again.`
-        : `❌ Failed to generate ${actionType}: ${err.message}`;
+        ? `â³ Rate limit reached. Please wait a moment and try again.`
+        : `âŒ Failed to generate ${actionType}: ${err.message}`;
       onMessage?.({
         type: 'error',
         content: errorMsg
@@ -835,7 +835,7 @@ function SyllabusQuickActions({ context, onMessage, expanded, onToggleExpanded }
       />
       <button
         onClick={onToggleExpanded}
-        className="p-1.5 text-black-400 hover:text-black-600"
+        className="p-1.5 text-neutral-400 hover:text-neutral-600"
         aria-label="Collapse"
       >
         <ChevronUp className="w-4 h-4" />
@@ -931,12 +931,12 @@ const SyllabusAIHelperPlugin = {
           
           return {
             handled: true,
-            response: `📝 **Generated Quiz** for ${subject} ${grade ? `Grade ${grade}` : ''}\n` +
-              `Topic: ${chapterTitle} → ${topicTitle}\n\n` +
+            response: `ðŸ“ **Generated Quiz** for ${subject} ${grade ? `Grade ${grade}` : ''}\n` +
+              `Topic: ${chapterTitle} â†’ ${topicTitle}\n\n` +
               questions.map((q, i) => 
                 `**${i + 1}. ${q.question}**\n` +
                 Object.entries(q.options).map(([k, v]) => `   ${k}. ${v}`).join('\n') +
-                `\n   ✓ Answer: ${q.correctAnswer}\n   💡 ${q.explanation}`
+                `\n   ✓ Answer: ${q.correctAnswer}\n   ðŸ’¡ ${q.explanation}`
               ).join('\n\n')
           };
         }
@@ -948,12 +948,12 @@ const SyllabusAIHelperPlugin = {
           
           return {
             handled: true,
-            response: `📄 **${assignment.title}**\n` +
-              `Topic: ${chapterTitle} → ${topicTitle}\n\n` +
+            response: `ðŸ“„ **${assignment.title}**\n` +
+              `Topic: ${chapterTitle} â†’ ${topicTitle}\n\n` +
               `${assignment.description}\n\n` +
               `**Instructions:**\n${assignment.instructions}\n\n` +
-              `**Rubric:**\n` + assignment.rubric.map(r => `• ${r.criterion}: ${r.points} pts - ${r.description}`).join('\n') +
-              `\n\n⏱️ ${assignment.estimatedTime} | 📅 Due in ${assignment.dueInDays} days`
+              `**Rubric:**\n` + assignment.rubric.map(r => `– ${r.criterion}: ${r.points} pts - ${r.description}`).join('\n') +
+              `\n\nâ±ï¸ ${assignment.estimatedTime} | ðŸ“… Due in ${assignment.dueInDays} days`
           };
         }
 
@@ -964,18 +964,18 @@ const SyllabusAIHelperPlugin = {
           
           return {
             handled: true,
-            response: `💡 **Next Topic Suggestion** for ${subject}\n\n` +
+            response: `ðŸ’¡ **Next Topic Suggestion** for ${subject}\n\n` +
               `**${suggestion.suggestedTopic}**\n\n` +
               `${suggestion.reasoning}\n\n` +
-              `**Preparation Tips:**\n` + (suggestion.preparationTips || []).map(t => `• ${t}`).join('\n') +
-              `\n\n⏱️ Estimated: ${suggestion.estimatedHours || 2} hours`
+              `**Preparation Tips:**\n` + (suggestion.preparationTips || []).map(t => `– ${t}`).join('\n') +
+              `\n\nâ±ï¸ Estimated: ${suggestion.estimatedHours || 2} hours`
           };
         }
       } catch (err) {
         debugLog('Error processing syllabus request:', err);
         const errorMsg = err.message?.includes('429') || err.message?.includes('quota')
-          ? `⏳ Rate limit reached. Please wait a moment and try again.`
-          : `❌ Sorry, I couldn't process that request. Error: ${err.message}`;
+          ? `â³ Rate limit reached. Please wait a moment and try again.`
+          : `âŒ Sorry, I couldn't process that request. Error: ${err.message}`;
         return {
           handled: true,
           response: errorMsg

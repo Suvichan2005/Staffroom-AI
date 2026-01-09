@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
     BookOpen, Calendar, Clock, Plus, X, Check, Image
@@ -134,7 +134,7 @@ export default function CreateClassModal({
             // Build schedule strings
             const schedules = classForm.schedules
                 .filter(s => s.startTime && s.endTime)
-                .map(s => `${s.day} ${s.startTime}–${s.endTime}`);
+                .map(s => `${s.day} ${s.startTime}-${s.endTime}`);
 
             const newSection = createSection(targetCourseId, {
                 id: classForm.sectionId.trim().toUpperCase(),
@@ -191,7 +191,7 @@ export default function CreateClassModal({
                     <>
                         {/* Subject */}
                         <div>
-                            <label className="block text-sm font-medium text-black-700 mb-1.5">
+                            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
                                 Subject
                             </label>
                             <input
@@ -199,7 +199,7 @@ export default function CreateClassModal({
                                 value={courseForm.subject}
                                 onChange={(e) => setCourseForm({ ...courseForm, subject: e.target.value })}
                                 placeholder="e.g., Mathematics"
-                                className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+                                className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                                 list="subject-suggestions"
                             />
                             <datalist id="subject-suggestions">
@@ -211,7 +211,7 @@ export default function CreateClassModal({
 
                         {/* Grade */}
                         <div>
-                            <label className="block text-sm font-medium text-black-700 mb-1.5">
+                            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
                                 Grade / Year
                             </label>
                             <input
@@ -221,14 +221,14 @@ export default function CreateClassModal({
                                 value={courseForm.grade}
                                 onChange={(e) => setCourseForm({ ...courseForm, grade: e.target.value })}
                                 placeholder="e.g., 6"
-                                className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+                                className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                             />
                         </div>
 
                         {/* Custom Title (optional) */}
                         <div>
-                            <label className="block text-sm font-medium text-black-700 mb-1.5">
-                                Custom Title <span className="text-black-400">(optional)</span>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                                Custom Title <span className="text-neutral-400">(optional)</span>
                             </label>
                             <input
                                 type="text"
@@ -237,7 +237,7 @@ export default function CreateClassModal({
                                 placeholder={courseForm.grade && courseForm.subject
                                     ? `Grade ${courseForm.grade} ${courseForm.subject}`
                                     : 'Auto-generated from subject and grade'}
-                                className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+                                className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                             />
                         </div>
                     </>
@@ -247,13 +247,13 @@ export default function CreateClassModal({
                         {/* Course Selection (if not pre-selected) */}
                         {!courseId && (
                             <div>
-                                <label className="block text-sm font-medium text-black-700 mb-1.5">
+                                <label className="block text-sm font-medium text-neutral-700 mb-1.5">
                                     Course
                                 </label>
                                 <select
                                     value={classForm.courseId}
                                     onChange={(e) => setClassForm({ ...classForm, courseId: e.target.value })}
-                                    className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+                                    className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                                 >
                                     <option value="">Select a course...</option>
                                     {courses.map(c => (
@@ -265,7 +265,7 @@ export default function CreateClassModal({
 
                         {/* Section/Class Name */}
                         <div>
-                            <label className="block text-sm font-medium text-black-700 mb-1.5">
+                            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
                                 Section / Class Name
                             </label>
                             <input
@@ -273,19 +273,19 @@ export default function CreateClassModal({
                                 value={classForm.sectionId}
                                 onChange={(e) => setClassForm({ ...classForm, sectionId: e.target.value })}
                                 placeholder="e.g., 6A, 8B, Section 1"
-                                className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+                                className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
                             />
-                            <p className="text-xs text-black-500 mt-1">
+                            <p className="text-xs text-neutral-500 mt-1">
                                 This will be the identifier for this class (e.g., "6A")
                             </p>
                         </div>
 
                         {/* Schedule Builder */}
                         <div>
-                            <label className="block text-sm font-medium text-black-700 mb-1.5">
-                                Schedule
+                            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                                Schedule ({classForm.schedules.length} slot{classForm.schedules.length !== 1 ? 's' : ''})
                             </label>
-                            <div className="space-y-2">
+                            <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-neutral-300">
                                 {classForm.schedules.map((schedule, index) => (
                                     <motion.div
                                         key={index}
@@ -296,7 +296,7 @@ export default function CreateClassModal({
                                         <select
                                             value={schedule.day}
                                             onChange={(e) => updateSchedule(index, 'day', e.target.value)}
-                                            className="px-3 py-2 border border-black-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                            className="px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
                                         >
                                             {DAYS.map(d => (
                                                 <option key={d} value={d}>{d}</option>
@@ -306,19 +306,19 @@ export default function CreateClassModal({
                                             type="time"
                                             value={schedule.startTime}
                                             onChange={(e) => updateSchedule(index, 'startTime', e.target.value)}
-                                            className="px-3 py-2 border border-black-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                            className="px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
                                         />
-                                        <span className="text-black-400">–</span>
+                                        <span className="text-neutral-400">-</span>
                                         <input
                                             type="time"
                                             value={schedule.endTime}
                                             onChange={(e) => updateSchedule(index, 'endTime', e.target.value)}
-                                            className="px-3 py-2 border border-black-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                            className="px-3 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-200"
                                         />
                                         {classForm.schedules.length > 1 && (
                                             <button
                                                 onClick={() => removeSchedule(index)}
-                                                className="p-1.5 text-black-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                             >
                                                 <X className="w-4 h-4" />
                                             </button>

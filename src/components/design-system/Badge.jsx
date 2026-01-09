@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 
 /**
  * Badge Component - Small status indicators
@@ -17,7 +17,7 @@ export function Badge({
   children,
 }) {
   const variants = {
-    default: 'bg-black-100 text-black-700',
+    default: 'bg-neutral-100 text-neutral-700',
     primary: 'bg-indigo-100 text-indigo-700',
     success: 'bg-green-100 text-green-700',
     warning: 'bg-yellow-100 text-yellow-700',
@@ -26,7 +26,7 @@ export function Badge({
   };
 
   const dotColors = {
-    default: 'bg-black-500',
+    default: 'bg-neutral-500',
     primary: 'bg-indigo-500',
     success: 'bg-green-500',
     warning: 'bg-yellow-500',

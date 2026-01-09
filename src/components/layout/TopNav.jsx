@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+﻿import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -122,12 +122,12 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
             <span className="h-9 w-9 grid place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow font-bold">
               S
             </span>
-            <span className="font-semibold text-black-800 tracking-tight">Staffroom</span>
+            <span className="font-semibold text-neutral-800 tracking-tight">Staffroom</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link
               to="/login"
-              className="px-4 py-2 text-sm font-medium text-black-700 hover:text-black-900 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 transition-colors"
             >
               Login
             </Link>
@@ -151,14 +151,14 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
   if (isMobile) {
     
     return (
-      <header className="sticky top-0 z-40 bg-white border-b border-black-200">
+      <header className="sticky top-0 z-40 bg-white border-b border-neutral-200">
         <div className="px-4 h-14 flex items-center justify-between">
           {/* Left side - Hamburger or Back button */}
           <div className="flex items-center gap-2">
             {showBack ? (
               <button
                 onClick={onBack || (() => navigate(-1))}
-                className="p-2 -ml-2 text-black-600 hover:bg-black-100 rounded-lg transition-colors"
+                className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -167,7 +167,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
             ) : (
               <button
                 onClick={() => openDrawer?.()}
-                className="p-2 -ml-2 text-black-600 hover:bg-black-100 rounded-lg transition-colors"
+                className="p-2 -ml-2 text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
                 aria-label="Open menu"
               >
                 <Menu className="w-5 h-5" />
@@ -176,7 +176,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
             
             {/* Logo/Title */}
             {title ? (
-              <h1 className="font-semibold text-black-800 truncate max-w-[180px]">
+              <h1 className="font-semibold text-neutral-800 truncate max-w-[180px]">
                 {title}
               </h1>
             ) : (
@@ -184,7 +184,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                 <span className="h-8 w-8 grid place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow text-sm font-bold">
                   S
                 </span>
-                <span className="font-semibold text-black-800 text-sm">Staffroom</span>
+                <span className="font-semibold text-neutral-800 text-sm">Staffroom</span>
               </Link>
             )}
           </div>
@@ -193,14 +193,14 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSearch(true)}
-              className="p-2 text-black-500 hover:bg-black-100 rounded-lg transition-colors"
+              className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors"
             >
               <Search className="w-5 h-5" />
             </button>
             <div className="relative">
               <button 
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 text-black-500 hover:bg-black-100 rounded-lg transition-colors"
+                className="relative p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors"
               >
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
@@ -221,10 +221,10 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -8, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-black-200 z-50 max-h-96 overflow-hidden"
+                      className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-neutral-200 z-50 max-h-96 overflow-hidden"
                     >
-                      <div className="px-4 py-3 border-b border-black-100 flex items-center justify-between">
-                        <p className="font-semibold text-black-800">Notifications</p>
+                      <div className="px-4 py-3 border-b border-neutral-100 flex items-center justify-between">
+                        <p className="font-semibold text-neutral-800">Notifications</p>
                         <div className="flex items-center gap-2">
                           {unreadCount > 0 && (
                             <button
@@ -249,9 +249,9 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                       <div className="overflow-y-auto max-h-72">
                         {notifications.length === 0 ? (
                           <div className="px-4 py-8 text-center">
-                            <Bell className="w-8 h-8 text-black-300 mx-auto mb-2" />
-                            <p className="text-sm text-black-500">No notifications</p>
-                            <p className="text-xs text-black-400 mt-1">You're all caught up!</p>
+                            <Bell className="w-8 h-8 text-neutral-300 mx-auto mb-2" />
+                            <p className="text-sm text-neutral-500">No notifications</p>
+                            <p className="text-xs text-neutral-400 mt-1">You're all caught up!</p>
                           </div>
                         ) : (
                           notifications.slice(0, 8).map((notif) => {
@@ -261,21 +261,21 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                                 key={notif.id}
                                 onClick={() => handleNotificationClick(notif)}
                                 className={`
-                                  w-full px-4 py-3 text-left hover:bg-black-50 transition-colors cursor-pointer
-                                  border-b border-black-50 last:border-b-0 group
+                                  w-full px-4 py-3 text-left hover:bg-neutral-50 transition-colors cursor-pointer
+                                  border-b border-neutral-50 last:border-b-0 group
                                   ${!notif.read ? 'bg-indigo-50/50' : ''}
                                 `}
                               >
                                 <div className="flex gap-3">
                                   <div className={`
                                     p-2 rounded-lg flex-shrink-0
-                                    ${notif.priority === 'high' ? 'bg-red-100 text-red-600' : 'bg-black-100 text-black-600'}
+                                    ${notif.priority === 'high' ? 'bg-red-100 text-red-600' : 'bg-neutral-100 text-neutral-600'}
                                   `}>
                                     <Icon className="w-4 h-4" />
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-2">
-                                      <p className={`text-sm truncate ${!notif.read ? 'font-semibold text-black-800' : 'text-black-700'}`}>
+                                      <p className={`text-sm truncate ${!notif.read ? 'font-semibold text-neutral-800' : 'text-neutral-700'}`}>
                                         {notif.title}
                                       </p>
                                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -284,15 +284,15 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                                         )}
                                         <button
                                           onClick={(e) => handleDeleteNotification(e, notif.id)}
-                                          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-black-100 rounded transition-all"
+                                          className="p-1 opacity-0 group-hover:opacity-100 hover:bg-neutral-100 rounded transition-all"
                                           title="Delete"
                                         >
-                                          <X className="w-3 h-3 text-black-400" />
+                                          <X className="w-3 h-3 text-neutral-400" />
                                         </button>
                                       </div>
                                     </div>
-                                    <p className="text-xs text-black-500 line-clamp-2 mt-0.5">{notif.message}</p>
-                                    <p className="text-[10px] text-black-400 mt-1">{formatNotificationTime(notif.timestamp)}</p>
+                                    <p className="text-xs text-neutral-500 line-clamp-2 mt-0.5">{notif.message}</p>
+                                    <p className="text-[10px] text-neutral-400 mt-1">{formatNotificationTime(notif.timestamp)}</p>
                                   </div>
                                 </div>
                               </div>
@@ -301,9 +301,9 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                         )}
                       </div>
                       {notifications.length > 0 && (
-                        <div className="px-4 py-2 border-t border-black-100 bg-black-50 text-center">
-                          <p className="text-xs text-black-500">
-                            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'} • {notifications.length} total
+                        <div className="px-4 py-2 border-t border-neutral-100 bg-neutral-50 text-center">
+                          <p className="text-xs text-neutral-500">
+                            {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'} – {notifications.length} total
                           </p>
                         </div>
                       )}
@@ -321,13 +321,13 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
 
   // Desktop Top Nav
   return (
-    <header className="sticky top-0 z-40 h-16 bg-white border-b border-black-200">
+    <header className="sticky top-0 z-40 h-16 bg-white border-b border-neutral-200">
       <div className="h-full px-6 flex items-center justify-between">
         {/* Left: Hamburger + Logo */}
         <div className="flex items-center gap-3">
           <button
             onClick={toggleSidebar}
-            className="p-2 text-black-500 hover:bg-black-100 rounded-xl transition-colors"
+            className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-xl transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="w-5 h-5" />
@@ -336,7 +336,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
             <span className="h-9 w-9 grid place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white shadow font-bold">
               S
             </span>
-            <span className="font-semibold text-black-800 tracking-tight text-lg">
+            <span className="font-semibold text-neutral-800 tracking-tight text-lg">
               Staffroom
             </span>
           </Link>
@@ -348,7 +348,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
           <div className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 text-black-500 hover:bg-black-100 rounded-lg transition-colors"
+              className="relative p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors"
             >
               <Bell className="w-5 h-5" />
               {unreadCount > 0 && (
@@ -369,12 +369,12 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-96 bg-white rounded-2xl shadow-xl border border-black-200 z-50 overflow-hidden"
+                    className="absolute right-0 top-full mt-2 w-96 bg-white rounded-2xl shadow-xl border border-neutral-200 z-50 overflow-hidden"
                   >
-                    <div className="px-5 py-4 border-b border-black-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50">
+                    <div className="px-5 py-4 border-b border-neutral-100 flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50">
                       <div>
-                        <p className="font-bold text-black-800">Notifications</p>
-                        <p className="text-xs text-black-500">{unreadCount} unread</p>
+                        <p className="font-bold text-neutral-800">Notifications</p>
+                        <p className="text-xs text-neutral-500">{unreadCount} unread</p>
                       </div>
                       <div className="flex items-center gap-2">
                         {unreadCount > 0 && (
@@ -400,11 +400,11 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                     <div className="overflow-y-auto max-h-80">
                       {notifications.length === 0 ? (
                         <div className="px-5 py-10 text-center">
-                          <div className="w-12 h-12 mx-auto bg-black-100 rounded-full flex items-center justify-center mb-3">
-                            <Bell className="w-6 h-6 text-black-400" />
+                          <div className="w-12 h-12 mx-auto bg-neutral-100 rounded-full flex items-center justify-center mb-3">
+                            <Bell className="w-6 h-6 text-neutral-400" />
                           </div>
-                          <p className="text-sm text-black-500">No notifications</p>
-                          <p className="text-xs text-black-400 mt-1">You're all caught up!</p>
+                          <p className="text-sm text-neutral-500">No notifications</p>
+                          <p className="text-xs text-neutral-400 mt-1">You're all caught up!</p>
                         </div>
                       ) : (
                         notifications.map((notif) => {
@@ -414,21 +414,21 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                               key={notif.id}
                               onClick={() => handleNotificationClick(notif)}
                               className={`
-                                w-full px-5 py-4 text-left hover:bg-black-50 transition-colors cursor-pointer
-                                border-b border-black-100 last:border-b-0 group
+                                w-full px-5 py-4 text-left hover:bg-neutral-50 transition-colors cursor-pointer
+                                border-b border-neutral-100 last:border-b-0 group
                                 ${!notif.read ? 'bg-indigo-50/30' : ''}
                               `}
                             >
                               <div className="flex gap-3">
                                 <div className={`
                                   p-2.5 rounded-xl flex-shrink-0
-                                  ${notif.priority === 'high' ? 'bg-red-100 text-red-600' : 'bg-black-100 text-black-600'}
+                                  ${notif.priority === 'high' ? 'bg-red-100 text-red-600' : 'bg-neutral-100 text-neutral-600'}
                                 `}>
                                   <Icon className="w-4 h-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-start justify-between gap-2">
-                                    <p className={`text-sm ${!notif.read ? 'font-semibold text-black-800' : 'text-black-700'}`}>
+                                    <p className={`text-sm ${!notif.read ? 'font-semibold text-neutral-800' : 'text-neutral-700'}`}>
                                       {notif.title}
                                     </p>
                                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -437,15 +437,15 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                                       )}
                                       <button
                                         onClick={(e) => handleDeleteNotification(e, notif.id)}
-                                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-black-100 rounded transition-all"
+                                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-neutral-100 rounded transition-all"
                                         title="Delete"
                                       >
-                                        <X className="w-3.5 h-3.5 text-black-400" />
+                                        <X className="w-3.5 h-3.5 text-neutral-400" />
                                       </button>
                                     </div>
                                   </div>
-                                  <p className="text-xs text-black-500 line-clamp-2 mt-1">{notif.message}</p>
-                                  <p className="text-[11px] text-black-400 mt-2">{formatNotificationTime(notif.timestamp)}</p>
+                                  <p className="text-xs text-neutral-500 line-clamp-2 mt-1">{notif.message}</p>
+                                  <p className="text-[11px] text-neutral-400 mt-2">{formatNotificationTime(notif.timestamp)}</p>
                                 </div>
                               </div>
                             </div>
@@ -454,9 +454,9 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                       )}
                     </div>
                     {notifications.length > 0 && (
-                      <div className="px-5 py-3 border-t border-black-100 bg-black-50/50 text-center">
-                        <p className="text-xs text-black-500">
-                          {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'} • {notifications.length} total
+                      <div className="px-5 py-3 border-t border-neutral-100 bg-neutral-50/50 text-center">
+                        <p className="text-xs text-neutral-500">
+                          {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'} – {notifications.length} total
                         </p>
                       </div>
                     )}
@@ -470,13 +470,13 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
           <div className="relative">
             <button
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2 px-2 py-1.5 hover:bg-black-100 rounded-xl transition-colors"
+              className="flex items-center gap-2 px-2 py-1.5 hover:bg-neutral-100 rounded-xl transition-colors"
             >
               <Avatar name={teacher.name} src={teacher.photoURL} size="sm" />
-              <span className="text-sm font-medium text-black-700 hidden lg:block">
+              <span className="text-sm font-medium text-neutral-700 hidden lg:block">
                 {teacher.name || 'Teacher'}
               </span>
-              <ChevronDown className="w-4 h-4 text-black-400" />
+              <ChevronDown className="w-4 h-4 text-neutral-400" />
             </button>
 
             <AnimatePresence>
@@ -491,12 +491,12 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.95 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-black-200 py-2 z-50"
+                    className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-lg border border-neutral-200 py-2 z-50"
                   >
                     {/* Profile Info */}
-                    <div className="px-4 py-3 border-b border-black-100">
-                      <p className="font-medium text-black-800">{teacher.name}</p>
-                      <p className="text-sm text-black-500">Teacher</p>
+                    <div className="px-4 py-3 border-b border-neutral-100">
+                      <p className="font-medium text-neutral-800">{teacher.name}</p>
+                      <p className="text-sm text-neutral-500">Teacher</p>
                     </div>
 
                     {/* Menu Items */}
@@ -506,9 +506,9 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                           setShowProfileMenu(false);
                           navigate('/profile');
                         }}
-                        className="w-full px-4 py-2 text-left text-sm text-black-700 hover:bg-black-50 flex items-center gap-3"
+                        className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 flex items-center gap-3"
                       >
-                        <User className="w-4 h-4 text-black-400" />
+                        <User className="w-4 h-4 text-neutral-400" />
                         View Profile
                       </button>
                       <button
@@ -516,16 +516,16 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                           setShowProfileMenu(false);
                           navigate('/settings');
                         }}
-                        className="w-full px-4 py-2 text-left text-sm text-black-700 hover:bg-black-50 flex items-center gap-3"
+                        className="w-full px-4 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-50 flex items-center gap-3"
                       >
-                        <Settings className="w-4 h-4 text-black-400" />
+                        <Settings className="w-4 h-4 text-neutral-400" />
                         Settings
                       </button>
                     </div>
 
                     {/* Role Switcher */}
-                    <div className="border-t border-black-100 py-2">
-                      <p className="px-4 py-1 text-xs font-semibold text-black-400 uppercase">
+                    <div className="border-t border-neutral-100 py-2">
+                      <p className="px-4 py-1 text-xs font-semibold text-neutral-400 uppercase">
                         Switch Role
                       </p>
                       {[
@@ -540,7 +540,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                             setShowProfileMenu(false);
                             navigate(role.path);
                           }}
-                          className="w-full px-4 py-2 text-left text-sm text-black-600 hover:bg-black-50"
+                          className="w-full px-4 py-2 text-left text-sm text-neutral-600 hover:bg-neutral-50"
                         >
                           {role.label}
                         </button>
@@ -548,7 +548,7 @@ export default function TopNav({ title, showBack, onBack, rightAction }) {
                     </div>
 
                     {/* Logout */}
-                    <div className="border-t border-black-100 pt-2">
+                    <div className="border-t border-neutral-100 pt-2">
                       <button
                         onClick={async () => {
                           setShowProfileMenu(false);

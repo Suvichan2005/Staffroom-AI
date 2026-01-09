@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -13,6 +13,7 @@ import { Modal, ConfirmModal } from '../components/design-system/Modal';
 import CreateClassModal from '../components/teacher/CreateClassModal';
 import EditClassModal from '../components/teacher/EditClassModal';
 import DocumentUploadModal from '../components/teacher/DocumentUploadModal';
+import StudentListEditor from '../components/teacher/StudentListEditor';
 import toast from 'react-hot-toast';
 
 /**
@@ -35,12 +36,22 @@ export default function ClassManagementPage() {
     const [uploadMode, setUploadMode] = useState(null); // 'timetable' | 'studentList' | null
     const [uploadTargetClass, setUploadTargetClass] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'course'|'class', courseId, sectionId? }
+    const [studentEditorClass, setStudentEditorClass] = useState(null); // classId for student list editing
 
     // Filter state
     const [searchQuery, setSearchQuery] = useState('');
-    const [expandedCourses, setExpandedCourses] = useState(new Set());
 
     const courses = teacher?.courses || [];
+    
+    // Initialize expanded state with all courses expanded by default
+    const [expandedCourses, setExpandedCourses] = useState(new Set());
+    
+    // When courses change, expand any new ones
+    useEffect(() => {
+        if (courses.length > 0 && expandedCourses.size === 0) {
+            setExpandedCourses(new Set(courses.map(c => c.id)));
+        }
+    }, [courses]);
 
     // Filter courses based on search
     const filteredCourses = useMemo(() => {
@@ -208,11 +219,11 @@ export default function ClassManagementPage() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
                                 transition={{ delay: courseIndex * 0.05 }}
-                                className="bg-white rounded-2xl border border-black-200 overflow-hidden"
+                                className="bg-white rounded-2xl border border-neutral-200 overflow-hidden"
                             >
                                 {/* Course Header */}
                                 <div
-                                    className="p-4 cursor-pointer hover:bg-black-50 transition-colors"
+                                    className="p-4 cursor-pointer hover:bg-neutral-50 transition-colors"
                                     onClick={() => toggleCourse(course.id)}
                                 >
                                     <div className="flex items-center gap-4">
@@ -228,7 +239,7 @@ export default function ClassManagementPage() {
                                         {/* Course Info */}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <h2 className="text-lg font-semibold text-black-800 truncate">
+                                                <h2 className="text-lg font-semibold text-neutral-800 truncate">
                                                     {course.title}
                                                 </h2>
                                                 {course.subject && (
@@ -237,8 +248,8 @@ export default function ClassManagementPage() {
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-sm text-black-500">
-                                                {course.sections?.length || 0} classes • Grade {course.grade || 'N/A'}
+                                            <p className="text-sm text-neutral-500">
+                                                {course.sections?.length || 0} classes – Grade {course.grade || 'N/A'}
                                             </p>
                                         </div>
 
@@ -262,7 +273,7 @@ export default function ClassManagementPage() {
                                                 <Trash2 className="w-4 h-4" />
                                             </IconButton>
                                             <ChevronRight
-                                                className={`w-5 h-5 text-black-400 transition-transform ${expandedCourses.has(course.id) ? 'rotate-90' : ''
+                                                className={`w-5 h-5 text-neutral-400 transition-transform ${expandedCourses.has(course.id) ? 'rotate-90' : ''
                                                     }`}
                                             />
                                         </div>
@@ -276,14 +287,14 @@ export default function ClassManagementPage() {
                                             initial={{ height: 0, opacity: 0 }}
                                             animate={{ height: 'auto', opacity: 1 }}
                                             exit={{ height: 0, opacity: 0 }}
-                                            className="border-t border-black-100"
+                                            className="border-t border-neutral-100"
                                         >
                                             {course.sections?.length > 0 ? (
-                                                <div className="divide-y divide-black-100">
+                                                <div className="divide-y divide-neutral-100">
                                                     {course.sections.map((section) => (
                                                         <div
                                                             key={section.id}
-                                                            className="p-4 flex items-center justify-between hover:bg-black-50 transition-colors"
+                                                            className="p-4 flex items-center justify-between hover:bg-neutral-50 transition-colors"
                                                         >
                                                             <div className="flex items-center gap-3">
                                                                 <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
@@ -292,8 +303,8 @@ export default function ClassManagementPage() {
                                                                     </span>
                                                                 </div>
                                                                 <div>
-                                                                    <p className="font-medium text-black-700">Section {section.id}</p>
-                                                                    <div className="flex items-center gap-3 text-xs text-black-500">
+                                                                    <p className="font-medium text-neutral-700">Section {section.id}</p>
+                                                                    <div className="flex items-center gap-3 text-xs text-neutral-500">
                                                                         <span className="flex items-center gap-1">
                                                                             <Clock className="w-3 h-3" />
                                                                             {section.schedules?.[0] || 'No schedule'}
@@ -309,13 +320,10 @@ export default function ClassManagementPage() {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    onClick={() => {
-                                                                        setUploadTargetClass(section.id);
-                                                                        setUploadMode('studentList');
-                                                                    }}
+                                                                    onClick={() => setStudentEditorClass(section.id)}
                                                                     className="gap-1 text-xs"
                                                                 >
-                                                                    <UserPlus className="w-3 h-3" />
+                                                                    <Users className="w-3 h-3" />
                                                                     Students
                                                                 </Button>
                                                                 <IconButton
@@ -345,10 +353,10 @@ export default function ClassManagementPage() {
                                                 </div>
                                             ) : (
                                                 <div className="p-8 text-center">
-                                                    <div className="w-12 h-12 mx-auto bg-black-100 rounded-full flex items-center justify-center mb-3">
-                                                        <Users className="w-6 h-6 text-black-400" />
+                                                    <div className="w-12 h-12 mx-auto bg-neutral-100 rounded-full flex items-center justify-center mb-3">
+                                                        <Users className="w-6 h-6 text-neutral-400" />
                                                     </div>
-                                                    <p className="text-black-500 mb-3">No classes in this course yet</p>
+                                                    <p className="text-neutral-500 mb-3">No classes in this course yet</p>
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
@@ -377,10 +385,10 @@ export default function ClassManagementPage() {
                             <div className="w-16 h-16 mx-auto bg-indigo-100 rounded-full flex items-center justify-center mb-4">
                                 <BookOpen className="w-8 h-8 text-indigo-600" />
                             </div>
-                            <h3 className="text-lg font-semibold text-black-800 mb-2">
+                            <h3 className="text-lg font-semibold text-neutral-800 mb-2">
                                 {searchQuery ? 'No matching courses' : 'No courses yet'}
                             </h3>
-                            <p className="text-black-500 mb-6">
+                            <p className="text-neutral-500 mb-6">
                                 {searchQuery
                                     ? 'Try a different search term'
                                     : 'Create your first course to start managing classes'}
@@ -448,6 +456,18 @@ export default function ClassManagementPage() {
                 }
                 confirmText="Delete"
                 variant="danger"
+            />
+
+            {/* Student List Editor */}
+            <StudentListEditor
+                isOpen={!!studentEditorClass}
+                onClose={() => setStudentEditorClass(null)}
+                classId={studentEditorClass}
+                onUpload={() => {
+                    setUploadTargetClass(studentEditorClass);
+                    setUploadMode('studentList');
+                    setStudentEditorClass(null);
+                }}
             />
         </PageShell>
     );

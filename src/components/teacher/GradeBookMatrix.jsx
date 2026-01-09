@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, ChevronDown, ChevronUp, Download, Filter, 
@@ -114,7 +114,7 @@ export default function GradeBookMatrix({ classId, courseId }) {
 
   // Get grade color
   const getGradeColor = (percent) => {
-    if (percent === null || percent === undefined) return 'bg-black-100 text-black-400';
+    if (percent === null || percent === undefined) return 'bg-neutral-100 text-neutral-400';
     if (percent >= 80) return 'bg-green-100 text-green-700';
     if (percent >= 60) return 'bg-yellow-100 text-yellow-700';
     return 'bg-red-100 text-red-700';
@@ -138,8 +138,8 @@ export default function GradeBookMatrix({ classId, courseId }) {
 
   if (classStudents.length === 0) {
     return (
-      <div className="text-center py-12 text-black-500">
-        <User className="w-12 h-12 mx-auto mb-3 text-black-300" />
+      <div className="text-center py-12 text-neutral-500">
+        <User className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
         <p>No students in this class</p>
       </div>
     );
@@ -147,8 +147,8 @@ export default function GradeBookMatrix({ classId, courseId }) {
 
   if (assessments.length === 0) {
     return (
-      <div className="text-center py-12 text-black-500">
-        <AlertCircle className="w-12 h-12 mx-auto mb-3 text-black-300" />
+      <div className="text-center py-12 text-neutral-500">
+        <AlertCircle className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
         <p>No assessments found for this class</p>
       </div>
     );
@@ -159,9 +159,9 @@ export default function GradeBookMatrix({ classId, courseId }) {
       {/* Header with filters */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-black-800">Grade Book</h3>
-          <p className="text-xs text-black-500">
-            {classStudents.length} students • {assessments.length} assessments
+          <h3 className="font-semibold text-neutral-800">Grade Book</h3>
+          <p className="text-xs text-neutral-500">
+            {classStudents.length} students – {assessments.length} assessments
           </p>
         </div>
         
@@ -170,7 +170,7 @@ export default function GradeBookMatrix({ classId, courseId }) {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-1.5 text-sm bg-white border border-black-200 rounded-lg focus:ring-2 focus:ring-indigo-200"
+            className="px-3 py-1.5 text-sm bg-white border border-neutral-200 rounded-lg focus:ring-2 focus:ring-indigo-200"
           >
             <option value="all">All Types</option>
             <option value="assignment">Assignments</option>
@@ -178,20 +178,20 @@ export default function GradeBookMatrix({ classId, courseId }) {
           </select>
 
           {/* Export button (placeholder) */}
-          <button className="p-2 text-black-500 hover:text-black-700 hover:bg-black-100 rounded-lg transition-colors">
+          <button className="p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors">
             <Download className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* Matrix Table */}
-      <div className="overflow-x-auto rounded-xl border border-black-200">
+      <div className="overflow-x-auto rounded-xl border border-neutral-200">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-black-50">
+            <tr className="bg-neutral-50">
               {/* Student column header */}
               <th 
-                className="sticky left-0 z-10 bg-black-50 px-4 py-3 text-left font-semibold text-black-700 border-r border-black-200 cursor-pointer hover:bg-black-100 transition-colors"
+                className="sticky left-0 z-10 bg-neutral-50 px-4 py-3 text-left font-semibold text-neutral-700 border-r border-neutral-200 cursor-pointer hover:bg-neutral-100 transition-colors"
                 onClick={() => toggleSort('name')}
               >
                 <div className="flex items-center gap-1">
@@ -204,7 +204,7 @@ export default function GradeBookMatrix({ classId, courseId }) {
               {assessments.map((assessment) => (
                 <th 
                   key={assessment.id}
-                  className="px-3 py-3 text-center font-medium text-black-600 min-w-[80px]"
+                  className="px-3 py-3 text-center font-medium text-neutral-600 min-w-[80px]"
                   title={assessment.title}
                 >
                   <div className="truncate max-w-[100px]">
@@ -213,7 +213,7 @@ export default function GradeBookMatrix({ classId, courseId }) {
                       : assessment.title
                     }
                   </div>
-                  <div className="text-[10px] text-black-400 font-normal mt-0.5">
+                  <div className="text-[10px] text-neutral-400 font-normal mt-0.5">
                     /{assessment.maxPoints}
                   </div>
                 </th>
@@ -221,7 +221,7 @@ export default function GradeBookMatrix({ classId, courseId }) {
               
               {/* Average column */}
               <th 
-                className="sticky right-0 z-10 bg-black-50 px-4 py-3 text-center font-semibold text-black-700 border-l border-black-200 cursor-pointer hover:bg-black-100 transition-colors"
+                className="sticky right-0 z-10 bg-neutral-50 px-4 py-3 text-center font-semibold text-neutral-700 border-l border-neutral-200 cursor-pointer hover:bg-neutral-100 transition-colors"
                 onClick={() => toggleSort('average')}
               >
                 <div className="flex items-center justify-center gap-1">
@@ -232,19 +232,19 @@ export default function GradeBookMatrix({ classId, courseId }) {
             </tr>
           </thead>
           
-          <tbody className="divide-y divide-black-100">
+          <tbody className="divide-y divide-neutral-100">
             {sortedMatrix.map((row, idx) => (
               <tr 
                 key={row.student.studentId}
-                className={idx % 2 === 0 ? 'bg-white' : 'bg-black-50/50'}
+                className={idx % 2 === 0 ? 'bg-white' : 'bg-neutral-50/50'}
               >
                 {/* Student name */}
-                <td className="sticky left-0 z-10 px-4 py-2.5 border-r border-black-200 bg-inherit">
+                <td className="sticky left-0 z-10 px-4 py-2.5 border-r border-neutral-200 bg-inherit">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-700">
                       {row.student.name.split(' ').map(n => n[0]).join('')}
                     </div>
-                    <span className="font-medium text-black-700 truncate max-w-[120px]">
+                    <span className="font-medium text-neutral-700 truncate max-w-[120px]">
                       {row.student.name}
                     </span>
                   </div>
@@ -258,11 +258,11 @@ export default function GradeBookMatrix({ classId, courseId }) {
                         {grade.percent}%
                       </span>
                     ) : grade.submitted ? (
-                      <span className="text-black-400 flex items-center justify-center">
+                      <span className="text-neutral-400 flex items-center justify-center">
                         <Clock className="w-3.5 h-3.5" title="Pending grade" />
                       </span>
                     ) : (
-                      <span className="text-black-300">
+                      <span className="text-neutral-300">
                         <Minus className="w-3.5 h-3.5 mx-auto" />
                       </span>
                     )}
@@ -270,13 +270,13 @@ export default function GradeBookMatrix({ classId, courseId }) {
                 ))}
                 
                 {/* Student average */}
-                <td className="sticky right-0 z-10 px-4 py-2.5 text-center border-l border-black-200 bg-inherit">
+                <td className="sticky right-0 z-10 px-4 py-2.5 text-center border-l border-neutral-200 bg-inherit">
                   {row.average !== null ? (
                     <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${getGradeColor(row.average)}`}>
                       {row.average}%
                     </span>
                   ) : (
-                    <span className="text-black-400 text-xs">—</span>
+                    <span className="text-neutral-400 text-xs">─</span>
                   )}
                 </td>
               </tr>
@@ -284,7 +284,7 @@ export default function GradeBookMatrix({ classId, courseId }) {
             
             {/* Assessment averages row */}
             <tr className="bg-indigo-50 font-medium">
-              <td className="sticky left-0 z-10 px-4 py-2.5 border-r border-black-200 bg-indigo-50 text-indigo-700">
+              <td className="sticky left-0 z-10 px-4 py-2.5 border-r border-neutral-200 bg-indigo-50 text-indigo-700">
                 Class Average
               </td>
               {assessmentAverages.map((avg, idx) => (
@@ -294,15 +294,15 @@ export default function GradeBookMatrix({ classId, courseId }) {
                       {avg}%
                     </span>
                   ) : (
-                    <span className="text-black-400 text-xs">—</span>
+                    <span className="text-neutral-400 text-xs">─</span>
                   )}
                 </td>
               ))}
-              <td className="sticky right-0 z-10 px-4 py-2.5 text-center border-l border-black-200 bg-indigo-50">
+              <td className="sticky right-0 z-10 px-4 py-2.5 text-center border-l border-neutral-200 bg-indigo-50">
                 {/* Overall class average */}
                 {(() => {
                   const allAvgs = sortedMatrix.filter(r => r.average !== null).map(r => r.average);
-                  if (allAvgs.length === 0) return <span className="text-black-400">—</span>;
+                  if (allAvgs.length === 0) return <span className="text-neutral-400">─</span>;
                   const overall = Math.round(allAvgs.reduce((s, a) => s + a, 0) / allAvgs.length);
                   return (
                     <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${getGradeColor(overall)}`}>
@@ -317,7 +317,7 @@ export default function GradeBookMatrix({ classId, courseId }) {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-xs text-black-500">
+      <div className="flex items-center gap-4 text-xs text-neutral-500">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-green-100" /> 80%+
         </div>
@@ -328,10 +328,10 @@ export default function GradeBookMatrix({ classId, courseId }) {
           <span className="w-3 h-3 rounded bg-red-100" /> &lt;60%
         </div>
         <div className="flex items-center gap-1.5">
-          <Clock className="w-3 h-3 text-black-400" /> Pending
+          <Clock className="w-3 h-3 text-neutral-400" /> Pending
         </div>
         <div className="flex items-center gap-1.5">
-          <Minus className="w-3 h-3 text-black-300" /> Not submitted
+          <Minus className="w-3 h-3 text-neutral-300" /> Not submitted
         </div>
       </div>
     </div>

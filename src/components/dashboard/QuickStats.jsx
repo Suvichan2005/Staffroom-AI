@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, BookOpen, CheckCircle, GraduationCap } from 'lucide-react';
 
@@ -59,16 +59,16 @@ export default function QuickStats({ stats }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-3xl border border-black-200 p-4 hover:shadow-md transition-shadow h-full min-h-[120px]"
+            className="bg-white rounded-3xl border border-neutral-200 p-4 hover:shadow-md transition-shadow h-full min-h-[120px]"
           >
             <div className="flex items-start justify-between mb-2">
               <div className={`p-2 rounded-xl ${stat.bg}`}>
                 <Icon className={`w-5 h-5 ${stat.color}`} />
               </div>
             </div>
-            <p className="text-2xl font-bold text-black-800">{stat.value}</p>
-            <p className="text-xs font-medium text-black-500 mt-1">{stat.label}</p>
-            <p className="text-[10px] text-black-400 mt-0.5">{stat.description}</p>
+            <p className="text-2xl font-bold text-neutral-800">{stat.value}</p>
+            <p className="text-xs font-medium text-neutral-500 mt-1">{stat.label}</p>
+            <p className="text-[10px] text-neutral-400 mt-0.5">{stat.description}</p>
           </motion.div>
         );
       })}

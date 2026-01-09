@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, Users, Calendar, Upload, CheckCircle2, 
@@ -77,7 +77,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
   const SchoolProfileStep = () => (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-black-700 mb-1">
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
           School Name *
         </label>
         <input
@@ -85,12 +85,12 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
           value={schoolData.schoolName}
           onChange={(e) => updateSchoolData({ schoolName: e.target.value })}
           placeholder="e.g., Delhi Public School"
-          className="w-full px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+          className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
         />
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-black-700 mb-1">
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
           School Address
         </label>
         <textarea
@@ -98,13 +98,13 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
           onChange={(e) => updateSchoolData({ address: e.target.value })}
           placeholder="Full address"
           rows={2}
-          className="w-full px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all resize-none"
+          className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all resize-none"
         />
       </div>
       
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-black-700 mb-1">
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
             Academic Year
           </label>
           <input
@@ -112,11 +112,11 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
             value={schoolData.academicYear}
             onChange={(e) => updateSchoolData({ academicYear: e.target.value })}
             placeholder="2025-2026"
-            className="w-full px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-black-700 mb-1">
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
             Principal Name
           </label>
           <input
@@ -124,13 +124,13 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
             value={schoolData.principalName}
             onChange={(e) => updateSchoolData({ principalName: e.target.value })}
             placeholder="Dr. Sharma"
-            className="w-full px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
           />
         </div>
       </div>
       
       <div>
-        <label className="block text-sm font-medium text-black-700 mb-1">
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
           Contact Email
         </label>
         <input
@@ -138,7 +138,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
           value={schoolData.contactEmail}
           onChange={(e) => updateSchoolData({ contactEmail: e.target.value })}
           placeholder="admin@school.edu"
-          className="w-full px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+          className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
         />
       </div>
     </div>
@@ -183,7 +183,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
 
     return (
       <div className="space-y-6">
-        <p className="text-sm text-black-500">
+        <p className="text-sm text-neutral-500">
           Define the grades and sections in your school. You can add or remove as needed.
         </p>
         
@@ -191,10 +191,10 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
           {schoolData.grades.map((gradeData, gradeIdx) => (
             <div 
               key={gradeIdx}
-              className="p-4 bg-black-50 rounded-xl border border-black-200"
+              className="p-4 bg-neutral-50 rounded-xl border border-neutral-200"
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="font-medium text-black-700">Grade {gradeData.grade}</span>
+                <span className="font-medium text-neutral-700">Grade {gradeData.grade}</span>
                 {schoolData.grades.length > 1 && (
                   <button
                     onClick={() => removeGrade(gradeIdx)}
@@ -223,7 +223,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
                 ))}
                 <button
                   onClick={() => addSection(gradeIdx)}
-                  className="px-3 py-1.5 border-2 border-dashed border-black-300 text-black-500 rounded-lg text-sm hover:border-indigo-400 hover:text-indigo-600 transition-colors"
+                  className="px-3 py-1.5 border-2 border-dashed border-neutral-300 text-neutral-500 rounded-lg text-sm hover:border-indigo-400 hover:text-indigo-600 transition-colors"
                 >
                   + Section
                 </button>
@@ -234,7 +234,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
         
         <button
           onClick={addGrade}
-          className="w-full py-3 border-2 border-dashed border-black-300 text-black-600 rounded-xl hover:border-indigo-400 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2"
+          className="w-full py-3 border-2 border-dashed border-neutral-300 text-neutral-600 rounded-xl hover:border-indigo-400 hover:text-indigo-600 transition-colors flex items-center justify-center gap-2"
         >
           <span>+ Add Grade</span>
         </button>
@@ -276,7 +276,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
 
     return (
       <div className="space-y-6">
-        <p className="text-sm text-black-500">
+        <p className="text-sm text-neutral-500">
           Add teacher email addresses. They'll receive an invitation to join your school on Staffroom.
         </p>
         
@@ -286,13 +286,13 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
             value={newEmail}
             onChange={(e) => setNewEmail(e.target.value)}
             placeholder="teacher@school.edu"
-            className="flex-1 px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            className="flex-1 px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
             onKeyDown={(e) => e.key === 'Enter' && addTeacher()}
           />
           <select
             value={newSubject}
             onChange={(e) => setNewSubject(e.target.value)}
-            className="px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            className="px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
           >
             <option value="">Subject</option>
             <option value="Geography">Geography</option>
@@ -316,11 +316,11 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
             {schoolData.teacherInvites.map((teacher, idx) => (
               <div 
                 key={idx}
-                className="flex items-center justify-between p-3 bg-black-50 rounded-xl"
+                className="flex items-center justify-between p-3 bg-neutral-50 rounded-xl"
               >
                 <div>
-                  <p className="font-medium text-black-700">{teacher.email}</p>
-                  <p className="text-xs text-black-500">{teacher.subject}</p>
+                  <p className="font-medium text-neutral-700">{teacher.email}</p>
+                  <p className="text-xs text-neutral-500">{teacher.subject}</p>
                 </div>
                 <button
                   onClick={() => removeTeacher(idx)}
@@ -332,14 +332,14 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-black-400">
+          <div className="text-center py-8 text-neutral-400">
             <UserPlus className="w-10 h-10 mx-auto mb-2 opacity-50" />
             <p>No teachers added yet</p>
           </div>
         )}
         
-        <p className="text-xs text-black-400">
-          💡 You can also skip this step and invite teachers later from Admin Dashboard.
+        <p className="text-xs text-neutral-400">
+          ðŸ’¡ You can also skip this step and invite teachers later from Admin Dashboard.
         </p>
       </div>
     );
@@ -357,7 +357,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
 
     return (
       <div className="space-y-6">
-        <p className="text-sm text-black-500">
+        <p className="text-sm text-neutral-500">
           Upload a CSV file with student data or add them manually later.
         </p>
         
@@ -367,14 +367,14 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
             className={`p-6 rounded-xl border-2 transition-all text-left ${
               schoolData.studentUploadMethod === 'csv'
                 ? 'border-indigo-500 bg-indigo-50'
-                : 'border-black-200 hover:border-indigo-300'
+                : 'border-neutral-200 hover:border-indigo-300'
             }`}
           >
             <FileSpreadsheet className={`w-8 h-8 mb-3 ${
-              schoolData.studentUploadMethod === 'csv' ? 'text-indigo-600' : 'text-black-400'
+              schoolData.studentUploadMethod === 'csv' ? 'text-indigo-600' : 'text-neutral-400'
             }`} />
-            <p className="font-medium text-black-700">Upload CSV</p>
-            <p className="text-xs text-black-500 mt-1">Bulk import from spreadsheet</p>
+            <p className="font-medium text-neutral-700">Upload CSV</p>
+            <p className="text-xs text-neutral-500 mt-1">Bulk import from spreadsheet</p>
           </button>
           
           <button
@@ -382,20 +382,20 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
             className={`p-6 rounded-xl border-2 transition-all text-left ${
               schoolData.studentUploadMethod === 'manual'
                 ? 'border-indigo-500 bg-indigo-50'
-                : 'border-black-200 hover:border-indigo-300'
+                : 'border-neutral-200 hover:border-indigo-300'
             }`}
           >
             <Users className={`w-8 h-8 mb-3 ${
-              schoolData.studentUploadMethod === 'manual' ? 'text-indigo-600' : 'text-black-400'
+              schoolData.studentUploadMethod === 'manual' ? 'text-indigo-600' : 'text-neutral-400'
             }`} />
-            <p className="font-medium text-black-700">Add Later</p>
-            <p className="text-xs text-black-500 mt-1">Skip for now, add manually</p>
+            <p className="font-medium text-neutral-700">Add Later</p>
+            <p className="text-xs text-neutral-500 mt-1">Skip for now, add manually</p>
           </button>
         </div>
         
         {schoolData.studentUploadMethod === 'csv' && (
-          <div className="p-6 border-2 border-dashed border-black-300 rounded-xl text-center">
-            <Upload className="w-10 h-10 mx-auto mb-3 text-black-400" />
+          <div className="p-6 border-2 border-dashed border-neutral-300 rounded-xl text-center">
+            <Upload className="w-10 h-10 mx-auto mb-3 text-neutral-400" />
             <input
               type="file"
               accept=".csv,.xlsx,.xls"
@@ -415,16 +415,16 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
                 {schoolData.studentsCsvData}
               </p>
             )}
-            <p className="text-xs text-black-400 mt-3">
+            <p className="text-xs text-neutral-400 mt-3">
               Required columns: Name, Roll Number, Class, Section
             </p>
           </div>
         )}
         
         {schoolData.studentUploadMethod === 'manual' && (
-          <div className="p-6 bg-black-50 rounded-xl text-center">
-            <Clock className="w-10 h-10 mx-auto mb-3 text-black-400" />
-            <p className="text-black-600">You can add students from the Admin Dashboard after setup</p>
+          <div className="p-6 bg-neutral-50 rounded-xl text-center">
+            <Clock className="w-10 h-10 mx-auto mb-3 text-neutral-400" />
+            <p className="text-neutral-600">You can add students from the Admin Dashboard after setup</p>
           </div>
         )}
       </div>
@@ -442,41 +442,41 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
       </div>
       
       <div className="space-y-4">
-        <div className="p-4 bg-black-50 rounded-xl">
-          <h4 className="font-medium text-black-700 mb-2 flex items-center gap-2">
+        <div className="p-4 bg-neutral-50 rounded-xl">
+          <h4 className="font-medium text-neutral-700 mb-2 flex items-center gap-2">
             <Building2 className="w-4 h-4" /> School
           </h4>
-          <p className="text-black-600">{schoolData.schoolName || 'Not set'}</p>
-          <p className="text-sm text-black-500">{schoolData.academicYear}</p>
+          <p className="text-neutral-600">{schoolData.schoolName || 'Not set'}</p>
+          <p className="text-sm text-neutral-500">{schoolData.academicYear}</p>
         </div>
         
-        <div className="p-4 bg-black-50 rounded-xl">
-          <h4 className="font-medium text-black-700 mb-2 flex items-center gap-2">
+        <div className="p-4 bg-neutral-50 rounded-xl">
+          <h4 className="font-medium text-neutral-700 mb-2 flex items-center gap-2">
             <School className="w-4 h-4" /> Structure
           </h4>
-          <p className="text-black-600">
+          <p className="text-neutral-600">
             {schoolData.grades.length} grades, {' '}
             {schoolData.grades.reduce((sum, g) => sum + g.sections.length, 0)} sections
           </p>
-          <p className="text-sm text-black-500">
+          <p className="text-sm text-neutral-500">
             {schoolData.grades.map(g => `Grade ${g.grade}`).join(', ')}
           </p>
         </div>
         
-        <div className="p-4 bg-black-50 rounded-xl">
-          <h4 className="font-medium text-black-700 mb-2 flex items-center gap-2">
+        <div className="p-4 bg-neutral-50 rounded-xl">
+          <h4 className="font-medium text-neutral-700 mb-2 flex items-center gap-2">
             <UserPlus className="w-4 h-4" /> Teachers
           </h4>
-          <p className="text-black-600">
+          <p className="text-neutral-600">
             {schoolData.teacherInvites.length} teachers to invite
           </p>
         </div>
         
-        <div className="p-4 bg-black-50 rounded-xl">
-          <h4 className="font-medium text-black-700 mb-2 flex items-center gap-2">
+        <div className="p-4 bg-neutral-50 rounded-xl">
+          <h4 className="font-medium text-neutral-700 mb-2 flex items-center gap-2">
             <Users className="w-4 h-4" /> Students
           </h4>
-          <p className="text-black-600">
+          <p className="text-neutral-600">
             {schoolData.studentUploadMethod === 'csv' 
               ? (schoolData.studentsCsvData ? 'CSV uploaded' : 'Upload pending')
               : 'Will add later'
@@ -510,7 +510,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -534,7 +534,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
         </div>
 
         {/* Progress Steps */}
-        <div className="px-6 py-4 border-b border-black-200">
+        <div className="px-6 py-4 border-b border-neutral-200">
           <div className="flex items-center justify-between">
             {steps.map((step, idx) => (
               <div 
@@ -547,7 +547,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
                     ? 'bg-green-500 text-white' 
                     : idx === currentStep 
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-black-100 text-black-400'
+                      : 'bg-neutral-100 text-neutral-400'
                   }
                 `}>
                   {idx < currentStep ? (
@@ -558,14 +558,14 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
                 </div>
                 {idx < steps.length - 1 && (
                   <div className={`flex-1 h-1 mx-2 rounded ${
-                    idx < currentStep ? 'bg-green-500' : 'bg-black-200'
+                    idx < currentStep ? 'bg-green-500' : 'bg-neutral-200'
                   }`} />
                 )}
               </div>
             ))}
           </div>
           <div className="mt-2 text-center">
-            <p className="text-sm font-medium text-black-700">{steps[currentStep].title}</p>
+            <p className="text-sm font-medium text-neutral-700">{steps[currentStep].title}</p>
           </div>
         </div>
 
@@ -585,14 +585,14 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-black-200 flex justify-between">
+        <div className="px-6 py-4 border-t border-neutral-200 flex justify-between">
           <button
             onClick={goBack}
             disabled={currentStep === 0}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
               currentStep === 0
-                ? 'text-black-300 cursor-not-allowed'
-                : 'text-black-600 hover:bg-black-100'
+                ? 'text-neutral-300 cursor-not-allowed'
+                : 'text-neutral-600 hover:bg-neutral-100'
             }`}
           >
             <ChevronLeft className="w-5 h-5" />
@@ -614,7 +614,7 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
               className={`flex items-center gap-2 px-6 py-2 rounded-xl font-medium transition-colors ${
                 isStepValid()
                   ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  : 'bg-black-200 text-black-400 cursor-not-allowed'
+                  : 'bg-neutral-200 text-neutral-400 cursor-not-allowed'
               }`}
             >
               Next

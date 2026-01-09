@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Check } from 'lucide-react';
@@ -77,13 +77,13 @@ export function Dropdown({
               absolute top-full mt-2 z-50
               ${alignments[align]}
               min-w-[180px] py-1
-              bg-white rounded-xl shadow-lg border border-black-200
+              bg-white rounded-xl shadow-lg border border-neutral-200
             `}
           >
             {items.map((item, index) => (
               <React.Fragment key={index}>
                 {item.divider ? (
-                  <div className="h-px bg-black-100 my-1" />
+                  <div className="h-px bg-neutral-100 my-1" />
                 ) : (
                   <button
                     onClick={() => {
@@ -96,10 +96,10 @@ export function Dropdown({
                       flex items-center gap-3
                       transition-colors
                       ${item.disabled
-                        ? 'text-black-300 cursor-not-allowed'
+                        ? 'text-neutral-300 cursor-not-allowed'
                         : item.destructive
                           ? 'text-red-600 hover:bg-red-50'
-                          : 'text-black-700 hover:bg-black-50'
+                          : 'text-neutral-700 hover:bg-neutral-50'
                       }
                     `}
                   >
@@ -108,7 +108,7 @@ export function Dropdown({
                     )}
                     <span className="flex-1">{item.label}</span>
                     {item.shortcut && (
-                      <span className="text-xs text-black-400">{item.shortcut}</span>
+                      <span className="text-xs text-neutral-400">{item.shortcut}</span>
                     )}
                   </button>
                 )}
@@ -166,7 +166,7 @@ export function Select({
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-black-700 mb-1.5">
+        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
           {label}
         </label>
       )}
@@ -183,22 +183,22 @@ export function Select({
             focus:outline-none focus:ring-2 focus:ring-offset-0
             ${sizes[size]}
             ${disabled
-              ? 'bg-black-50 text-black-500 cursor-not-allowed'
-              : 'text-black-900'
+              ? 'bg-neutral-50 text-neutral-500 cursor-not-allowed'
+              : 'text-neutral-900'
             }
             ${error
               ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
               : isOpen
                 ? 'border-indigo-500 ring-2 ring-indigo-100'
-                : 'border-black-200 focus:border-indigo-500 focus:ring-indigo-100'
+                : 'border-neutral-200 focus:border-indigo-500 focus:ring-indigo-100'
             }
           `}
         >
-          <span className={selectedOption ? 'text-black-900' : 'text-black-400'}>
+          <span className={selectedOption ? 'text-neutral-900' : 'text-neutral-400'}>
             {selectedOption?.label || placeholder}
           </span>
           <ChevronDown
-            className={`w-4 h-4 text-black-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            className={`w-4 h-4 text-neutral-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           />
         </button>
 
@@ -212,7 +212,7 @@ export function Select({
               className="
                 absolute top-full left-0 right-0 mt-1 z-50
                 max-h-60 overflow-y-auto
-                bg-white rounded-xl shadow-lg border border-black-200
+                bg-white rounded-xl shadow-lg border border-neutral-200
                 py-1
               "
             >
@@ -230,10 +230,10 @@ export function Select({
                     flex items-center justify-between
                     transition-colors
                     ${option.disabled
-                      ? 'text-black-300 cursor-not-allowed'
+                      ? 'text-neutral-300 cursor-not-allowed'
                       : option.value === value
                         ? 'bg-indigo-50 text-indigo-700'
-                        : 'text-black-700 hover:bg-black-50'
+                        : 'text-neutral-700 hover:bg-neutral-50'
                     }
                   `}
                 >

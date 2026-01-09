@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Chat Plugin System
  * 
- * Wired-in by plugin integration pass — user asked to keep files intact.
+ * Wired-in by plugin integration pass ─ user asked to keep files intact.
  * 
  * Provides a standardized interface for extending the AI chat functionality
  * with additional features like VoiceProgressLogger and SyllabusAIHelper.

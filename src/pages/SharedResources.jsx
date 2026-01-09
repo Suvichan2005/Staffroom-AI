@@ -1,4 +1,4 @@
-import { PageShell } from "../components/layout";
+﻿import { PageShell } from "../components/layout";
 import { ResourceGallery, defaultResources } from "../components/shared";
 
 export default function SharedResources() {

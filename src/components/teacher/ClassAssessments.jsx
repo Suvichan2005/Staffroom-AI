@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, Plus, Search, CheckCircle2, AlertTriangle, Calendar, 
@@ -74,7 +74,7 @@ export default function ClassAssessments({ classId }) {
       case 'final': return 'bg-red-100 text-red-700';
       case 'project': return 'bg-green-100 text-green-700';
       case 'homework': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-black-100 text-black-700';
+      default: return 'bg-neutral-100 text-neutral-700';
     }
   };
 
@@ -136,15 +136,15 @@ export default function ClassAssessments({ classId }) {
       {/* Stats Row */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Total', value: stats.total, icon: ClipboardList, bg: 'bg-black-50' },
+          { label: 'Total', value: stats.total, icon: ClipboardList, bg: 'bg-neutral-50' },
           { label: 'Assignments', value: stats.assignments, icon: FileText, bg: 'bg-blue-50' },
           { label: 'Tests', value: stats.tests, icon: BookOpen, bg: 'bg-purple-50' },
           { label: 'To Grade', value: stats.needsGrading, icon: Edit, bg: 'bg-yellow-50' },
         ].map((stat, idx) => (
           <div key={idx} className={`${stat.bg} rounded-xl p-3 text-center`}>
-            <stat.icon className="w-4 h-4 mx-auto mb-1 text-black-500" />
-            <p className="text-xl font-bold text-black-800">{stat.value}</p>
-            <p className="text-[10px] text-black-500">{stat.label}</p>
+            <stat.icon className="w-4 h-4 mx-auto mb-1 text-neutral-500" />
+            <p className="text-xl font-bold text-neutral-800">{stat.value}</p>
+            <p className="text-[10px] text-neutral-500">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -163,7 +163,7 @@ export default function ClassAssessments({ classId }) {
               px-3 py-1.5 rounded-lg text-sm font-medium transition-all
               ${typeFilter === filter.id
                 ? 'bg-indigo-600 text-white'
-                : 'bg-black-100 text-black-600 hover:bg-black-200'
+                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
               }
             `}
           >
@@ -179,9 +179,9 @@ export default function ClassAssessments({ classId }) {
       {/* Assessments List */}
       <div className="space-y-2">
         {filteredAssessments.length === 0 ? (
-          <div className="text-center py-8 bg-black-50 rounded-xl">
-            <ClipboardList className="w-8 h-8 text-black-300 mx-auto mb-2" />
-            <p className="text-sm text-black-500">No assessments for this class</p>
+          <div className="text-center py-8 bg-neutral-50 rounded-xl">
+            <ClipboardList className="w-8 h-8 text-neutral-300 mx-auto mb-2" />
+            <p className="text-sm text-neutral-500">No assessments for this class</p>
           </div>
         ) : (
           filteredAssessments.map((assessment, idx) => (
@@ -190,7 +190,7 @@ export default function ClassAssessments({ classId }) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.03 }}
-              className="bg-white rounded-xl border border-black-200 p-4 hover:border-indigo-200 hover:shadow-sm transition-all"
+              className="bg-white rounded-xl border border-neutral-200 p-4 hover:border-indigo-200 hover:shadow-sm transition-all"
             >
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
@@ -200,8 +200,8 @@ export default function ClassAssessments({ classId }) {
                     </span>
                     {getStatusBadge(assessment.status)}
                   </div>
-                  <h4 className="font-medium text-black-800">{assessment.title}</h4>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-black-500">
+                  <h4 className="font-medium text-neutral-800">{assessment.title}</h4>
+                  <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {new Date(assessment.dueDate).toLocaleDateString()}
@@ -215,16 +215,16 @@ export default function ClassAssessments({ classId }) {
                 
                 <div className="flex items-center gap-4">
                   <div className="text-center">
-                    <p className="text-lg font-bold text-black-800">
-                      {assessment.submitted}<span className="text-xs text-black-400">/{assessment.totalStudents}</span>
+                    <p className="text-lg font-bold text-neutral-800">
+                      {assessment.submitted}<span className="text-xs text-neutral-400">/{assessment.totalStudents}</span>
                     </p>
-                    <p className="text-[10px] text-black-500">Submitted</p>
+                    <p className="text-[10px] text-neutral-500">Submitted</p>
                   </div>
                   <div className="text-center">
                     <p className="text-lg font-bold text-green-600">
-                      {assessment.graded}<span className="text-xs text-black-400">/{assessment.submitted}</span>
+                      {assessment.graded}<span className="text-xs text-neutral-400">/{assessment.submitted}</span>
                     </p>
-                    <p className="text-[10px] text-black-500">Graded</p>
+                    <p className="text-[10px] text-neutral-500">Graded</p>
                   </div>
                   <button 
                     onClick={() => openGradingModal(assessment)}
@@ -236,7 +236,7 @@ export default function ClassAssessments({ classId }) {
               </div>
               
               {/* Progress Bar */}
-              <div className="mt-3 h-1.5 bg-black-100 rounded-full overflow-hidden">
+              <div className="mt-3 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
                   style={{ width: `${assessment.totalStudents ? (assessment.submitted / assessment.totalStudents) * 100 : 0}%` }}
@@ -250,36 +250,36 @@ export default function ClassAssessments({ classId }) {
       {/* Grading Modal */}
       <AnimatePresence>
         {showGradingModal && selectedAssessment && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-black-100 bg-gradient-to-r from-green-50 to-teal-50 flex-shrink-0">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-gradient-to-r from-green-50 to-teal-50 flex-shrink-0">
                 <div>
-                  <h3 className="text-lg font-semibold text-black-800">Grade Assessment</h3>
-                  <p className="text-sm text-black-500">{selectedAssessment.title} • Max {selectedAssessment.maxPoints} pts</p>
+                  <h3 className="text-lg font-semibold text-neutral-800">Grade Assessment</h3>
+                  <p className="text-sm text-neutral-500">{selectedAssessment.title} – Max {selectedAssessment.maxPoints} pts</p>
                 </div>
                 <button
                   onClick={() => setShowGradingModal(false)}
                   className="p-2 hover:bg-white/50 rounded-xl transition-colors"
                 >
-                  <X className="w-5 h-5 text-black-500" />
+                  <X className="w-5 h-5 text-neutral-500" />
                 </button>
               </div>
               
               {/* Quick Stats */}
-              <div className="px-6 py-3 bg-black-50 border-b border-black-100 flex-shrink-0">
+              <div className="px-6 py-3 bg-neutral-50 border-b border-neutral-100 flex-shrink-0">
                 <div className="flex items-center gap-6 text-sm">
-                  <span className="text-black-500">
-                    <span className="font-semibold text-black-800">{classId}</span> • {gradingStudents.length} students
+                  <span className="text-neutral-500">
+                    <span className="font-semibold text-neutral-800">{classId}</span> – {gradingStudents.length} students
                   </span>
-                  <span className="text-black-500">
+                  <span className="text-neutral-500">
                     Submitted: <span className="font-semibold text-green-600">{selectedAssessment.submitted}</span>
                   </span>
-                  <span className="text-black-500">
+                  <span className="text-neutral-500">
                     Graded: <span className="font-semibold text-indigo-600">{selectedAssessment.graded}</span>
                   </span>
                 </div>
@@ -301,18 +301,18 @@ export default function ClassAssessments({ classId }) {
                         transition={{ delay: idx * 0.02 }}
                         className={`flex items-center gap-4 p-3 rounded-xl border transition-all ${
                           hasSubmitted 
-                            ? 'bg-white border-black-200 hover:border-indigo-200' 
-                            : 'bg-black-50 border-black-100'
+                            ? 'bg-white border-neutral-200 hover:border-indigo-200' 
+                            : 'bg-neutral-50 border-neutral-100'
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                          hasSubmitted ? 'bg-green-100 text-green-700' : 'bg-black-200 text-black-500'
+                          hasSubmitted ? 'bg-green-100 text-green-700' : 'bg-neutral-200 text-neutral-500'
                         }`}>
                           {student.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-black-800">{student.name}</p>
-                          <p className="text-xs text-black-500">
+                          <p className="font-medium text-neutral-800">{student.name}</p>
+                          <p className="text-xs text-neutral-500">
                             {hasSubmitted 
                               ? `Submitted ${new Date(submission.submittedDate).toLocaleDateString()}`
                               : 'Not submitted'
@@ -333,11 +333,11 @@ export default function ClassAssessments({ classId }) {
                             placeholder="-"
                             className={`w-20 px-3 py-2 text-center border rounded-xl text-sm font-medium transition-all ${
                               hasSubmitted 
-                                ? 'border-black-200 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300' 
-                                : 'border-black-100 bg-black-100 text-black-400 cursor-not-allowed'
+                                ? 'border-neutral-200 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300' 
+                                : 'border-neutral-100 bg-neutral-100 text-neutral-400 cursor-not-allowed'
                             }`}
                           />
-                          <span className="text-sm text-black-400">/ {selectedAssessment.maxPoints}</span>
+                          <span className="text-sm text-neutral-400">/ {selectedAssessment.maxPoints}</span>
                         </div>
                       </motion.div>
                     );
@@ -345,14 +345,14 @@ export default function ClassAssessments({ classId }) {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-black-100 bg-black-50 flex-shrink-0">
-                <div className="text-sm text-black-500">
+              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-neutral-100 bg-neutral-50 flex-shrink-0">
+                <div className="text-sm text-neutral-500">
                   {Object.keys(grades).filter(k => grades[k] !== '').length} grades entered
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowGradingModal(false)}
-                    className="px-4 py-2 text-black-600 hover:bg-black-200 rounded-xl transition-colors"
+                    className="px-4 py-2 text-neutral-600 hover:bg-neutral-200 rounded-xl transition-colors"
                   >
                     Cancel
                   </button>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minimize2, Maximize2, Send, Sparkles, Loader2 } from 'lucide-react';
 import ChatMessage from './ChatMessage';
@@ -77,7 +77,7 @@ export default function AIChatBox({
         className={`
           fixed bottom-20 right-4 z-50
           w-[360px] max-w-[calc(100vw-2rem)]
-          bg-white rounded-2xl shadow-2xl border border-black-200
+          bg-white rounded-2xl shadow-2xl border border-neutral-200
           flex flex-col overflow-hidden
         `}
       >
@@ -111,14 +111,14 @@ export default function AIChatBox({
         {!isMinimized && (
           <>
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-black-50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-neutral-50">
               {messages.length === 0 ? (
                 <div className="text-center py-8">
                   <div className="w-12 h-12 mx-auto bg-indigo-100 rounded-full flex items-center justify-center mb-3">
                     <Sparkles className="w-6 h-6 text-indigo-600" />
                   </div>
-                  <p className="text-sm font-medium text-black-700">How can I help you today?</p>
-                  <p className="text-xs text-black-500 mt-1">Ask me anything about your classes</p>
+                  <p className="text-sm font-medium text-neutral-700">How can I help you today?</p>
+                  <p className="text-xs text-neutral-500 mt-1">Ask me anything about your classes</p>
                   
                   <AISuggestions onSuggestionClick={handleSuggestionClick} />
                 </div>
@@ -128,7 +128,7 @@ export default function AIChatBox({
                     <ChatMessage key={msg.id} message={msg} />
                   ))}
                   {isLoading && (
-                    <div className="flex items-center gap-2 text-black-500">
+                    <div className="flex items-center gap-2 text-neutral-500">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span className="text-xs">Thinking...</span>
                     </div>

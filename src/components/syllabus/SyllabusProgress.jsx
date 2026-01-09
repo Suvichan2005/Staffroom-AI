@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
+﻿import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, CheckCircle2, Circle, Clock, X } from "lucide-react";
@@ -9,8 +9,8 @@ const STATUS_META = {
   "not-started": { 
     label: "Not Started", 
     icon: Circle, 
-    badgeClass: "bg-black-200 text-black-700",
-    iconClass: "text-black-400"
+    badgeClass: "bg-neutral-200 text-neutral-700",
+    iconClass: "text-neutral-400"
   },
   "ongoing": { 
     label: "Ongoing", 
@@ -28,9 +28,9 @@ const STATUS_META = {
 
 const DEFAULT_STATUS = STATUS_FLOW[0];
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Vertical Scroll Page Picker Component (Portal-based to avoid clipping)
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function PageScrollPicker({ value, min, max, onChange, onClose, anchorEl }) {
   const containerRef = useRef(null);
   const pickerRef = useRef(null);
@@ -602,7 +602,7 @@ export default function SyllabusProgress({
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
         <div>
           <h3 className="sc-heading text-base">Syllabus Progress</h3>
-          <p className="text-xs text-black-500 mt-0.5">
+          <p className="text-xs text-neutral-500 mt-0.5">
             {donePages} of {totalPages} pages covered
           </p>
         </div>
@@ -614,10 +614,10 @@ export default function SyllabusProgress({
           >
             Expand All
           </button>
-          <span className="text-black-300">|</span>
+          <span className="text-neutral-300">|</span>
           <button
             onClick={() => toggleAll(false)}
-            className="text-xs font-medium text-black-500 hover:text-black-700"
+            className="text-xs font-medium text-neutral-500 hover:text-neutral-700"
           >
             Collapse
           </button>
@@ -634,7 +634,7 @@ export default function SyllabusProgress({
                     ? "bg-indigo-100 text-indigo-600"
                     : isDirty
                       ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
-                      : "bg-black-200 text-black-500 cursor-not-allowed"
+                      : "bg-neutral-200 text-neutral-500 cursor-not-allowed"
               }`}
             >
               {getSaveButtonContent()}
@@ -671,7 +671,7 @@ export default function SyllabusProgress({
                 </span>
                 {lastCoveredTopic.currentPage && (
                   <>
-                    <span className="text-indigo-300">•</span>
+                    <span className="text-indigo-300">–</span>
                     <span className="text-[10px] text-indigo-600 font-semibold">
                       @ p.{lastCoveredTopic.currentPage}
                     </span>
@@ -697,7 +697,7 @@ export default function SyllabusProgress({
               className={`border rounded-lg transition-all duration-200 ${
                 isComplete ? 'bg-green-50/50 border-green-200' : 
                 hasOngoing ? 'bg-indigo-50/30 border-indigo-200' : 
-                'bg-white/50 border-black-200'
+                'bg-white/50 border-neutral-200'
               }`}
             >
               {/* Chapter Header */}
@@ -708,23 +708,23 @@ export default function SyllabusProgress({
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className={`
                     p-1 rounded transition-colors
-                    ${isExpanded ? 'bg-indigo-100 text-indigo-600' : 'bg-black-100 text-black-500'}
+                    ${isExpanded ? 'bg-indigo-100 text-indigo-600' : 'bg-neutral-100 text-neutral-500'}
                   `}>
                     {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <h4 className={`text-sm font-medium truncate ${isComplete ? 'text-green-700' : 'text-black-800'}`}>
+                    <h4 className={`text-sm font-medium truncate ${isComplete ? 'text-green-700' : 'text-neutral-800'}`}>
                       {chapter.index}. {chapter.title}
                     </h4>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <div className="flex-1 h-1 w-20 bg-black-100 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1 w-20 bg-neutral-100 rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all ${isComplete ? 'bg-green-500' : 'bg-indigo-500'}`}
                           style={{ width: `${percent}%` }}
                         />
                       </div>
-                      <span className="text-[10px] text-black-500 font-medium">{percent}%</span>
+                      <span className="text-[10px] text-neutral-500 font-medium">{percent}%</span>
                     </div>
                   </div>
                 </div>
@@ -732,7 +732,7 @@ export default function SyllabusProgress({
                 <div className="text-right pl-2 flex items-center gap-2">
                   {isComplete && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                   {hasOngoing && !isComplete && <Clock className="w-4 h-4 text-indigo-500" />}
-                  <span className={`text-xs font-medium ${isComplete ? 'text-green-600' : 'text-black-500'}`}>
+                  <span className={`text-xs font-medium ${isComplete ? 'text-green-600' : 'text-neutral-500'}`}>
                     {completedPages}/{totalPages}p
                   </span>
                 </div>
@@ -746,7 +746,7 @@ export default function SyllabusProgress({
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="overflow-visible border-t border-black-100"
+                    className="overflow-visible border-t border-neutral-100"
                   >
                     <ul className="p-1.5 space-y-1.5 overflow-visible">
                       {(chapter.subTopics || []).map((topic) => {
@@ -769,7 +769,7 @@ export default function SyllabusProgress({
                               border rounded-lg transition-colors overflow-visible
                               ${status === 'done' ? 'bg-green-50 border-green-100' : 
                                 status === 'ongoing' ? 'bg-indigo-50 border-indigo-100' : 
-                                'bg-black-50 border-black-100'}
+                                'bg-neutral-50 border-neutral-100'}
                             `}
                           >
                             {/* Topic Row */}
@@ -787,10 +787,10 @@ export default function SyllabusProgress({
                                 <Icon className="w-4 h-4" />
                               </div>
                               <div className="min-w-0">
-                                <span className={`truncate block ${status === 'done' ? 'text-black-500' : 'text-black-700'}`}>
+                                <span className={`truncate block ${status === 'done' ? 'text-neutral-500' : 'text-neutral-700'}`}>
                                   {topic.title}
                                 </span>
-                                <span className="text-[10px] text-black-400">
+                                <span className="text-[10px] text-neutral-400">
                                   p.{topic.pageFrom}-{topic.pageTo} ({pageCount} pages)
                                 </span>
                               </div>
@@ -893,9 +893,9 @@ export default function SyllabusProgress({
                                     className="w-full text-left text-[11px] px-2 py-1 rounded hover:bg-white/60 transition-colors"
                                   >
                                     {notes ? (
-                                      <span className="text-black-600 italic">📝 {notes}</span>
+                                      <span className="text-neutral-600 italic">ðŸ“ {notes}</span>
                                     ) : (
-                                      <span className="text-black-400">+ Add notes...</span>
+                                      <span className="text-neutral-400">+ Add notes...</span>
                                     )}
                                   </button>
                                 )}
@@ -905,7 +905,7 @@ export default function SyllabusProgress({
                             {/* Read-only notes */}
                             {!editable && notes && (
                               <div className="px-2 pb-1.5 pt-0">
-                                <p className="text-[11px] text-black-600 italic">📝 {notes}</p>
+                                <p className="text-[11px] text-neutral-600 italic">ðŸ“ {notes}</p>
                               </div>
                             )}
                           </li>
@@ -935,15 +935,15 @@ export default function SyllabusProgress({
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-xl shadow-2xl p-5 max-w-sm mx-4 border border-black-200"
+              className="bg-white rounded-xl shadow-2xl p-5 max-w-sm mx-4 border border-neutral-200"
             >
               <div className="flex items-start gap-3 mb-4">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-black-800 mb-1">Mark as Complete?</h3>
-                  <p className="text-sm text-black-600">
+                  <h3 className="font-semibold text-neutral-800 mb-1">Mark as Complete?</h3>
+                  <p className="text-sm text-neutral-600">
                     Are you sure you want to mark this topic as done? This will move it to completed status.
                   </p>
                 </div>
@@ -952,7 +952,7 @@ export default function SyllabusProgress({
                 <button
                   type="button"
                   onClick={() => setConfirmingDone(null)}
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-black-700 hover:bg-black-100 transition-colors"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-neutral-700 hover:bg-neutral-100 transition-colors"
                 >
                   Cancel
                 </button>

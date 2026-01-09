@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   UserPlus, Mail, Search, MoreVertical, Edit2, Trash2, 
@@ -178,8 +178,8 @@ export default function TeacherManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-black-800">Teacher Management</h2>
-          <p className="text-sm text-black-500">
+          <h2 className="text-lg font-semibold text-neutral-800">Teacher Management</h2>
+          <p className="text-sm text-neutral-500">
             {teachers.length} active, {pendingInvites.length} pending invitations
           </p>
         </div>
@@ -195,19 +195,19 @@ export default function TeacherManagement() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input
             type="text"
             placeholder="Search by name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2.5 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+          className="px-4 py-2.5 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
         >
           <option value="all">All Status</option>
           <option value="active">Active</option>
@@ -216,24 +216,24 @@ export default function TeacherManagement() {
       </div>
 
       {/* Teachers List */}
-      <div className="bg-white rounded-2xl border border-black-200 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
         {filteredTeachers.length === 0 ? (
           <div className="text-center py-12">
-            <User className="w-12 h-12 mx-auto mb-3 text-black-300" />
-            <p className="text-black-600 font-medium">No teachers found</p>
-            <p className="text-sm text-black-500">
+            <User className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+            <p className="text-neutral-600 font-medium">No teachers found</p>
+            <p className="text-sm text-neutral-500">
               {searchQuery ? 'Try a different search' : 'Invite teachers to get started'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-black-100">
+          <div className="divide-y divide-neutral-100">
             {filteredTeachers.map((teacher, idx) => (
               <motion.div
                 key={teacher.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: idx * 0.05 }}
-                className="p-4 hover:bg-black-50 transition-colors"
+                className="p-4 hover:bg-neutral-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   {/* Avatar */}
@@ -246,13 +246,13 @@ export default function TeacherManagement() {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-black-800 truncate">
+                      <h3 className="font-medium text-neutral-800 truncate">
                         {teacher.name}
                       </h3>
                       {getStatusBadge(teacher.status)}
                     </div>
-                    <p className="text-sm text-black-500 truncate">{teacher.email}</p>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-black-400">
+                    <p className="text-sm text-neutral-500 truncate">{teacher.email}</p>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-neutral-400">
                       <span className="flex items-center gap-1">
                         <BookOpen className="w-3 h-3" />
                         {teacher.subject}
@@ -288,7 +288,7 @@ export default function TeacherManagement() {
                     ) : (
                       <>
                         <button
-                          className="p-2 text-black-500 hover:bg-black-100 rounded-lg transition-colors"
+                          className="p-2 text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors"
                           title="Edit teacher"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -313,44 +313,44 @@ export default function TeacherManagement() {
       {/* Invite Modal */}
       <AnimatePresence>
         {showInviteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
             >
-              <div className="p-6 border-b border-black-200">
+              <div className="p-6 border-b border-neutral-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-black-800">Invite Teacher</h3>
+                  <h3 className="text-lg font-semibold text-neutral-800">Invite Teacher</h3>
                   <button
                     onClick={() => setShowInviteModal(false)}
-                    className="p-2 hover:bg-black-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
                   >
-                    <X className="w-5 h-5 text-black-500" />
+                    <X className="w-5 h-5 text-neutral-500" />
                   </button>
                 </div>
               </div>
 
               <div className="p-6 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-black-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
                     Email Address *
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                     <input
                       type="email"
                       value={inviteForm.email}
                       onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
                       placeholder="teacher@school.edu"
-                      className="w-full pl-10 pr-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                      className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
                     Full Name
                   </label>
                   <input
@@ -358,18 +358,18 @@ export default function TeacherManagement() {
                     value={inviteForm.name}
                     onChange={(e) => setInviteForm({ ...inviteForm, name: e.target.value })}
                     placeholder="Priya Sharma"
-                    className="w-full px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-black-700 mb-1">
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">
                     Subject
                   </label>
                   <select
                     value={inviteForm.subject}
                     onChange={(e) => setInviteForm({ ...inviteForm, subject: e.target.value })}
-                    className="w-full px-4 py-3 border border-black-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
+                    className="w-full px-4 py-3 border border-neutral-200 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 transition-all"
                   >
                     <option value="">Select subject...</option>
                     <option value="Geography">Geography</option>
@@ -384,16 +384,16 @@ export default function TeacherManagement() {
                 </div>
 
                 <div className="pt-2">
-                  <p className="text-xs text-black-500">
+                  <p className="text-xs text-neutral-500">
                     An invitation email will be sent to the teacher. They can set up their account once they accept.
                   </p>
                 </div>
               </div>
 
-              <div className="p-6 border-t border-black-200 flex justify-end gap-3">
+              <div className="p-6 border-t border-neutral-200 flex justify-end gap-3">
                 <button
                   onClick={() => setShowInviteModal(false)}
-                  className="px-4 py-2 text-black-600 hover:bg-black-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+﻿import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Clock, CalendarDays, LayoutGrid } from "lucide-react";
 import { getUpcomingSessions, teacherData } from "../../data/dummyData";
@@ -184,20 +184,20 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
         {showDayNav && (
           <div className="flex items-center gap-2">
             {/* View Mode Toggle */}
-            <div className="flex items-center bg-black-100 rounded-lg p-0.5">
+            <div className="flex items-center bg-neutral-100 rounded-lg p-0.5">
               <button
                 onClick={() => setViewMode('day')}
-                className={`p-1.5 rounded-md transition-colors ${viewMode === 'day' ? 'bg-white shadow-sm' : 'hover:bg-black-200'}`}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'day' ? 'bg-white shadow-sm' : 'hover:bg-neutral-200'}`}
                 title="Day view"
               >
-                <CalendarDays className="w-4 h-4 text-black-600" />
+                <CalendarDays className="w-4 h-4 text-neutral-600" />
               </button>
               <button
                 onClick={() => setViewMode('week')}
-                className={`p-1.5 rounded-md transition-colors ${viewMode === 'week' ? 'bg-white shadow-sm' : 'hover:bg-black-200'}`}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'week' ? 'bg-white shadow-sm' : 'hover:bg-neutral-200'}`}
                 title="Week view"
               >
-                <LayoutGrid className="w-4 h-4 text-black-600" />
+                <LayoutGrid className="w-4 h-4 text-neutral-600" />
               </button>
             </div>
             
@@ -206,10 +206,10 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setDayOffset(o => o - 1)}
-                  className="p-1.5 rounded-lg hover:bg-black-100 active:bg-black-200 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
                   aria-label="Previous day"
                 >
-                  <ChevronLeft className="w-5 h-5 text-black-600" />
+                  <ChevronLeft className="w-5 h-5 text-neutral-600" />
                 </button>
                 <button
                   onClick={() => setDayOffset(0)}
@@ -219,10 +219,10 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
                 </button>
                 <button
                   onClick={() => setDayOffset(o => o + 1)}
-                  className="p-1.5 rounded-lg hover:bg-black-100 active:bg-black-200 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
                   aria-label="Next day"
                 >
-                  <ChevronRight className="w-5 h-5 text-black-600" />
+                  <ChevronRight className="w-5 h-5 text-neutral-600" />
                 </button>
               </div>
             )}
@@ -232,10 +232,10 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setDayOffset(o => o - 7)}
-                  className="p-1.5 rounded-lg hover:bg-black-100 active:bg-black-200 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
                   aria-label="Previous week"
                 >
-                  <ChevronLeft className="w-5 h-5 text-black-600" />
+                  <ChevronLeft className="w-5 h-5 text-neutral-600" />
                 </button>
                 <button
                   onClick={() => setDayOffset(0)}
@@ -245,10 +245,10 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
                 </button>
                 <button
                   onClick={() => setDayOffset(o => o + 7)}
-                  className="p-1.5 rounded-lg hover:bg-black-100 active:bg-black-200 transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-neutral-100 active:bg-neutral-200 transition-colors"
                   aria-label="Next week"
                 >
-                  <ChevronRight className="w-5 h-5 text-black-600" />
+                  <ChevronRight className="w-5 h-5 text-neutral-600" />
                 </button>
               </div>
             )}
@@ -260,10 +260,10 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
             <button 
               type="button"
               onClick={goToPreviousDay}
-              className="p-2 rounded-lg hover:bg-black-100 active:bg-black-200 transition-colors cursor-pointer select-none"
+              className="p-2 rounded-lg hover:bg-neutral-100 active:bg-neutral-200 transition-colors cursor-pointer select-none"
               aria-label="Previous day"
             >
-              <ChevronLeft className="w-5 h-5 text-black-600" />
+              <ChevronLeft className="w-5 h-5 text-neutral-600" />
             </button>
             <input
               type="date"
@@ -272,15 +272,15 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
                 const val = e.target.value;
                 if (val) setSelectedDate(val);
               }}
-              className="text-xs bg-white border border-black-200 rounded-lg px-2 py-1.5 text-black-600 w-[120px] cursor-pointer"
+              className="text-xs bg-white border border-neutral-200 rounded-lg px-2 py-1.5 text-neutral-600 w-[120px] cursor-pointer"
             />
             <button 
               type="button"
               onClick={goToNextDay}
-              className="p-2 rounded-lg hover:bg-black-100 active:bg-black-200 transition-colors cursor-pointer select-none"
+              className="p-2 rounded-lg hover:bg-neutral-100 active:bg-neutral-200 transition-colors cursor-pointer select-none"
               aria-label="Next day"
             >
-              <ChevronRight className="w-5 h-5 text-black-600" />
+              <ChevronRight className="w-5 h-5 text-neutral-600" />
             </button>
           </div>
         )}
@@ -291,24 +291,24 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
         <div className="grid grid-cols-7 gap-1 overflow-auto max-h-96">
           {weekDates.map((day) => (
             <div key={day.date} className="flex flex-col">
-              <div className={`text-center py-2 rounded-t-lg ${day.isToday ? 'bg-indigo-600 text-white' : 'bg-black-100'}`}>
+              <div className={`text-center py-2 rounded-t-lg ${day.isToday ? 'bg-indigo-600 text-white' : 'bg-neutral-100'}`}>
                 <p className="text-[10px] font-medium">{day.dayName}</p>
                 <p className="text-sm font-bold">{day.dayNum}</p>
               </div>
-              <div className="flex-1 bg-black-50 rounded-b-lg p-1 min-h-[120px] space-y-1">
+              <div className="flex-1 bg-neutral-50 rounded-b-lg p-1 min-h-[120px] space-y-1">
                 {sessionsByDate[day.date]?.length > 0 ? (
                   sessionsByDate[day.date].map((session, idx) => (
                     <button
                       key={idx}
                       onClick={() => navigate(`/course/${session.courseId}/class/${session.classId}`)}
-                      className="w-full text-left p-1.5 rounded-lg bg-white border border-black-200 hover:border-indigo-300 hover:shadow-sm transition-all"
+                      className="w-full text-left p-1.5 rounded-lg bg-white border border-neutral-200 hover:border-indigo-300 hover:shadow-sm transition-all"
                     >
-                      <p className="text-[10px] font-medium text-black-800 truncate">{session.subject}</p>
-                      <p className="text-[9px] text-black-500">{session.startTime}</p>
+                      <p className="text-[10px] font-medium text-neutral-800 truncate">{session.subject}</p>
+                      <p className="text-[9px] text-neutral-500">{session.startTime}</p>
                     </button>
                   ))
                 ) : (
-                  <p className="text-[10px] text-black-400 text-center py-4">-</p>
+                  <p className="text-[10px] text-neutral-400 text-center py-4">-</p>
                 )}
               </div>
             </div>
@@ -323,19 +323,19 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
               return (
                 <div 
                   key={`${session.courseId}-${session.classId}-${session.date}-${index}`} 
-                  className={`rounded-xl bg-black-50 border border-black-200 flex flex-col gap-1 ${compact ? 'p-2' : 'p-3'}`}
+                  className={`rounded-xl bg-neutral-50 border border-neutral-200 flex flex-col gap-1 ${compact ? 'p-2' : 'p-3'}`}
                   role="listitem"
                 >
                   <div className="flex items-center justify-between">
                     <p className={`font-medium truncate ${compact ? 'text-sm' : ''}`} title={session.subject}>
-                      {session.subject} – {session.classId}
+                      {session.subject} - {session.classId}
                     </p>
                     {!showDateSelector && !showDayNav && (
-                      <span className="text-xs text-black-500">{session.date}</span>
+                      <span className="text-xs text-neutral-500">{session.date}</span>
                     )}
                   </div>
-                  <p className={`text-black-600 ${compact ? 'text-[11px]' : 'text-xs'}`}>
-                    {session.startTime} – {session.endTime}
+                  <p className={`text-neutral-600 ${compact ? 'text-[11px]' : 'text-xs'}`}>
+                    {session.startTime} - {session.endTime}
                   </p>
                   <div className="mt-1 flex justify-end">
                     <button
@@ -346,7 +346,7 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
                       } ${
                         active
                           ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                          : "bg-black-200 text-black-500 cursor-not-allowed"
+                          : "bg-neutral-200 text-neutral-500 cursor-not-allowed"
                       }`}
                       aria-label={active ? "Open attendance sheet" : "Attendance available near class time"}
                     >
@@ -357,7 +357,7 @@ export default function UpcomingClasses({ daysAhead = 7, className = "", compact
               );
             })
           ) : (
-            <div className="border border-dashed border-black-300 rounded-xl bg-black-50 p-4 text-sm text-black-500 text-center">
+            <div className="border border-dashed border-neutral-300 rounded-xl bg-neutral-50 p-4 text-sm text-neutral-500 text-center">
               {showDayNav ? 'No classes scheduled for this day.' : 'No classes scheduled.'}
             </div>
           )}

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { User, Sparkles, CheckCircle, Mic } from 'lucide-react';
 
@@ -13,9 +13,9 @@ function renderMarkdown(text) {
   
   return textStr
     // Code blocks (triple backticks)
-    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-black-100 dark:bg-black-800 p-2 rounded text-xs overflow-x-auto my-2"><code>$2</code></pre>')
+    .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-neutral-100 dark:bg-neutral-800 p-2 rounded text-xs overflow-x-auto my-2"><code>$2</code></pre>')
     // Inline code
-    .replace(/`([^`]+)`/g, '<code class="bg-black-100 dark:bg-black-700 px-1 py-0.5 rounded text-xs">$1</code>')
+    .replace(/`([^`]+)`/g, '<code class="bg-neutral-100 dark:bg-neutral-700 px-1 py-0.5 rounded text-xs">$1</code>')
     // Bold
     .replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold">$1</strong>')
     // Italic
@@ -81,7 +81,7 @@ export default function ChatMessage({ message }) {
         max-w-[75%] px-4 py-2.5 rounded-2xl
         ${isUser 
           ? 'bg-indigo-600 text-white rounded-tr-sm' 
-          : 'bg-white text-black-700 border border-black-200 rounded-tl-sm shadow-sm'
+          : 'bg-white text-neutral-700 border border-neutral-200 rounded-tl-sm shadow-sm'
         }
       `}>
         {isUser ? (
@@ -90,13 +90,13 @@ export default function ChatMessage({ message }) {
           <div 
             className="text-sm pred pred-sm pred-black max-w-none
               [&_strong]:font-semibold [&_em]:italic
-              [&_code]:bg-black-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
-              [&_pre]:bg-black-100 [&_pre]:p-2 [&_pre]:rounded [&_pre]:text-xs [&_pre]:overflow-x-auto
+              [&_code]:bg-neutral-100 [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs
+              [&_pre]:bg-neutral-100 [&_pre]:p-2 [&_pre]:rounded [&_pre]:text-xs [&_pre]:overflow-x-auto
               [&_li]:ml-4"
             dangerouslySetInnerHTML={{ __html: renderMarkdown(message.content) }}
           />
         )}
-        <p className={`text-[10px] mt-1 ${isUser ? 'text-indigo-200' : 'text-black-400'}`}>
+        <p className={`text-[10px] mt-1 ${isUser ? 'text-indigo-200' : 'text-neutral-400'}`}>
           {formatTime(message.timestamp)}
         </p>
       </div>

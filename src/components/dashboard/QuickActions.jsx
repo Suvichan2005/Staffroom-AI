@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -116,12 +116,12 @@ export default function QuickActions() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.05 }}
             onClick={action.onClick}
-            className="flex flex-col items-center gap-2 p-4 bg-white rounded-3xl border border-black-200 hover:shadow-md hover:border-black-300 transition-all group h-full"
+            className="flex flex-col items-center gap-2 p-4 bg-white rounded-3xl border border-neutral-200 hover:shadow-md hover:border-neutral-300 transition-all group h-full"
           >
             <div className={`p-3 rounded-xl bg-gradient-to-br ${action.color} text-white shadow-lg group-hover:scale-110 transition-transform`}>
               <Icon className="w-5 h-5" />
             </div>
-            <span className="text-xs font-medium text-black-600 text-center leading-tight">
+            <span className="text-xs font-medium text-neutral-600 text-center leading-tight">
               {action.label}
             </span>
           </motion.button>

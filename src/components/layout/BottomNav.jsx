@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, GraduationCap, Calendar } from 'lucide-react';
@@ -20,7 +20,7 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-black-200"
+      className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-neutral-200"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto">
@@ -48,20 +48,20 @@ export default function BottomNav() {
               
               <motion.div 
                 className={`relative p-2 rounded-xl transition-colors ${
-                  isActive ? '' : 'hover:bg-black-100'
+                  isActive ? '' : 'hover:bg-neutral-100'
                 }`}
                 whileTap={{ scale: 0.9 }}
               >
                 <Icon
                   className={`w-6 h-6 transition-colors ${
-                    isActive ? 'text-indigo-600' : 'text-black-400'
+                    isActive ? 'text-indigo-600' : 'text-neutral-400'
                   }`}
                   strokeWidth={isActive ? 2 : 1.75}
                 />
               </motion.div>
               <span
                 className={`text-[10px] font-medium -mt-0.5 transition-colors ${
-                  isActive ? 'text-indigo-600' : 'text-black-500'
+                  isActive ? 'text-indigo-600' : 'text-neutral-500'
                 }`}
               >
                 {item.label}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { AlertTriangle, TrendingDown, Info, Loader2 } from 'lucide-react';
 import { detectAttendanceRisks, analyzeStudentPerformance } from '../../services/aiService';
 import { attendanceLogs, students, getStudentAttendanceSummary } from '../../data/dummyData';
@@ -125,7 +125,7 @@ export default function AttendanceAIInsights({ classId }) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-black-900">AI Attendance Insights</h3>
+        <h3 className="text-lg font-semibold text-neutral-900">AI Attendance Insights</h3>
         <button
           onClick={analyzeAttendance}
           disabled={isLoading}
@@ -139,7 +139,7 @@ export default function AttendanceAIInsights({ classId }) {
       {isLoading && (
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
-          <span className="ml-2 text-sm text-black-600">AI is analyzing attendance patterns...</span>
+          <span className="ml-2 text-sm text-neutral-600">AI is analyzing attendance patterns...</span>
         </div>
       )}
 
@@ -189,13 +189,13 @@ export default function AttendanceAIInsights({ classId }) {
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-black-900">{selectedStudent.name}</h3>
+                <h3 className="text-xl font-bold text-neutral-900">{selectedStudent.name}</h3>
                 <button
                   onClick={() => {
                     setSelectedStudent(null);
                     setStudentAnalysis(null);
                   }}
-                  className="text-black-400 hover:text-black-600"
+                  className="text-neutral-400 hover:text-neutral-600"
                 >
                   ✕
                 </button>
@@ -223,11 +223,11 @@ export default function AttendanceAIInsights({ classId }) {
 
               {/* Strengths */}
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-black-900 mb-2">✅ Strengths</h4>
+                <h4 className="text-sm font-semibold text-neutral-900 mb-2">✅ Strengths</h4>
                 <ul className="space-y-1">
                   {studentAnalysis.strengths.map((strength, idx) => (
-                    <li key={idx} className="text-sm text-black-700 flex items-start gap-2">
-                      <span className="text-green-600">•</span>
+                    <li key={idx} className="text-sm text-neutral-700 flex items-start gap-2">
+                      <span className="text-green-600">–</span>
                       <span>{strength}</span>
                     </li>
                   ))}
@@ -236,11 +236,11 @@ export default function AttendanceAIInsights({ classId }) {
 
               {/* Weaknesses */}
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-black-900 mb-2">⚠️ Areas for Improvement</h4>
+                <h4 className="text-sm font-semibold text-neutral-900 mb-2">⚠️ Areas for Improvement</h4>
                 <ul className="space-y-1">
                   {studentAnalysis.weaknesses.map((weakness, idx) => (
-                    <li key={idx} className="text-sm text-black-700 flex items-start gap-2">
-                      <span className="text-orange-600">•</span>
+                    <li key={idx} className="text-sm text-neutral-700 flex items-start gap-2">
+                      <span className="text-orange-600">–</span>
                       <span>{weakness}</span>
                     </li>
                   ))}
@@ -256,10 +256,10 @@ export default function AttendanceAIInsights({ classId }) {
 
               {/* Recommendations */}
               <div className="mb-4">
-                <h4 className="text-sm font-semibold text-black-900 mb-2">💡 Recommendations</h4>
+                <h4 className="text-sm font-semibold text-neutral-900 mb-2">💡 Recommendations</h4>
                 <ul className="space-y-2">
                   {studentAnalysis.recommendations.map((rec, idx) => (
-                    <li key={idx} className="text-sm text-black-700 p-2 bg-black-50 rounded">
+                    <li key={idx} className="text-sm text-neutral-700 p-2 bg-neutral-50 rounded">
                       {rec}
                     </li>
                   ))}

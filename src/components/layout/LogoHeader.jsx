@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 
 export default function LogoHeader({ title }) {
   return (
@@ -8,7 +8,7 @@ export default function LogoHeader({ title }) {
         <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full shadow-lg bg-gradient-to-br from-indigo-500 to-blue-500 text-white grid place-items-center text-xl font-bold">
           S
         </div>
-        <h1 className="text-2xl sm:text-3xl font-semibold text-black-800">
+        <h1 className="text-2xl sm:text-3xl font-semibold text-neutral-800">
           {title}
         </h1>
       </div>

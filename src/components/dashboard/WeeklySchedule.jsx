@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+﻿import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, ChevronRight, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -65,13 +65,13 @@ export default function WeeklySchedule({ compact = false }) {
   if (compact) {
     // Compact horizontal view for dashboard
     return (
-      <div className="bg-white rounded-3xl border border-black-200 p-4 shadow-sm">
+      <div className="bg-white rounded-3xl border border-neutral-200 p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-purple-100 rounded-xl">
               <Calendar className="w-5 h-5 text-purple-600" />
             </div>
-            <h3 className="font-bold text-black-800">This Week</h3>
+            <h3 className="font-bold text-neutral-800">This Week</h3>
           </div>
           <button className="text-sm text-indigo-600 font-medium hover:underline flex items-center gap-1">
             Full Schedule <ChevronRight className="w-4 h-4" />
@@ -94,18 +94,18 @@ export default function WeeklySchedule({ compact = false }) {
                   ${day.isToday 
                     ? 'bg-indigo-600 border-indigo-600 text-white' 
                     : hasClasses 
-                      ? 'bg-black-50 border-black-200'
-                      : 'bg-white border-black-100 opacity-60'
+                      ? 'bg-neutral-50 border-neutral-200'
+                      : 'bg-white border-neutral-100 opacity-60'
                   }
                 `}
               >
-                <p className={`text-xs font-medium ${day.isToday ? 'text-indigo-200' : 'text-black-500'}`}>
+                <p className={`text-xs font-medium ${day.isToday ? 'text-indigo-200' : 'text-neutral-500'}`}>
                   {day.name}
                 </p>
-                <p className={`text-lg font-bold ${day.isToday ? 'text-white' : 'text-black-800'}`}>
+                <p className={`text-lg font-bold ${day.isToday ? 'text-white' : 'text-neutral-800'}`}>
                   {day.date}
                 </p>
-                <p className={`text-xs mt-1 ${day.isToday ? 'text-indigo-200' : 'text-black-500'}`}>
+                <p className={`text-xs mt-1 ${day.isToday ? 'text-indigo-200' : 'text-neutral-500'}`}>
                   {daySessions.length} {daySessions.length === 1 ? 'class' : 'classes'}
                 </p>
               </motion.div>
@@ -115,8 +115,8 @@ export default function WeeklySchedule({ compact = false }) {
 
         {/* Today's Classes Quick View */}
         {sessions.filter(s => s.date === today.toISOString().slice(0, 10)).length > 0 && (
-          <div className="mt-4 pt-4 border-t border-black-100">
-            <p className="text-xs font-semibold text-black-500 uppercase mb-2">Today's Classes</p>
+          <div className="mt-4 pt-4 border-t border-neutral-100">
+            <p className="text-xs font-semibold text-neutral-500 uppercase mb-2">Today's Classes</p>
             <div className="space-y-2">
               {sessions
                 .filter(s => s.date === today.toISOString().slice(0, 10))
@@ -139,9 +139,9 @@ export default function WeeklySchedule({ compact = false }) {
                         <p className={`text-sm font-medium ${colors.text} truncate`}>
                           {session.subject}
                         </p>
-                        <p className="text-xs text-black-500">Section {session.classId}</p>
+                        <p className="text-xs text-neutral-500">Section {session.classId}</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-black-400" />
+                      <ChevronRight className="w-4 h-4 text-neutral-400" />
                     </button>
                   );
                 })}
@@ -154,15 +154,15 @@ export default function WeeklySchedule({ compact = false }) {
 
   // Full weekly view
   return (
-    <div className="bg-white rounded-3xl border border-black-200 p-5 shadow-sm">
+    <div className="bg-white rounded-3xl border border-neutral-200 p-5 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-purple-100 rounded-xl">
             <Calendar className="w-5 h-5 text-purple-600" />
           </div>
           <div>
-            <h3 className="font-bold text-black-800">Weekly Schedule</h3>
-            <p className="text-xs text-black-500">Your teaching schedule for this week</p>
+            <h3 className="font-bold text-neutral-800">Weekly Schedule</h3>
+            <p className="text-xs text-neutral-500">Your teaching schedule for this week</p>
           </div>
         </div>
       </div>
@@ -179,15 +179,15 @@ export default function WeeklySchedule({ compact = false }) {
                 min-h-[140px] rounded-xl p-2 border
                 ${isToday 
                   ? 'bg-indigo-50 border-indigo-200' 
-                  : 'bg-black-50/50 border-black-100'
+                  : 'bg-neutral-50/50 border-neutral-100'
                 }
               `}
             >
               <div className={`
                 text-center pb-2 mb-2 border-b
-                ${isToday ? 'border-indigo-200' : 'border-black-200'}
+                ${isToday ? 'border-indigo-200' : 'border-neutral-200'}
               `}>
-                <p className={`text-xs font-medium ${isToday ? 'text-indigo-600' : 'text-black-500'}`}>
+                <p className={`text-xs font-medium ${isToday ? 'text-indigo-600' : 'text-neutral-500'}`}>
                   {day}
                 </p>
                 {isToday && (
@@ -219,12 +219,12 @@ export default function WeeklySchedule({ compact = false }) {
                   );
                 })}
                 {daySessions.length > 3 && (
-                  <p className="text-[10px] text-black-400 text-center">
+                  <p className="text-[10px] text-neutral-400 text-center">
                     +{daySessions.length - 3} more
                   </p>
                 )}
                 {daySessions.length === 0 && (
-                  <p className="text-[10px] text-black-400 text-center py-4">
+                  <p className="text-[10px] text-neutral-400 text-center py-4">
                     No classes
                   </p>
                 )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Send, Mic, Paperclip } from 'lucide-react';
 
 /**
@@ -22,14 +22,14 @@ export default function ChatInput({ value, onChange, onSend, isLoading }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 bg-white border-t border-black-100">
+    <form onSubmit={handleSubmit} className="p-3 bg-white border-t border-neutral-100">
       <div className={`
         flex items-center gap-2 p-2 rounded-xl border transition-all
-        ${isFocused ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-black-200'}
+        ${isFocused ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-neutral-200'}
       `}>
         <button
           type="button"
-          className="p-2 text-black-400 hover:text-black-600 hover:bg-black-100 rounded-lg transition-colors"
+          className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
         >
           <Paperclip className="w-4 h-4" />
         </button>
@@ -43,12 +43,12 @@ export default function ChatInput({ value, onChange, onSend, isLoading }) {
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything..."
           disabled={isLoading}
-          className="flex-1 text-sm bg-transparent outline-none placeholder-black-400 disabled:opacity-50"
+          className="flex-1 text-sm bg-transparent outline-none placeholder-neutral-400 disabled:opacity-50"
         />
 
         <button
           type="button"
-          className="p-2 text-black-400 hover:text-black-600 hover:bg-black-100 rounded-lg transition-colors"
+          className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors"
         >
           <Mic className="w-4 h-4" />
         </button>
@@ -60,7 +60,7 @@ export default function ChatInput({ value, onChange, onSend, isLoading }) {
             p-2 rounded-lg transition-all
             ${value.trim() && !isLoading
               ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-              : 'bg-black-100 text-black-400 cursor-not-allowed'
+              : 'bg-neutral-100 text-neutral-400 cursor-not-allowed'
             }
           `}
         >
@@ -68,7 +68,7 @@ export default function ChatInput({ value, onChange, onSend, isLoading }) {
         </button>
       </div>
 
-      <p className="text-[10px] text-black-400 text-center mt-2">
+      <p className="text-[10px] text-neutral-400 text-center mt-2">
         Press Enter to send • Shift+Enter for new line
       </p>
     </form>
