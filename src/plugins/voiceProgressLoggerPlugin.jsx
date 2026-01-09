@@ -315,6 +315,11 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
         }
         emitEvent('progress:updated', batchResult);
         
+        // Emit window event for page listeners
+        window.dispatchEvent(new CustomEvent('syllabus-progress-updated', { 
+          detail: { classId: sectionId } 
+        }));
+        
         return;
       }
 
@@ -390,6 +395,11 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
         onProgressUpdate(updateResult);
       }
       emitEvent('progress:updated', updateResult);
+      
+      // Emit window event for page listeners
+      window.dispatchEvent(new CustomEvent('syllabus-progress-updated', { 
+        detail: { classId: sectionId } 
+      }));
 
     } catch (err) {
       console.error('Voice processing error:', err);
@@ -793,7 +803,22 @@ const VoiceProgressLoggerPlugin = {
                 section.progress[update.chapterIndex] = { topics: {} };
               }
               
-              section.progress[update.chapterIndex].topics[update.topicIndex] = statusMap[update.action];
+              // Get existing topic progress
+              const existingTopic = section.progress[update.chapterIndex].topics[update.topicIndex] || {};
+              const existingData = typeof existingTopic === 'object' ? existingTopic : { status: existingTopic };
+              const newStatus = statusMap[update.action];
+              
+              // Create updated topic progress object with notes and currentPage
+              const updatedTopic = {
+                status: newStatus,
+                currentPage: update.currentPage !== undefined ? update.currentPage : existingData.currentPage,
+                notes: update.notes !== undefined ? update.notes : existingData.notes,
+                startedAt: existingData.startedAt || (newStatus !== 'not-started' ? new Date().toISOString() : null),
+                completedAt: newStatus === 'done' ? new Date().toISOString() : existingData.completedAt,
+                lastCoveredAt: new Date().toISOString()
+              };
+              
+              section.progress[update.chapterIndex].topics[update.topicIndex] = updatedTopic;
               persistProgress(section.id, section.progress);
               
               const chapter = syllabus.chapters.find(ch => ch.index === update.chapterIndex);
@@ -802,16 +827,55 @@ const VoiceProgressLoggerPlugin = {
               results.push({
                 topic: topic?.title || update.matchedTopic || `Topic ${update.topicIndex}`,
                 status: statusMap[update.action].toUpperCase(),
-                chapter: chapter?.title || update.matchedChapter
+                chapter: chapter?.title || update.matchedChapter,
+                currentPage: updatedTopic.currentPage,
+                notes: updatedTopic.notes
               });
             }
           }
           
           if (results.length > 0) {
-            const updateLines = results.map(r => `• **${r.topic}** → ${r.status}`).join('\n');
+            // Build detailed update lines
+            const updateLines = results.map(r => {
+              let line = `• **${r.topic}** → ${r.status}`;
+              if (r.currentPage) line += ` (page ${r.currentPage})`;
+              if (r.notes) line += `\n  _"${r.notes}"_`;
+              return line;
+            }).join('\n');
+            
+            // Emit window event for page listeners to refresh UI
+            const lastUpdate = parsed.updates[parsed.updates.length - 1];
+            const sectionId = lastUpdate.sectionId || urlContext.sectionId || aiContext.currentSectionId;
+            window.dispatchEvent(new CustomEvent('syllabus-progress-updated', { 
+              detail: { classId: sectionId } 
+            }));
+            
+            // Find next topic to suggest
+            const courseId = lastUpdate.courseId || aiContext.currentCourseId;
+            const course = getCourseById(teacherData, courseId);
+            const syllabus = getSyllabusByRef(course?.syllabusRef);
+            
+            let nextTopicSuggestion = '';
+            if (syllabus) {
+              // Find the next topic after the last updated one
+              const lastChapter = syllabus.chapters.find(ch => ch.index === lastUpdate.chapterIndex);
+              if (lastChapter && lastChapter.subTopics) {
+                const nextTopicInChapter = lastChapter.subTopics.find(t => t.index > lastUpdate.topicIndex);
+                if (nextTopicInChapter) {
+                  nextTopicSuggestion = `\n\n📚 **Next up:** ${nextTopicInChapter.title} (pages ${nextTopicInChapter.pageFrom}-${nextTopicInChapter.pageTo})`;
+                } else {
+                  // Check next chapter
+                  const nextChapter = syllabus.chapters.find(ch => ch.index > lastUpdate.chapterIndex);
+                  if (nextChapter && nextChapter.subTopics?.[0]) {
+                    nextTopicSuggestion = `\n\n📚 **Next chapter:** ${nextChapter.title}\n   Start with: ${nextChapter.subTopics[0].title}`;
+                  }
+                }
+              }
+            }
+            
             return {
               handled: true,
-              response: `✅ **Batch Progress Updated!**\n\n${updateLines}\n\n*${results.length} topic(s) updated*`
+              response: `✅ **Batch Progress Updated!**\n\n${updateLines}\n\n*${results.length} topic(s) updated*${nextTopicSuggestion}`
             };
           }
         }

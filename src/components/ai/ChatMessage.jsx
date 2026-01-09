@@ -8,7 +8,10 @@ import { User, Sparkles, CheckCircle, Mic } from 'lucide-react';
 function renderMarkdown(text) {
   if (!text) return '';
   
-  return text
+  // Ensure text is a string
+  const textStr = typeof text === 'string' ? text : String(text);
+  
+  return textStr
     // Code blocks (triple backticks)
     .replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="bg-black-100 dark:bg-black-800 p-2 rounded text-xs overflow-x-auto my-2"><code>$2</code></pre>')
     // Inline code

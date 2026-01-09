@@ -16,7 +16,8 @@ const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 // In production, we fetch the WebSocket URL from the secure proxy
 // to avoid exposing API keys in the client bundle
-const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
+// Disable proxy - use direct browser API calls
+const USE_PROXY = false;
 
 // Use gemini-2.0-flash-exp for Live API - cheapest model that supports audio→tool calling
 // Audio input: $2.10/1M, Text output: $1.50/1M (~$0.41/hour for attendance)

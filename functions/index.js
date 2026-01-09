@@ -110,11 +110,18 @@ function checkRateLimit(ip) {
 function setCorsHeaders(req, res) {
   const origin = req.headers.origin;
   
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.set("Access-Control-Allow-Origin", origin);
+  // Always allow Firebase Hosting domains
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin) || 
+        origin.includes('.web.app') || 
+        origin.includes('.firebaseapp.com') ||
+        origin.includes('localhost')) {
+      res.set("Access-Control-Allow-Origin", origin);
+      res.set("Access-Control-Allow-Credentials", "true");
+    }
   }
   
-  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Methods", "POST, GET, OPTIONS");
   res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.set("Access-Control-Max-Age", "3600");
 }
@@ -135,17 +142,24 @@ function sanitizeInput(text) {
 
 exports.aiGenerate = onRequest(
   {
-    cors: false, // We handle CORS manually for more control
+    cors: true, // Enable CORS automatically
     memory: "256MiB",
     timeoutSeconds: 60,
     secrets: [geminiApiKey], // Inject the secret
   },
   async (req, res) => {
+    console.log('[aiGenerate] Request received:', {
+      method: req.method,
+      origin: req.headers.origin,
+      contentType: req.headers['content-type']
+    });
+    
     // Handle CORS
     setCorsHeaders(req, res);
     
     // Handle preflight
     if (req.method === "OPTIONS") {
+      console.log('[aiGenerate] Handling OPTIONS preflight');
       return res.status(204).send("");
     }
     
@@ -187,7 +201,7 @@ exports.aiGenerate = onRequest(
       // Initialize Gemini
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         systemInstruction: systemInstruction || undefined,
         tools: tools || undefined,
       });
@@ -250,6 +264,7 @@ exports.transcribe = onRequest(
     memory: "512MiB", // Audio processing needs more memory
     timeoutSeconds: 120,
     secrets: [openaiApiKey], // Inject the secret
+    invoker: "public",
   },
   async (req, res) => {
     // Handle CORS
@@ -431,8 +446,7 @@ exports.azureGenerate = onRequest(
     cors: false,
     memory: "256MiB",
     timeoutSeconds: 60,
-    secrets: [azureOpenaiApiKey, azureOpenaiEndpoint, azureOpenaiDeployment],
-  },
+    secrets: [azureOpenaiApiKey, azureOpenaiEndpoint, azureOpenaiDeployment],    invoker: "public",  },
   async (req, res) => {
     // Handle CORS
     setCorsHeaders(req, res);
@@ -562,8 +576,7 @@ exports.azureSpeechToken = onRequest(
     cors: false,
     memory: "128MiB",
     timeoutSeconds: 10,
-    secrets: [azureSpeechKey, azureSpeechRegion],
-  },
+    secrets: [azureSpeechKey, azureSpeechRegion],    invoker: "public",  },
   async (req, res) => {
     setCorsHeaders(req, res);
     
@@ -628,8 +641,7 @@ exports.azureTranscribe = onRequest(
     cors: false,
     memory: "512MiB",
     timeoutSeconds: 120,
-    secrets: [azureSpeechKey, azureSpeechRegion],
-  },
+    secrets: [azureSpeechKey, azureSpeechRegion],    invoker: "public",  },
   async (req, res) => {
     setCorsHeaders(req, res);
     
@@ -709,8 +721,7 @@ exports.azureHealth = onRequest(
     cors: true,
     memory: "128MiB",
     timeoutSeconds: 10,
-    secrets: [azureOpenaiApiKey, azureOpenaiEndpoint],
-  },
+    secrets: [azureOpenaiApiKey, azureOpenaiEndpoint],    invoker: "public",  },
   async (req, res) => {
     try {
       const apiKey = azureOpenaiApiKey.value();
@@ -742,8 +753,7 @@ exports.azureSpeechHealth = onRequest(
     cors: true,
     memory: "128MiB",
     timeoutSeconds: 10,
-    secrets: [azureSpeechKey, azureSpeechRegion],
-  },
+    secrets: [azureSpeechKey, azureSpeechRegion],    invoker: "public",  },
   async (req, res) => {
     try {
       const speechKey = azureSpeechKey.value();

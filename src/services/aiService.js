@@ -34,9 +34,8 @@ const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const AZURE_CONFIGURED = !!(import.meta.env.VITE_AZURE_OPENAI_ENDPOINT && import.meta.env.VITE_AZURE_OPENAI_API_KEY);
 
-// In production, we use Firebase Cloud Functions proxy (API keys are server-side)
-// In development, you can use direct API calls with API keys
-const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
+// Disable proxy - use direct browser API calls with API key from environment
+const USE_PROXY = false;
 
 // Check provider availability
 const isProviderReady = () => {
@@ -61,7 +60,7 @@ const genAI = (!USE_PROXY && AI_PROVIDER === 'gemini' && GEMINI_API_KEY)
 // Models
 const MODELS = {
   TEXT: 'gemini-2.5-flash', // Fast, good for most tasks
-  PRO: 'gemini-3-pro'     // More capable, use for complex analysis
+  PRO: 'gemini-2.5-pro'     // More capable, use for complex analysis
 };
 
 // Generation config
@@ -2665,7 +2664,37 @@ export async function   processChat(message, conversationHistory = [], context =
       return await processAzureChat(text, conversationHistory, context, startTime);
     }
     
-    // Gemini path (original code)
+    // If using proxy mode, route through Firebase Functions
+    if (USE_PROXY) {
+      // For now, fall back to basic proxy call (function calling not yet implemented in proxy)
+      try {
+        // Convert conversation history to Gemini format
+        const history = conversationHistory.slice(-6).map(msg => ({
+          role: msg.role === 'assistant' ? 'model' : 'user',
+          parts: [{ text: msg.content }]
+        }));
+        
+        const response = await callAIGenerate({
+          prompt: text,
+          systemInstruction: `You are a helpful AI teaching assistant. Context: ${JSON.stringify(context)}`,
+          history: history,
+          temperature: 0.7
+        });
+        
+        logGeminiCall('processChat', {
+          messagePreview: text.substring(0, 100),
+          model: 'gemini-proxy',
+          useProxy: true
+        }, response, Date.now() - startTime);
+        
+        return response;
+      } catch (err) {
+        console.error('[processChat] Proxy call failed:', err);
+        return getFallbackResponse(text, context, conversationHistory);
+      }
+    }
+    
+    // Gemini path (direct API - development only)
     // Build conversation history for context (last 10 messages)
     // IMPORTANT: Gemini requires history to start with 'user' role, not 'model'
     // Filter out leading assistant/model messages (like welcome message)

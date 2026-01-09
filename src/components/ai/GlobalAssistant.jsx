@@ -5,8 +5,12 @@ import { Sparkles, Send, ChevronRight } from "lucide-react";
 // Simple markdown renderer for inline formatting
 const renderSimpleMarkdown = (text) => {
   if (!text) return text;
+  
+  // Ensure text is a string
+  const textStr = typeof text === 'string' ? text : String(text);
+  
   // Bold: **text**
-  let result = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  let result = textStr.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   // Italic: *text*
   result = result.replace(/\*(.+?)\*/g, '<em>$1</em>');
   // Code: `text`
