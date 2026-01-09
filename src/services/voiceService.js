@@ -11,7 +11,8 @@ import { transcribeAudio, blobToBase64 } from './aiApiClient';
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 // In production, we use Firebase Cloud Functions proxy (API keys are server-side)
-const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
+// Disable proxy - use direct browser API calls
+const USE_PROXY = false;
 
 /**
  * Check if browser supports Web Speech API

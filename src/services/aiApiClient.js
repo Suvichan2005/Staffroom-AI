@@ -15,7 +15,8 @@
 
 // Configuration
 const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
-const USE_PROXY = import.meta.env.VITE_USE_AI_PROXY === 'true';
+// Disable proxy - use direct browser API calls
+const USE_PROXY = false;
 const AZURE_ENDPOINT = import.meta.env.VITE_AZURE_OPENAI_ENDPOINT;
 const AZURE_API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY;
 const AZURE_DEPLOYMENT = import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT || 'gpt-4.1-mini';
