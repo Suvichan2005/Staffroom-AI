@@ -21,7 +21,7 @@ const AZURE_OPENAI_API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY;
 // Realtime requires: gpt-4o-realtime-preview, gpt-4o-mini-realtime-preview, gpt-realtime, gpt-realtime-mini
 const AZURE_REALTIME_DEPLOYMENT = import.meta.env.VITE_AZURE_REALTIME_DEPLOYMENT || 
   import.meta.env.VITE_AZURE_DEPLOYMENT_REALTIME || 
-  'gpt-realtime-mini';
+  'gpt-4o-realtime-preview';
 
 const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
 
@@ -33,7 +33,7 @@ export function isAzureRealtimeAvailable() {
 }
 
 /**
- * Audio Processor for PCM conversion (shared with Gemini Live)
+ * Audio Processor for PCM conversion (matches Gemini Live exactly)
  */
 class AudioProcessor {
   constructor() {
@@ -44,7 +44,8 @@ class AudioProcessor {
   }
 
   async init() {
-    this.audioContext = new AudioContext({ sampleRate: 24000 }); // Azure uses 24kHz
+    // Azure Realtime uses 24kHz sample rate
+    this.audioContext = new AudioContext({ sampleRate: 24000 });
     return this;
   }
 
@@ -187,8 +188,9 @@ export class AzureRealtimeSession {
     this.onError = options.onError || console.error;
     this.onStatusChange = options.onStatusChange || (() => {});
     this.onAudioResponse = options.onAudioResponse || (() => {});
+    this.onTurnComplete = options.onTurnComplete || (() => {});
     
-    // Student list for fuzzy matching
+    // Student list for fuzzy matching (same as Gemini)
     this.studentList = options.studentList || [];
     this.classId = options.classId || '';
     
@@ -196,13 +198,13 @@ export class AzureRealtimeSession {
     this.systemPrompt = options.systemPrompt || null;
     this.tools = options.tools || null;
     
-    // Transcript accumulator
+    // Transcript accumulator (matches Gemini exactly)
     this.currentTranscript = '';
     this.interimTranscript = '';
     
     // Response tracking
     this.currentResponseId = null;
-    this.pendingToolCalls = new Map();
+    this.pendingFunctionArgs = {};
   }
 
   /**
@@ -210,12 +212,10 @@ export class AzureRealtimeSession {
    */
   getWebSocketUrl() {
     // Extract the resource name from endpoint
-    // e.g., https://myresource.openai.azure.com → myresource
     const endpointUrl = new URL(AZURE_OPENAI_ENDPOINT);
     const resourceName = endpointUrl.hostname.split('.')[0];
     
-    // Azure Realtime uses this WebSocket endpoint format for GA models
-    // wss://{resource}.openai.azure.com/openai/realtime?deployment={deployment}&api-version=2025-04-01-preview
+    // Azure Realtime WebSocket endpoint format
     return `wss://${resourceName}.openai.azure.com/openai/realtime?deployment=${AZURE_REALTIME_DEPLOYMENT}&api-version=2025-04-01-preview`;
   }
 
@@ -231,10 +231,9 @@ export class AzureRealtimeSession {
 
     return new Promise((resolve, reject) => {
       try {
-        // Azure uses API key in header - need to pass as protocol or use fetch for ephemeral token
-        // For WebSocket, we'll use the api-key query param for dev (not ideal for prod)
+        // Azure uses API key in query param for WebSocket
         const wsUrlWithKey = USE_PROXY 
-          ? wsUrl // Proxy will handle auth
+          ? wsUrl 
           : `${wsUrl}&api-key=${AZURE_OPENAI_API_KEY}`;
         
         this.ws = new WebSocket(wsUrlWithKey);
@@ -251,7 +250,7 @@ export class AzureRealtimeSession {
           console.log('🔌 WebSocket connected to Azure Realtime API');
           this.isConnected = true;
           this.onStatusChange('connected');
-          this.sendSessionUpdate();
+          // Note: session.update will be sent after receiving session.created
           resolve();
         };
 
@@ -262,7 +261,7 @@ export class AzureRealtimeSession {
         this.ws.onerror = (error) => {
           clearTimeout(connectionTimeout);
           console.error('❌ WebSocket error:', error);
-          this.onError(new Error('WebSocket connection failed'));
+          this.onError(new Error('WebSocket connection failed. Check API key and deployment.'));
           reject(new Error('WebSocket connection failed'));
         };
 
@@ -296,7 +295,7 @@ export class AzureRealtimeSession {
    * Send session.update to configure the session
    */
   sendSessionUpdate() {
-    // Build student list for the prompt
+    // Build student list for the prompt (same format as Gemini)
     const studentListWithRolls = this.studentList.map(s => 
       `Roll ${s.rollNo || '?'}: ${s.name}`
     ).join(', ');
@@ -312,7 +311,7 @@ export class AzureRealtimeSession {
           properties: {
             student_name: {
               type: 'string',
-              description: 'The name of the student to mark present'
+              description: 'The name of the student to mark present (use the actual name, not the roll number)'
             },
             roll_number: {
               type: 'number',
@@ -331,7 +330,7 @@ export class AzureRealtimeSession {
           properties: {
             student_name: {
               type: 'string',
-              description: 'The name of the student to mark absent'
+              description: 'The name of the student to mark absent (use the actual name, not the roll number)'
             },
             roll_number: {
               type: 'number',
@@ -361,24 +360,40 @@ export class AzureRealtimeSession {
     // Use provided tools or default attendance tools
     const tools = this.tools ? convertToolsToAzureFormat(this.tools) : defaultTools;
     
-    const sessionUpdate = {
-      type: 'session.update',
-      session: {
-        voice: 'alloy',
-        instructions: this.systemPrompt || `You are an attendance assistant for Class ${this.classId}. 
+    // System prompt matching Gemini's format exactly
+    const systemPrompt = this.systemPrompt || `You are an attendance assistant for Class ${this.classId}. 
 
-CRITICAL: Transcribe and respond in ENGLISH ONLY. Translate Hindi/Hinglish to English.
+CRITICAL LANGUAGE RULE - MANDATORY:
+- You MUST ALWAYS respond in ENGLISH ONLY, regardless of the input language
+- If the teacher speaks in Hindi, Hinglish, Spanish, or ANY other language, you MUST:
+  1. Understand what they said
+  2. Respond ONLY in English
+  3. NEVER respond in the same language as the input
+- Do NOT repeat the user's words in their original language
+- Do NOT respond in Hindi, Spanish, French, or any non-English language
+- Your ONLY output language is English
+
+Listen to the teacher's voice and mark attendance in real-time using the provided tools.
 
 Students in this class (Roll No: Name): ${studentListWithRolls}
 
 Instructions:
-- When you hear a student's name followed by "present", "here", "attending", call mark_student_present
-- When you hear "roll number X" followed by "present"/"here", look up the name and call mark_student_present
-- When you hear a student's name followed by "absent", "not here", call mark_student_absent
+- When you hear a student's name followed by "present", "here", "attending", call mark_student_present with the student's full name
+- When you hear "roll number X" or "roll X" followed by "present"/"here", look up the name for that roll number and call mark_student_present with both name and roll_number
+- When you hear a student's name followed by "absent", "not here", "missing", call mark_student_absent
+- When you hear "roll number X" followed by "absent", look up the name and call mark_student_absent
 - When you hear "everyone present" or "all present", call mark_all_present
-- Call tools IMMEDIATELY as you recognize names - don't wait
-- Fuzzy match student names - handle nicknames and partial names
-- Match number words: "one"=1, "two"=2, "three"=3, etc.`,
+- IMPORTANT: Match spoken variations like "role", "roll", "number" to roll numbers
+- Match number words: "one"=1, "two"=2, "three"=3, "four"=4, "five"=5, "six"=6, etc.
+- Call tools immediately as you recognize names or roll numbers - don't wait
+- Fuzzy match student names - teacher might use nicknames or partial names
+- If unsure between two students, pick the closest match`;
+
+    const sessionUpdate = {
+      type: 'session.update',
+      session: {
+        voice: 'alloy',
+        instructions: systemPrompt,
         input_audio_format: 'pcm16',
         output_audio_format: 'pcm16',
         input_audio_transcription: {
@@ -393,7 +408,7 @@ Instructions:
         },
         tools: tools,
         tool_choice: 'auto',
-        temperature: 0.7,
+        temperature: 0.6, // Azure Realtime minimum is 0.6 (unlike Gemini's 0.3)
       }
     };
 
@@ -409,7 +424,7 @@ Instructions:
       const message = JSON.parse(data);
       const eventType = message.type;
       
-      // Log important events
+      // Log important events (not deltas)
       if (!eventType?.includes('delta')) {
         console.log('📥 Azure Realtime:', eventType, message);
       }
@@ -418,10 +433,16 @@ Instructions:
         case 'session.created':
           console.log('✅ Session created:', message.session?.id);
           this.sessionId = message.session?.id;
+          // Send session.update AFTER receiving session.created
+          // Small delay to ensure server is fully ready
+          setTimeout(() => {
+            this.sendSessionUpdate();
+          }, 100);
           break;
           
         case 'session.updated':
           console.log('✅ Session configured');
+          this.onStatusChange('ready');
           break;
           
         case 'input_audio_buffer.speech_started':
@@ -439,16 +460,16 @@ Instructions:
           break;
           
         case 'conversation.item.input_audio_transcription.completed':
-          // User's speech transcription
+          // User's speech transcription - accumulate like Gemini
           const transcript = message.transcript;
           if (transcript) {
-            console.log('📝 User said:', transcript);
-            this.currentTranscript = transcript;
+            console.log('🎤 Input transcript:', transcript);
+            this.currentTranscript += ' ' + transcript;
+            this.currentTranscript = this.currentTranscript.trim();
             this.onTranscript({
               type: 'input',
-              transcript: transcript,
-              combined: transcript,
-              isFinal: true
+              text: transcript,
+              combined: this.currentTranscript
             });
           }
           break;
@@ -458,16 +479,26 @@ Instructions:
           break;
           
         case 'response.output_item.added':
-          // New item being generated
+          // Track the item for function call accumulation
+          if (message.item?.type === 'function_call') {
+            this.pendingFunctionArgs[message.item.id] = {
+              callId: message.item.call_id,
+              name: message.item.name,
+              args: ''
+            };
+          }
           break;
           
         case 'response.function_call_arguments.delta':
-          // Function call arguments streaming
+          // Accumulate function call arguments
+          if (message.item_id && this.pendingFunctionArgs[message.item_id]) {
+            this.pendingFunctionArgs[message.item_id].args += message.delta || '';
+          }
           break;
           
         case 'response.function_call_arguments.done':
-          // Function call complete - extract and execute
-          this.handleFunctionCall(message);
+          // Function call complete - execute it
+          this.handleFunctionCallComplete(message);
           break;
           
         case 'response.audio_transcript.delta':
@@ -481,33 +512,46 @@ Instructions:
           // AI response complete
           const aiTranscript = message.transcript || this.interimTranscript;
           if (aiTranscript) {
-            console.log('🤖 AI said:', aiTranscript);
+            console.log('🤖 Model response:', aiTranscript);
             this.onTranscript({
               type: 'model',
-              transcript: aiTranscript,
-              combined: this.currentTranscript + ' → ' + aiTranscript,
-              isFinal: true
+              text: aiTranscript,
+              combined: this.currentTranscript
             });
           }
           this.interimTranscript = '';
           break;
           
         case 'response.audio.delta':
-          // Audio response data - could play back if needed
+          // Audio response data
           if (message.delta && this.onAudioResponse) {
-            // Decode base64 audio
-            const audioData = atob(message.delta);
-            this.onAudioResponse(audioData);
+            try {
+              const audioData = atob(message.delta);
+              this.onAudioResponse(audioData);
+            } catch (e) {
+              // Ignore decode errors
+            }
           }
           break;
           
         case 'response.done':
           console.log('✅ Response complete');
-          this.onStatusChange('connected');
+          this.onStatusChange('streaming');
+          
+          // Clear any pending function args
+          this.pendingFunctionArgs = {};
+          
+          // Notify turn complete
+          if (this.onTurnComplete) {
+            this.onTurnComplete();
+          }
           break;
           
         case 'error':
-          console.error('❌ Azure Realtime error:', message.error);
+          console.error('❌ Azure Realtime error:', JSON.stringify(message.error, null, 2));
+          console.error('Error type:', message.error?.type);
+          console.error('Error code:', message.error?.code);
+          console.error('Error message:', message.error?.message);
           this.onError(new Error(message.error?.message || 'Unknown error'));
           break;
           
@@ -524,69 +568,207 @@ Instructions:
   }
 
   /**
-   * Handle function call from Realtime API
+   * Handle completed function call - matches Gemini's handleToolCall logic
    */
-  async handleFunctionCall(message) {
-    const callId = message.call_id;
-    const name = message.name;
+  handleFunctionCallComplete(message) {
+    const itemId = message.item_id;
+    const pending = this.pendingFunctionArgs[itemId];
     
-    // Get accumulated arguments from the item
+    // Get call info from pending or directly from message
+    const callId = pending?.callId || message.call_id;
+    const name = pending?.name || message.name;
+    let argsStr = pending?.args || message.arguments || '{}';
+    
     let args = {};
     try {
-      if (message.arguments) {
-        args = JSON.parse(message.arguments);
-      }
+      args = JSON.parse(argsStr);
     } catch (e) {
       console.error('Failed to parse function arguments:', e);
     }
     
-    console.log(`🔧 Tool call: ${name}`, args);
+    console.log('🔧 Tool call:', name, args);
     
-    // Notify about tool call
-    this.onToolCall({
-      name,
-      args,
-      callId
-    });
-    
-    // Execute the tool if it's an attendance function
-    let result = null;
-    if (name === 'mark_student_present' || name === 'mark_student_absent') {
-      const studentName = args.student_name;
-      const rollNumber = args.roll_number;
-      const status = name === 'mark_student_present' ? 'present' : 'absent';
-      
-      // Find student by name or roll number
-      let student = this.studentList.find(s => 
-        s.name.toLowerCase().includes(studentName?.toLowerCase()) ||
-        s.rollNo === rollNumber
-      );
-      
-      if (student) {
-        result = { success: true, student: student.name, status };
-      } else {
-        result = { success: false, error: `Student not found: ${studentName || rollNumber}` };
-      }
-    } else if (name === 'mark_all_present') {
-      result = { success: true, count: this.studentList.length };
-    } else {
-      // Try using handleChatToolCall for other tools
-      try {
-        result = await handleChatToolCall(name, args);
-      } catch (e) {
-        result = { error: e.message };
-      }
+    // Handle attendance-specific tools with fuzzy matching (like Gemini)
+    if (name === 'mark_student_present' || name === 'mark_student_absent' || name === 'mark_all_present') {
+      this.handleAttendanceToolCall(callId, name, args);
+      return;
     }
     
-    // Send tool result back to the API
+    // Use the shared handleChatToolCall for other tools (syllabus, progress, etc.)
+    const { action, result } = handleChatToolCall({
+      id: callId,
+      name: name,
+      args: args
+    }, null);
+
+    // Emit tool call event to UI
+    this.onToolCall({
+      id: callId,
+      name: name,
+      args: args,
+      display: action.display,
+      result: result
+    });
+
+    // Send tool response back to Azure
     this.sendFunctionResult(callId, result);
   }
 
   /**
-   * Send function result back to the API
+   * Handle attendance-specific tool calls with fuzzy matching (matches Gemini exactly)
+   */
+  handleAttendanceToolCall(callId, name, args) {
+    let result = {};
+    let matchedStudent = null;
+    let confidence = 'low';
+    
+    if (name === 'mark_student_present' || name === 'mark_student_absent') {
+      // Try to match student by roll number first, then by name
+      matchedStudent = this.fuzzyMatchStudent(args.student_name, args.roll_number);
+      
+      if (matchedStudent) {
+        const status = name === 'mark_student_present' ? 'present' : 'absent';
+        result = { 
+          success: true, 
+          studentId: matchedStudent.studentId,
+          studentName: matchedStudent.name,
+          rollNo: matchedStudent.rollNo,
+          status: status,
+          message: `Marked ${matchedStudent.name} (Roll ${matchedStudent.rollNo}) as ${status}`
+        };
+        confidence = 'high';
+        console.log(`✅ Matched "${args.student_name}" → ${matchedStudent.name} (Roll ${matchedStudent.rollNo})`);
+      } else {
+        result = { 
+          success: false, 
+          error: `Could not find student matching "${args.student_name}"`,
+          searchedName: args.student_name,
+          searchedRoll: args.roll_number
+        };
+        console.log(`❌ No match for "${args.student_name}"`);
+      }
+    } else if (name === 'mark_all_present') {
+      const exceptions = (args.exceptions || []).map(n => n.toLowerCase());
+      const markedStudents = this.studentList.filter(s => 
+        !exceptions.some(ex => s.name.toLowerCase().includes(ex))
+      );
+      result = {
+        success: true,
+        count: markedStudents.length,
+        exceptions: exceptions,
+        message: `Marked ${markedStudents.length} students as present`
+      };
+      confidence = 'high';
+    }
+    
+    // Emit tool call event to UI with matched student info (same as Gemini)
+    this.onToolCall({
+      id: callId,
+      name: name,
+      args: args,
+      matchedStudent: matchedStudent,
+      confidence: confidence,
+      display: result.message || result.error,
+      result: result
+    });
+    
+    // Send tool response back to Azure
+    this.sendFunctionResult(callId, result);
+  }
+
+  /**
+   * Match student by roll number (same as Gemini)
+   */
+  matchByRollNumber(rollNumber) {
+    if (rollNumber === undefined || rollNumber === null) return null;
+    const num = parseInt(rollNumber, 10);
+    if (isNaN(num)) return null;
+    return this.studentList.find(s => s.rollNo === num);
+  }
+
+  /**
+   * Fuzzy match student name from the list, with roll number support (same as Gemini)
+   */
+  fuzzyMatchStudent(spokenName, rollNumber = null) {
+    // First try roll number if provided
+    if (rollNumber !== undefined && rollNumber !== null) {
+      const byRoll = this.matchByRollNumber(rollNumber);
+      if (byRoll) return byRoll;
+    }
+    
+    const lower = (spokenName || '').toLowerCase().trim();
+    if (!lower) return null;
+    
+    // Check if the spoken name contains a roll number pattern
+    const rollPatterns = [
+      /roll\s*(?:number|no|num|#)?\s*(\d+)/i,
+      /(\d+)\s*(?:number|no)?/i
+    ];
+    for (const pattern of rollPatterns) {
+      const rollMatch = lower.match(pattern);
+      if (rollMatch) {
+        const num = parseInt(rollMatch[1], 10);
+        const byRoll = this.matchByRollNumber(num);
+        if (byRoll) return byRoll;
+      }
+    }
+    
+    // Exact match
+    let match = this.studentList.find(s => 
+      s.name.toLowerCase() === lower
+    );
+    if (match) return match;
+
+    // Partial match (first name or last name)
+    match = this.studentList.find(s => {
+      const nameParts = s.name.toLowerCase().split(' ');
+      return nameParts.some(part => part === lower || lower.includes(part) || part.includes(lower));
+    });
+    if (match) return match;
+
+    // Fuzzy match using simple Levenshtein-like similarity
+    let bestMatch = null;
+    let bestScore = 0;
+    
+    for (const student of this.studentList) {
+      const score = this.similarityScore(lower, student.name.toLowerCase());
+      if (score > bestScore && score > 0.5) { // At least 50% similar
+        bestScore = score;
+        bestMatch = student;
+      }
+    }
+
+    return bestMatch;
+  }
+
+  /**
+   * Simple string similarity score (0-1) - same as Gemini
+   */
+  similarityScore(a, b) {
+    if (a === b) return 1;
+    if (!a || !b) return 0;
+    
+    const longer = a.length > b.length ? a : b;
+    const shorter = a.length > b.length ? b : a;
+    
+    if (longer.includes(shorter)) {
+      return shorter.length / longer.length;
+    }
+    
+    // Count matching characters
+    let matches = 0;
+    for (const char of shorter) {
+      if (longer.includes(char)) matches++;
+    }
+    return matches / longer.length;
+  }
+
+  /**
+   * Send function result back to Azure Realtime API
    */
   sendFunctionResult(callId, result) {
-    const event = {
+    // Create the function output item
+    const createEvent = {
       type: 'conversation.item.create',
       item: {
         type: 'function_call_output',
@@ -595,24 +777,19 @@ Instructions:
       }
     };
     
-    console.log('📤 Sending function result:', event);
-    this.ws.send(JSON.stringify(event));
+    console.log('📤 Sending function result:', createEvent);
+    this.ws.send(JSON.stringify(createEvent));
     
     // Request a new response after the function result
     this.ws.send(JSON.stringify({ type: 'response.create' }));
   }
 
   /**
-   * Start streaming audio from microphone
+   * Start audio streaming from microphone
    */
   async startStreaming() {
     if (!this.isConnected) {
       throw new Error('Not connected to Azure Realtime API');
-    }
-    
-    if (this.isStreaming) {
-      console.warn('Already streaming');
-      return;
     }
 
     try {
@@ -620,40 +797,63 @@ Instructions:
       await this.audioProcessor.init();
       
       await this.audioProcessor.startMicrophone((pcmData) => {
-        if (this.isStreaming && this.ws?.readyState === WebSocket.OPEN) {
-          // Convert Int16Array to base64 for Azure Realtime API
-          const base64Audio = this.int16ToBase64(pcmData);
-          
-          // Send audio data
-          const event = {
-            type: 'input_audio_buffer.append',
-            audio: base64Audio
-          };
-          this.ws.send(JSON.stringify(event));
-        }
+        this.sendAudioChunk(pcmData);
       });
-      
+
       this.isStreaming = true;
       this.onStatusChange('streaming');
-      console.log('🎙️ Started audio streaming');
+      console.log('🎤 Audio streaming started');
       
     } catch (error) {
-      console.error('Failed to start streaming:', error);
       this.onError(error);
       throw error;
     }
   }
 
   /**
-   * Convert Int16Array to base64
+   * Send audio chunk to Azure Realtime API
    */
-  int16ToBase64(int16Array) {
+  sendAudioChunk(int16Array) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    if (!this.isStreaming) return;
+
+    // Convert Int16Array to base64
     const bytes = new Uint8Array(int16Array.buffer);
     let binary = '';
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i]);
     }
-    return btoa(binary);
+    const base64 = btoa(binary);
+
+    // Azure Realtime API format
+    const event = {
+      type: 'input_audio_buffer.append',
+      audio: base64
+    };
+
+    this.ws.send(JSON.stringify(event));
+  }
+
+  /**
+   * Send text input (for testing or hybrid mode)
+   */
+  sendText(text) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+
+    const event = {
+      type: 'conversation.item.create',
+      item: {
+        type: 'message',
+        role: 'user',
+        content: [{
+          type: 'input_text',
+          text: text
+        }]
+      }
+    };
+
+    this.ws.send(JSON.stringify(event));
+    this.ws.send(JSON.stringify({ type: 'response.create' }));
   }
 
   /**
@@ -695,6 +895,8 @@ Instructions:
     }
     
     this.isConnected = false;
+    this.currentTranscript = '';
+    this.interimTranscript = '';
     this.onStatusChange('disconnected');
     console.log('🔌 Disconnected from Azure Realtime API');
   }

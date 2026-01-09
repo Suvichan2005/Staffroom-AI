@@ -232,6 +232,93 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
       const parsed = await parseVoiceTranscript(text, aiContext);
       debugLog('Parsed result:', parsed);
 
+      // Handle batch updates (multiple operations)
+      if (parsed.action === 'batch_update' && parsed.updates && Array.isArray(parsed.updates)) {
+        debugLog('Processing batch update with', parsed.updates.length, 'operations');
+        
+        const section = course?.sections.find(s => s.id === sectionId);
+        const syllabus = getSyllabusByRef(course?.syllabusRef);
+
+        if (!section || !syllabus) {
+          setStatus('error');
+          setError('Could not find section or syllabus data.');
+          return;
+        }
+
+        const statusMap = {
+          'mark_complete': 'done',
+          'mark_ongoing': 'ongoing',
+          'mark_pending': 'not-started'
+        };
+
+        const results = [];
+        
+        // Process each operation
+        for (const operation of parsed.updates) {
+          if (operation.action === 'unclear' || 
+              typeof operation.chapterIndex !== 'number' || 
+              typeof operation.topicIndex !== 'number') {
+            continue; // Skip unclear operations
+          }
+
+          // Update progress - ensure chapter exists
+          if (!section.progress[operation.chapterIndex]) {
+            section.progress[operation.chapterIndex] = { topics: {} };
+          }
+
+          // Get existing topic progress or create new one
+          const existingTopic = section.progress[operation.chapterIndex].topics[operation.topicIndex] || {};
+          const newStatus = statusMap[operation.action];
+
+          // Create updated topic progress object
+          const updatedTopic = {
+            status: newStatus,
+            currentPage: operation.currentPage !== undefined ? operation.currentPage : existingTopic.currentPage,
+            notes: operation.notes !== undefined ? operation.notes : existingTopic.notes,
+            startedAt: existingTopic.startedAt || (newStatus !== 'not-started' ? new Date().toISOString() : null),
+            completedAt: newStatus === 'done' ? new Date().toISOString() : existingTopic.completedAt,
+            lastCoveredAt: new Date().toISOString()
+          };
+
+          // Store the complete object
+          section.progress[operation.chapterIndex].topics[operation.topicIndex] = updatedTopic;
+
+          // Get chapter and topic names for result
+          const chapter = syllabus.chapters.find(ch => ch.index === operation.chapterIndex);
+          const topic = chapter?.subTopics?.find(t => t.index === operation.topicIndex);
+
+          results.push({
+            action: operation.action,
+            chapter: chapter?.title || `Chapter ${operation.chapterIndex}`,
+            topic: topic?.title || `Topic ${operation.topicIndex}`,
+            status: newStatus,
+            currentPage: updatedTopic.currentPage,
+            notes: updatedTopic.notes
+          });
+        }
+
+        persistProgress(sectionId, section.progress);
+
+        // Set result as batch
+        const batchResult = {
+          action: 'batch_update',
+          count: results.length,
+          updates: results
+        };
+        
+        setResult(batchResult);
+        setStatus('success');
+
+        // Notify parent with batch result
+        if (onProgressUpdate) {
+          onProgressUpdate(batchResult);
+        }
+        emitEvent('progress:updated', batchResult);
+        
+        return;
+      }
+
+      // Handle single operation (original code)
       // Validate parsing result
       if (
         parsed.action === 'unclear' ||
@@ -264,7 +351,22 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
         'mark_pending': 'not-started'
       };
 
-      section.progress[parsed.chapterIndex].topics[parsed.topicIndex] = statusMap[parsed.action];
+      // Get existing topic progress or create new one
+      const existingTopic = section.progress[parsed.chapterIndex].topics[parsed.topicIndex] || {};
+      const newStatus = statusMap[parsed.action];
+
+      // Create updated topic progress object with all fields
+      const updatedTopic = {
+        status: newStatus,
+        currentPage: parsed.currentPage !== undefined ? parsed.currentPage : existingTopic.currentPage,
+        notes: parsed.notes !== undefined ? parsed.notes : existingTopic.notes,
+        startedAt: existingTopic.startedAt || (newStatus !== 'not-started' ? new Date().toISOString() : null),
+        completedAt: newStatus === 'done' ? new Date().toISOString() : existingTopic.completedAt,
+        lastCoveredAt: new Date().toISOString()
+      };
+
+      // Store the complete object
+      section.progress[parsed.chapterIndex].topics[parsed.topicIndex] = updatedTopic;
       persistProgress(sectionId, section.progress);
 
       // Get chapter and topic names
@@ -275,7 +377,9 @@ function VoiceProgressPanel({ context, onProgressUpdate }) {
         action: parsed.action,
         chapter: chapter?.title || `Chapter ${parsed.chapterIndex}`,
         topic: topic?.title || `Topic ${parsed.topicIndex}`,
-        status: statusMap[parsed.action]
+        status: newStatus,
+        currentPage: updatedTopic.currentPage,
+        notes: updatedTopic.notes
       };
 
       setResult(updateResult);

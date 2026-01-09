@@ -1338,6 +1338,245 @@ const chatToolDeclarations = [
 ];
 
 /**
+ * Azure implementation of parseVoiceTranscript with iterative tool calling
+ * Matches Gemini's function calling approach but uses Azure OpenAI
+ */
+async function parseVoiceTranscriptAzure(text, currentCourseId, currentSectionId) {
+  console.log('[parseVoiceTranscriptAzure] Processing:', text);
+  
+  const systemPrompt = `You are a teaching assistant helping to parse voice commands for updating syllabus progress.
+
+The user said: "${text}"
+
+Current context:
+- Current Course ID: ${currentCourseId || 'not set'}
+- Current Section ID: ${currentSectionId || 'not set'}
+
+MULTI-STEP COMMAND DETECTION:
+The user may give MULTIPLE operations in ONE command. You MUST identify ALL operations:
+
+PATTERN 1: "Mark X done, mark Y as ongoing/started"
+Example: "mark plains and valleys as done, mark the next topic as ongoing"
+→ TWO operations: 1) mark first topic complete, 2) mark next topic ongoing
+
+PATTERN 2: "Mark X done, the kids understood well, mark next at page Y"  
+Example: "mark plains as valleys as done, the kids understood it very well, mark the next topic as ongoing at page number 38"
+→ TWO operations: 1) mark first topic complete with note, 2) mark next topic ongoing at page 38
+
+PATTERN 3: "Done with X, covered to page Y"
+Example: "done with plains and valleys, covered to page 42"
+→ TWO operations: 1) mark X complete, 2) mark topic containing page Y as ongoing at that page
+
+Your task:
+1. First, identify what subject/section the user is referring to:
+   - Look for explicit mentions like "history", "geography", "8B", "6A"
+   - If they say "in it" or don't specify, use the Current Course ID context above
+   
+2. Use the tools strategically:
+   - Call getSyllabus with subject filter if user mentioned a subject
+   - Call searchTopic with filterSubject/filterSectionId to AVOID cross-subject matches
+   - IMPORTANT: "Enlightenment" in History is different from topics in Geography!
+
+3. Identify ALL operations in the command (there may be multiple):
+   - action: "mark_complete" (finished/done/completed), "mark_pending" (not done/undo/hasn't), "mark_ongoing" (started/working on), or "unclear"
+   - courseId: the course this belongs to
+   - sectionId: the section mentioned or from context
+   - chapterIndex: the chapter number (1-based index from syllabus)
+   - topicIndex: the topic number (1-based index from syllabus)
+   - currentPage: (optional) page number if mentioned
+   - notes: (optional) any notes/comments like "kids understood well"
+
+CRITICAL RULES:
+- "not done", "has not done", "hasn't done" → action: "mark_pending"
+- Notes go with the topic being worked on (ongoing), NOT completed topics
+- "covered to page X" means the NEXT topic (not current) is at page X
+- When searching topics, ALWAYS filter by subject if one was mentioned or is in context
+- Handle speech-to-text errors like "deformers" → "reformers", "planes" → "plains", "plains as valleys" → "plains and valleys"
+- If user says "in it" without specifying subject, use the Current Course ID to determine subject
+- "mark the next" means find the next topic after the current one in sequence`;
+
+  try {
+    // Call Azure with tools
+    let response = await callAIGenerate({
+      prompt: text,
+      systemInstruction: systemPrompt,
+      tools: [{ functionDeclarations: toolDeclarations }],
+      history: [],
+      useCase: 'tools'
+    });
+    
+    console.log('[parseVoiceTranscriptAzure] Initial response:', response);
+    
+    // Handle function calls iteratively (same as Gemini)
+    let iterations = 0;
+    const maxIterations = 5;
+    const conversationHistory = [];
+    
+    while (response.functionCalls && response.functionCalls.length > 0 && iterations < maxIterations) {
+      iterations++;
+      console.log(`[parseVoiceTranscriptAzure] Processing ${response.functionCalls.length} function calls (iteration ${iterations})`);
+      
+      // Execute all function calls
+      const toolResults = [];
+      for (const call of response.functionCalls) {
+        const { name, args } = call;
+        console.log(`[parseVoiceTranscriptAzure] Calling tool: ${name}`, args);
+        
+        const fn = toolFunctions[name];
+        let result;
+        
+        if (fn) {
+          try {
+            if (name === 'getAvailableCourses') {
+              result = fn();
+            } else if (name === 'getSyllabus') {
+              result = fn(args.courseId, args.subject, args.sectionId);
+            } else if (name === 'searchTopic') {
+              result = fn(args.searchQuery, args.filterSubject, args.filterSectionId);
+            } else {
+              result = { error: `Unknown function: ${name}` };
+            }
+          } catch (err) {
+            console.error(`[parseVoiceTranscriptAzure] Error calling ${name}:`, err);
+            result = { error: err.message };
+          }
+        } else {
+          result = { error: `Unknown function: ${name}` };
+        }
+        
+        console.log(`[parseVoiceTranscriptAzure] Tool result for ${name}:`, result);
+        toolResults.push({
+          name,
+          result: JSON.stringify(result)
+        });
+      }
+      
+      // Add to conversation history
+      conversationHistory.push({ role: 'assistant', content: JSON.stringify(response.functionCalls) });
+      conversationHistory.push({ role: 'user', content: `Tool results:\n${toolResults.map(t => `${t.name}: ${t.result}`).join('\n')}` });
+      
+      // Call Azure again with tool results
+      response = await callAIGenerate({
+        prompt: 'Based on the tool results, continue analyzing the user request.',
+        systemInstruction: systemPrompt,
+        tools: [{ functionDeclarations: toolDeclarations }],
+        history: conversationHistory,
+        useCase: 'tools'
+      });
+    }
+    
+    // Now ask for the final structured response
+    const finalPrompt = `Based on the syllabus information you gathered, provide your final answer.
+
+CRITICAL: Use the courseId from the syllabus where you actually found the topic!
+- If you found "Enlightenment" in the History syllabus (hist8), return courseId: "hist8"
+- If you found "Plains and Valleys" in Geography syllabus (geo6), return courseId: "geo6"
+- Do NOT use the default context course if the topic is from a different course!
+
+MULTI-STEP OPERATIONS:
+If the user's command contains MULTIPLE operations, return MULTIPLE JSON objects (one per line).
+
+Example 1: "mark plains and valleys done, mark the next as ongoing"
+Output TWO JSON objects:
+{"action": "mark_complete", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 2, "matchedTopic": "Plains and Valleys", "matchedChapter": "Landforms of the Earth", "confidence": "high"}
+{"action": "mark_ongoing", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 3, "matchedTopic": "Rivers and Deltas", "matchedChapter": "Landforms of the Earth", "confidence": "high"}
+
+Example 2: "mark plains as valleys done, kids understood well, mark next at page 38"
+Output TWO JSON objects:
+{"action": "mark_complete", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 2, "matchedTopic": "Plains and Valleys", "matchedChapter": "Landforms of the Earth", "notes": "kids understood well", "confidence": "high"}
+{"action": "mark_ongoing", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 3, "matchedTopic": "Rivers and Deltas", "matchedChapter": "Landforms of the Earth", "currentPage": 38, "confidence": "high"}
+
+Return JSON object(s) (no markdown, no explanation, one JSON per line if multiple):
+{
+  "action": "mark_complete" | "mark_ongoing" | "mark_pending" | "unclear",
+  "courseId": "the courseId where the topic was found (e.g., 'hist8', 'geo6')",
+  "sectionId": "string (from user input or context)", 
+  "chapterIndex": number,
+  "topicIndex": number,
+  "matchedTopic": "the exact topic title from syllabus",
+  "matchedChapter": "the exact chapter title from syllabus",
+  "currentPage": number (optional - only if page number mentioned),
+  "notes": "string (optional - any comments like 'kids understood well')",
+  "confidence": "high" | "medium" | "low"
+}
+
+Remember:
+- "not done", "hasn't done", "has not" → action: "mark_pending"
+- Use the exact indices from the syllabus (1-based, not 0-based)
+- courseId must match where the topic was found!
+- Notes go on the topic being worked on (ongoing), not completed topics
+- If multiple operations, output multiple JSON objects (one per line)
+- If you couldn't find the topic, set action: "unclear"`;
+
+    const finalResponse = await callAIGenerate({
+      prompt: finalPrompt,
+      systemInstruction: systemPrompt,
+      tools: [],
+      history: conversationHistory,
+      useCase: 'tools'
+    });
+    
+    const finalText = finalResponse.text || '';
+    console.log('[parseVoiceTranscriptAzure] Final response:', finalText);
+    
+    // Parse JSON from response
+    const jsonMatches = finalText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
+    if (!jsonMatches || jsonMatches.length === 0) {
+      console.warn('[parseVoiceTranscriptAzure] No JSON in response, using fallback');
+      return simpleFallbackParse(text, currentCourseId, currentSectionId);
+    }
+    
+    // Parse all JSON blocks
+    const parsedResults = [];
+    for (const jsonStr of jsonMatches) {
+      try {
+        const parsed = JSON.parse(jsonStr);
+        if (parsed.action && parsed.chapterIndex !== undefined && parsed.topicIndex !== undefined) {
+          parsed._source = 'azure-function-calling';
+          parsedResults.push(parsed);
+        }
+      } catch (e) {
+        console.warn('[parseVoiceTranscriptAzure] Failed to parse JSON block:', jsonStr, e);
+      }
+    }
+    
+    // If we got multiple valid results, return as batch
+    if (parsedResults.length > 1) {
+      console.log('[parseVoiceTranscriptAzure] Batch update detected:', parsedResults.length, 'topics');
+      return {
+        action: 'batch_update',
+        updates: parsedResults,
+        _source: 'azure-function-calling-batch'
+      };
+    }
+    
+    // Single result
+    if (parsedResults.length === 1) {
+      const parsed = parsedResults[0];
+      
+      // Validate required fields
+      if (!parsed.chapterIndex || !parsed.topicIndex || parsed.action === 'unclear') {
+        console.warn('[parseVoiceTranscriptAzure] Azure returned unclear result, trying fallback');
+        const fallback = simpleFallbackParse(text, currentCourseId, currentSectionId);
+        if (fallback.chapterIndex && fallback.topicIndex) {
+          return { ...fallback, _source: 'fallback-after-azure' };
+        }
+      }
+      
+      return parsed;
+    }
+    
+    // No valid results, use fallback
+    console.warn('[parseVoiceTranscriptAzure] No valid JSON results, using fallback');
+    return simpleFallbackParse(text, currentCourseId, currentSectionId);
+    
+  } catch (error) {
+    console.error('[parseVoiceTranscriptAzure] Error:', error);
+    return simpleFallbackParse(text, currentCourseId, currentSectionId);
+  }
+}
+
+/**
  * Parse voice transcript to extract syllabus update intent
  * LLM-FIRST approach with function calling for intelligent context gathering
  * 
@@ -1354,6 +1593,11 @@ export async function parseVoiceTranscript(transcript, context) {
   }
 
   console.log('[parseVoiceTranscript] Input:', text);
+
+  // Use Azure if provider is set to Azure
+  if (AI_PROVIDER === 'azure') {
+    return parseVoiceTranscriptAzure(text, currentCourseId, currentSectionId);
+  }
 
   // If no API key, use simple fallback
   if (!genAI) {
@@ -1376,6 +1620,21 @@ Current context:
 - Current Course ID: ${currentCourseId || 'not set'}
 - Current Section ID: ${currentSectionId || 'not set'}
 
+MULTI-STEP COMMAND DETECTION:
+The user may give MULTIPLE operations in ONE command. You MUST identify ALL operations:
+
+PATTERN 1: "Mark X done, mark Y as ongoing/started"
+Example: "mark plains and valleys as done, mark the next topic as ongoing"
+→ TWO operations: 1) mark first topic complete, 2) mark next topic ongoing
+
+PATTERN 2: "Mark X done, the kids understood well, mark next at page Y"  
+Example: "mark plains as valleys as done, the kids understood it very well, mark the next topic as ongoing at page number 38"
+→ TWO operations: 1) mark first topic complete with note, 2) mark next topic ongoing at page 38
+
+PATTERN 3: "Done with X, covered to page Y"
+Example: "done with plains and valleys, covered to page 42"
+→ TWO operations: 1) mark X complete, 2) mark topic containing page Y as ongoing at that page
+
 Your task:
 1. First, identify what subject/section the user is referring to:
    - Look for explicit mentions like "history", "geography", "8B", "6A"
@@ -1386,18 +1645,23 @@ Your task:
    - Call searchTopic with filterSubject/filterSectionId to AVOID cross-subject matches
    - IMPORTANT: "Enlightenment" in History is different from topics in Geography!
 
-3. Determine:
+3. Identify ALL operations in the command (there may be multiple):
    - action: "mark_complete" (finished/done/completed), "mark_pending" (not done/undo/hasn't), "mark_ongoing" (started/working on), or "unclear"
    - courseId: the course this belongs to
    - sectionId: the section mentioned or from context
    - chapterIndex: the chapter number (1-based index from syllabus)
    - topicIndex: the topic number (1-based index from syllabus)
+   - currentPage: (optional) page number if mentioned
+   - notes: (optional) any notes/comments like "kids understood well"
 
 CRITICAL RULES:
-- "not done", "has not done", "hasn't done" → action: "mark_pending"  
+- "not done", "has not done", "hasn't done" → action: "mark_pending"
+- Notes go with the topic being worked on (ongoing), NOT completed topics
+- "covered to page X" means the NEXT topic (not current) is at page X
 - When searching topics, ALWAYS filter by subject if one was mentioned or is in context
-- Handle speech-to-text errors like "deformers" → "reformers", "planes" → "plains"
+- Handle speech-to-text errors like "deformers" → "reformers", "planes" → "plains", "plains as valleys" → "plains and valleys"
 - If user says "in it" without specifying subject, use the Current Course ID to determine subject
+- "mark the next" means find the next topic after the current one in sequence
 
 Start by identifying the subject context, then fetch the relevant syllabus.`;
 
@@ -1462,7 +1726,20 @@ CRITICAL: Use the courseId from the syllabus where you actually found the topic!
 - If you found "Plains and Valleys" in Geography syllabus (geo6), return courseId: "geo6"
 - Do NOT use the default context course if the topic is from a different course!
 
-Return ONLY a JSON object (no markdown, no explanation):
+MULTI-STEP OPERATIONS:
+If the user's command contains MULTIPLE operations, return MULTIPLE JSON objects (one per line).
+
+Example 1: "mark plains and valleys done, mark the next as ongoing"
+Output TWO JSON objects:
+{"action": "mark_complete", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 2, "matchedTopic": "Plains and Valleys", "matchedChapter": "Landforms of the Earth", "confidence": "high"}
+{"action": "mark_ongoing", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 3, "matchedTopic": "Rivers and Deltas", "matchedChapter": "Landforms of the Earth", "confidence": "high"}
+
+Example 2: "mark plains as valleys done, kids understood well, mark next at page 38"
+Output TWO JSON objects:
+{"action": "mark_complete", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 2, "matchedTopic": "Plains and Valleys", "matchedChapter": "Landforms of the Earth", "notes": "kids understood well", "confidence": "high"}
+{"action": "mark_ongoing", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 3, "matchedTopic": "Rivers and Deltas", "matchedChapter": "Landforms of the Earth", "currentPage": 38, "confidence": "high"}
+
+Return JSON object(s) (no markdown, no explanation, one JSON per line if multiple):
 {
   "action": "mark_complete" | "mark_ongoing" | "mark_pending" | "unclear",
   "courseId": "the courseId where the topic was found (e.g., 'hist8', 'geo6')",
@@ -1471,6 +1748,8 @@ Return ONLY a JSON object (no markdown, no explanation):
   "topicIndex": number,
   "matchedTopic": "the exact topic title from syllabus",
   "matchedChapter": "the exact chapter title from syllabus",
+  "currentPage": number (optional - only if page number mentioned),
+  "notes": "string (optional - any comments like 'kids understood well')",
   "confidence": "high" | "medium" | "low"
 }
 
@@ -1478,6 +1757,8 @@ Remember:
 - "not done", "hasn't done", "has not" → action: "mark_pending"
 - Use the exact indices from the syllabus (1-based, not 0-based)
 - courseId must match where the topic was found!
+- Notes go on the topic being worked on (ongoing), not completed topics
+- If multiple operations, output multiple JSON objects (one per line)
 - If you couldn't find the topic, set action: "unclear"`;
 
     const finalResponse = await chat.sendMessage(finalPrompt);
@@ -1632,27 +1913,12 @@ export async function parseAttendanceVoice(transcript, classId, studentList) {
     return { error: 'Empty transcript' };
   }
 
-  // If no API key, use fallback
-  if (!genAI) {
-    return {
-      error: 'AI service unavailable',
-      _fallback: true,
-      transcript
-    };
-  }
+  // Build student list with roll numbers
+  const studentListWithRolls = studentList.map(s => 
+    `Roll ${s.rollNo || '?'}: ${s.name}`
+  ).join(', ');
 
-  try {
-    const model = genAI.getGenerativeModel({
-      model: MODELS.TEXT,
-      generationConfig: { responseMimeType: "application/json" }
-    });
-
-    // Build student list with roll numbers
-    const studentListWithRolls = studentList.map(s => 
-      `Roll ${s.rollNo || '?'}: ${s.name}`
-    ).join(', ');
-
-    const prompt = `
+  const prompt = `
 Parse this attendance voice command for Class ${classId}:
 "${text}"
 
@@ -1676,9 +1942,65 @@ Rules:
 - Always include both name and rollNo in the output
 `;
 
+  // Use Azure if provider is set to Azure
+  if (AI_PROVIDER === 'azure') {
+    try {
+      const response = await callAIGenerate({
+        prompt,
+        systemInstruction: 'You are a helpful AI that parses attendance voice commands. Return ONLY valid JSON, no markdown.',
+        tools: [],
+        history: [],
+        useCase: 'chat'
+      });
+      
+      const responseText = response.text || '';
+      console.log('[parseAttendanceVoice Azure] Response:', responseText);
+      
+      // Parse JSON from response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        return { error: 'Failed to parse JSON from Azure response', _fallback: true, transcript };
+      }
+      
+      const json = JSON.parse(jsonMatch[0]);
+      return processAttendanceResult(json, studentList);
+      
+    } catch (error) {
+      console.error('[parseAttendanceVoice Azure] Error:', error);
+      return { error: 'Azure AI service error', _fallback: true, transcript };
+    }
+  }
+
+  // If no Gemini API key, use fallback
+  if (!genAI) {
+    return {
+      error: 'AI service unavailable',
+      _fallback: true,
+      transcript
+    };
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({
+      model: MODELS.TEXT,
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
     const result = await model.generateContent(prompt);
     const json = JSON.parse(result.response.text());
 
+    return processAttendanceResult(json, studentList);
+
+  } catch (error) {
+    console.error('Attendance parsing error:', error);
+    return { error: error.message };
+  }
+}
+
+/**
+ * Process attendance JSON result and map to student IDs
+ */
+function processAttendanceResult(json, studentList) {
     // Map names/roll numbers back to IDs
     const updates = {};
 
@@ -1728,11 +2050,6 @@ Rules:
     }
 
     return { updates, confidence: 'high' };
-
-  } catch (error) {
-    console.error('Attendance parsing error:', error);
-    return { error: error.message };
-  }
 }
 
 /**
@@ -2058,6 +2375,9 @@ async function processAzureChat(text, conversationHistory, context, startTime) {
   // Get temporal context
   const temporal = getTemporalContext();
   
+  // Track navigation intent (same as Gemini)
+  let navigationIntent = null;
+  
   // Build system instruction (same as Gemini)
   const systemInstruction = `You are a helpful AI teaching assistant for a school management app. You help teachers with:
 - Tracking syllabus progress
@@ -2084,6 +2404,58 @@ TOOL USAGE RULES:
 3. If user asks about progress/page WITHOUT specifying section, use URL section: ${context.urlContext?.sectionId || 'ask for clarification'}
 4. For updateProgress: you need sectionId, chapterIndex, and topicIndex - get these from getSyllabus or searchTopic first
 
+MULTI-STEP OPERATION HANDLING (CRITICAL):
+When the teacher gives complex commands with MULTIPLE operations, YOU MUST execute them ALL in sequence:
+
+Pattern 1: "Mark X as done AND mark the next as [status]"
+EXAMPLE: "mark plains and valleys as done and the next as started"
+REQUIRED STEPS:
+1. searchTopic("plains and valleys") → get {sectionId, chapterIndex, topicIndex}
+2. updateProgress(sectionId, chapterIndex, topicIndex, "complete") → mark first topic DONE
+3. getNextTopic(sectionId) → find the NEXT topic after completion
+4. Extract indices from getNextTopic result
+5. updateProgress(sectionId, nextChapterIndex, nextTopicIndex, "ongoing") → mark next topic STARTED
+RESULT: Both operations completed successfully
+
+Pattern 2: "Done with X, covered to page Y, note Z"
+EXAMPLE: "done with plains and valleys, covered to page 42, students understood clearly"
+REQUIRED STEPS:
+1. searchTopic("plains and valleys") → get current topic indices
+2. updateProgress(status="complete") → mark current topic DONE (NO notes, NO currentPage on completed topics)
+3. findTopicByPage(sectionId, 42) → find which topic CONTAINS page 42 (this is the NEXT topic)
+4. updateProgress(status="ongoing", currentPage=42, notes="students understood clearly") → notes and page go on ONGOING topic
+KEY INSIGHT: The note refers to WHERE THEY LEFT OFF (ongoing topic), not the completed topic!
+
+Pattern 3: "Mark X as ongoing with note Y and page Z"
+EXAMPLE: "mark rivers and deltas as ongoing with note 'need extra time' at page 38"
+REQUIRED STEPS:
+1. searchTopic("rivers and deltas") → get topic indices
+2. updateProgress(status="ongoing", currentPage=38, notes="need extra time") → single call with all params
+
+Pattern 4: "Update/read note on topic X"
+EXAMPLE: "what note did I write on plains and valleys?" OR "update the note on rivers to say 'completed exercises'"
+REQUIRED STEPS (READ):
+1. searchTopic("plains and valleys") → get topic indices
+2. getProgress(sectionId) → get syllabus with progress data
+3. Find the specific topic in the syllabus and extract its notes field
+4. Report the note to user
+
+REQUIRED STEPS (UPDATE):
+1. searchTopic("rivers") → get topic indices  
+2. getProgress(sectionId) → get current progress to preserve other fields
+3. updateProgress(status=current_status, notes="completed exercises", currentPage=preserve_current) → update just the note
+
+CRITICAL RULES FOR MULTI-STEP:
+✅ DO: Execute ALL operations mentioned in a single command
+✅ DO: Chain function calls - use results from one call to inform the next
+✅ DO: Notes and currentPage go on ONGOING topics, not completed ones
+✅ DO: When finding "next topic", use getNextTopic() which handles sequence automatically
+✅ DO: Read existing progress before updating to preserve fields you're not changing
+❌ DON'T: Stop after the first operation - complete ALL requested changes
+❌ DON'T: Put notes on completed topics (status="complete" → NO notes parameter)
+❌ DON'T: Assume "done with X, page Y" means page Y is for topic X - page Y indicates the NEXT topic!
+❌ DON'T: Forget that findTopicByPage ONLY FINDS - you must call updateProgress after to actually update
+
 RESPONSE RULES:
 1. Keep responses concise and use markdown formatting
 2. When reporting progress, ALWAYS include: topic name, chapter name, page range, and current page if in progress
@@ -2108,7 +2480,7 @@ RESPONSE RULES:
     
     console.log('[processAzureChat] Initial response:', response);
     
-    // Handle function calls iteratively
+    // Handle function calls iteratively (same as Gemini with max 5 iterations)
     let finalResponse = response;
     let iterations = 0;
     const maxIterations = 5;
@@ -2117,7 +2489,7 @@ RESPONSE RULES:
       iterations++;
       console.log(`[processAzureChat] Processing ${finalResponse.functionCalls.length} function calls (iteration ${iterations})`);
       
-      // Execute all function calls
+      // Execute all function calls (same switch cases as Gemini)
       const toolResults = [];
       for (const call of finalResponse.functionCalls) {
         const { name, args } = call;
@@ -2164,6 +2536,10 @@ RESPONSE RULES:
                 break;
               case 'navigateTo':
                 result = fn(args.destination, { courseId: args.courseId, sectionId: args.sectionId });
+                // Store navigation intent for caller to handle (SAME AS GEMINI)
+                if (result.success && result.path) {
+                  navigationIntent = result;
+                }
                 break;
               default:
                 result = { error: `Unknown function: ${name}` };
@@ -2183,7 +2559,7 @@ RESPONSE RULES:
         });
       }
       
-      // Build new history with tool results
+      // Build new history with tool results (format for Azure tool message)
       const newHistory = [
         ...history,
         { role: 'user', content: text },
@@ -2201,19 +2577,45 @@ RESPONSE RULES:
       });
     }
     
+    // Extract final text
+    const finalText = finalResponse.text || '';
+    console.log('[processAzureChat] Final response:', finalText);
+    
     // Log successful chat
     logGeminiCall('processAzureChat', {
       messagePreview: text.substring(0, 100),
       model: 'azure-gpt-4.1-mini',
       toolsUsed: iterations > 0,
       iterations,
-    }, finalResponse.text, Date.now() - startTime);
+    }, finalText, Date.now() - startTime);
     
-    return finalResponse.text || "I processed your request but couldn't generate a response.";
+    // If navigation was requested, return object with both text and navigation (SAME AS GEMINI)
+    if (navigationIntent) {
+      return {
+        text: finalText || `Navigating to ${navigationIntent.displayName}...`,
+        navigate: navigationIntent.path
+      };
+    }
+    
+    return finalText || "I processed your request but couldn't generate a response.";
     
   } catch (error) {
     console.error('[processAzureChat] Error:', error);
-    throw error;
+    
+    // Log error (same as Gemini)
+    logGeminiCall('processAzureChat', {
+      messagePreview: text.substring(0, 100),
+      model: 'azure-gpt-4.1-mini',
+    }, null, Date.now() - startTime, error);
+    
+    // Handle rate limit errors with user-friendly message (same as Gemini)
+    if (isRateLimitError(error)) {
+      const retryDelay = extractRetryDelay(error);
+      const waitTime = retryDelay ? Math.ceil(retryDelay / 1000) : 60;
+      return `⏳ **Rate Limit Reached**\n\nI'm getting too many requests right now. Please wait about ${waitTime} seconds and try again.\n\n_In the meantime, here's what I can help with:_\n• "What's next in 8B?"\n• "Show progress for 6A"\n• "What's my schedule today?"`;
+    }
+    
+    return getFallbackResponse(text, context, conversationHistory);
   }
 }
 
@@ -2353,6 +2755,58 @@ TOOL USAGE RULES:
 5. If user says "mark [topic] done in [section]", first call searchTopic to find the chapter/topic indices, then call updateProgress
 6. When getting syllabus/progress info, ALWAYS include page numbers in your response
 
+MULTI-STEP OPERATION HANDLING (CRITICAL):
+When the teacher gives complex commands with MULTIPLE operations, YOU MUST execute them ALL in sequence:
+
+Pattern 1: "Mark X as done AND mark the next as [status]"
+EXAMPLE: "mark plains and valleys as done and the next as started"
+REQUIRED STEPS:
+1. searchTopic("plains and valleys") → get {sectionId, chapterIndex, topicIndex}
+2. updateProgress(sectionId, chapterIndex, topicIndex, "complete") → mark first topic DONE
+3. getNextTopic(sectionId) → find the NEXT topic after completion
+4. Extract indices from getNextTopic result
+5. updateProgress(sectionId, nextChapterIndex, nextTopicIndex, "ongoing") → mark next topic STARTED
+RESULT: Both operations completed successfully
+
+Pattern 2: "Done with X, covered to page Y, note Z"
+EXAMPLE: "done with plains and valleys, covered to page 42, students understood clearly"
+REQUIRED STEPS:
+1. searchTopic("plains and valleys") → get current topic indices
+2. updateProgress(status="complete") → mark current topic DONE (NO notes, NO currentPage on completed topics)
+3. findTopicByPage(sectionId, 42) → find which topic CONTAINS page 42 (this is the NEXT topic)
+4. updateProgress(status="ongoing", currentPage=42, notes="students understood clearly") → notes and page go on ONGOING topic
+KEY INSIGHT: The note refers to WHERE THEY LEFT OFF (ongoing topic), not the completed topic!
+
+Pattern 3: "Mark X as ongoing with note Y and page Z"
+EXAMPLE: "mark rivers and deltas as ongoing with note 'need extra time' at page 38"
+REQUIRED STEPS:
+1. searchTopic("rivers and deltas") → get topic indices
+2. updateProgress(status="ongoing", currentPage=38, notes="need extra time") → single call with all params
+
+Pattern 4: "Update/read note on topic X"
+EXAMPLE: "what note did I write on plains and valleys?" OR "update the note on rivers to say 'completed exercises'"
+REQUIRED STEPS (READ):
+1. searchTopic("plains and valleys") → get topic indices
+2. getProgress(sectionId) → get syllabus with progress data
+3. Find the specific topic in the syllabus and extract its notes field
+4. Report the note to user
+
+REQUIRED STEPS (UPDATE):
+1. searchTopic("rivers") → get topic indices  
+2. getProgress(sectionId) → get current progress to preserve other fields
+3. updateProgress(status=current_status, notes="completed exercises", currentPage=preserve_current) → update just the note
+
+CRITICAL RULES FOR MULTI-STEP:
+✅ DO: Execute ALL operations mentioned in a single command
+✅ DO: Chain function calls - use results from one call to inform the next
+✅ DO: Notes and currentPage go on ONGOING topics, not completed ones
+✅ DO: When finding "next topic", use getNextTopic() which handles sequence automatically
+✅ DO: Read existing progress before updating to preserve fields you're not changing
+❌ DON'T: Stop after the first operation - complete ALL requested changes
+❌ DON'T: Put notes on completed topics (status="complete" → NO notes parameter)
+❌ DON'T: Assume "done with X, page Y" means page Y is for topic X - page Y indicates the NEXT topic!
+❌ DON'T: Forget that findTopicByPage ONLY FINDS - you must call updateProgress after to actually update
+
 RESPONSE RULES:
 1. Keep responses concise and use markdown formatting
 2. When reporting progress, ALWAYS include: topic name, chapter name, page range (pageFrom-pageTo), and current page if in progress
@@ -2468,7 +2922,7 @@ EXAMPLE RESPONSES:
     
     // Extract final text response
     const finalText = response.response.text();
-    console.log('[Chat] Final response:', finalText);
+    console.log('[Chat] Final response:', finalText || '(empty)');
     
     // Log successful chat completion
     logGeminiCall('processChat', {
@@ -2486,7 +2940,13 @@ EXAMPLE RESPONSES:
       };
     }
     
-    return finalText || "I processed your request but couldn't generate a response. Please try again.";
+    // Handle empty response - provide meaningful fallback
+    if (!finalText || finalText.trim() === '') {
+      console.warn('[Chat] Empty response from AI, using fallback');
+      return "I understood your request but couldn't generate a proper response. Could you please rephrase?";
+    }
+    
+    return finalText;
     
   } catch (error) {
     console.error('Chat processing error:', error);

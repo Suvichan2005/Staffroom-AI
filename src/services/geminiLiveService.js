@@ -154,9 +154,13 @@ export class GeminiLiveSession {
     this.systemPrompt = options.systemPrompt || null;
     this.tools = options.tools || null;
     
-    // Transcript accumulator
+    // Transcript tracking
+    // turnTranscript: Transcript for current turn (reset after model responds)
+    // currentTranscript: Full accumulated transcript for reference only
+    this.turnTranscript = '';
     this.currentTranscript = '';
     this.interimTranscript = '';
+    this.lastTranscriptText = ''; // For deduplication
   }
 
   /**
@@ -400,13 +404,34 @@ Instructions:
         if (content.inputTranscription) {
           const text = content.inputTranscription.text || '';
           if (text) {
+            // Filter out noise markers and empty transcripts
+            if (text === '<noise>' || text.trim() === '' || text === this.lastTranscriptText) {
+              return; // Skip noise, empty, or duplicate
+            }
+            
             console.log('🎤 Input transcript:', text);
-            this.currentTranscript += ' ' + text;
-            this.currentTranscript = this.currentTranscript.trim();
+            this.lastTranscriptText = text;
+            
+            // Smart concatenation for partial transcripts from Gemini:
+            // - If text STARTS with a space, it's a NEW word → just append (space included)
+            // - If text does NOT start with a space, it's a CONTINUATION → append directly (no space)
+            // This handles cases like: " which" (new word) vs "cumenta" (continuation of "do")
+            if (text.startsWith(' ')) {
+              // New word - append as-is (includes the leading space)
+              this.turnTranscript += text;
+            } else {
+              // Continuation of previous word - append directly without space
+              this.turnTranscript += text;
+            }
+            this.turnTranscript = this.turnTranscript.trim();
+            
+            // Also update full transcript for reference
+            this.currentTranscript = this.turnTranscript;
+            
             this.onTranscript({
               type: 'input',
               text: text,
-              combined: this.currentTranscript
+              combined: this.turnTranscript // Use turn transcript, not full session
             });
           }
         }
@@ -420,7 +445,7 @@ Instructions:
               this.onTranscript({
                 type: 'model',
                 text: part.text,
-                combined: this.currentTranscript
+                combined: this.turnTranscript // Use turn transcript, not full session
               });
             }
             // Silently skip audio inlineData
@@ -431,6 +456,11 @@ Instructions:
         if (content.turnComplete) {
           console.log('✅ Turn complete');
           this.interimTranscript = '';
+          
+          // Reset turn transcript for next turn
+          // This prevents accumulation across turns
+          this.turnTranscript = '';
+          this.lastTranscriptText = '';
           
           // Notify callback that turn is complete
           if (this.onTurnComplete) {

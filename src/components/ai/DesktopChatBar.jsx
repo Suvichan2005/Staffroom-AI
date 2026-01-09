@@ -477,7 +477,7 @@ function DesktopChatBarContent({ className = '' }) {
 class DesktopChatBarErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, errorCount: 0 };
   }
 
   static getDerivedStateFromError(error) {
@@ -486,6 +486,13 @@ class DesktopChatBarErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.warn('[DesktopChatBar] Error caught:', error.message);
+    // Auto-recover after a short delay (for HMR issues)
+    this.setState(prev => ({ errorCount: prev.errorCount + 1 }));
+    if (this.state.errorCount < 3) {
+      setTimeout(() => {
+        this.setState({ hasError: false });
+      }, 100);
+    }
   }
 
   render() {
