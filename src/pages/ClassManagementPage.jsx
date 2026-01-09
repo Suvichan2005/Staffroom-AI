@@ -108,51 +108,95 @@ export default function ClassManagementPage() {
     return (
         <PageShell width="6xl">
             <div className="space-y-6">
-                {/* Header */}
+                {/* Hero Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+                    className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 text-white relative overflow-hidden"
                 >
-                    <div>
-                        <h1 className="text-2xl font-bold text-black-800">Class Management</h1>
-                        <p className="text-black-500">
-                            Create and manage your courses, classes, and student lists
-                        </p>
+                    {/* Background pattern */}
+                    <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -translate-y-1/2 translate-x-1/2" />
+                        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full translate-y-1/2 -translate-x-1/2" />
                     </div>
+                    
+                    <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                                    <FolderPlus className="w-5 h-5" />
+                                </div>
+                                <h1 className="text-2xl font-bold">Class Management</h1>
+                            </div>
+                            <p className="text-white/80 text-sm max-w-md">
+                                Create courses, add class sections, and upload your timetable or student lists.
+                            </p>
+                        </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-3">
-                        <Button
-                            variant="outline"
-                            onClick={() => setUploadMode('timetable')}
-                            className="gap-2"
-                        >
-                            <FileSpreadsheet className="w-4 h-4" />
-                            Upload Timetable
-                        </Button>
-                        <Button
-                            variant="primary"
-                            onClick={() => setShowCreateCourse(true)}
-                            className="gap-2"
-                        >
-                            <FolderPlus className="w-4 h-4" />
-                            New Course
-                        </Button>
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setUploadMode('timetable')}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 rounded-xl text-sm font-medium transition-colors"
+                            >
+                                <FileSpreadsheet className="w-4 h-4" />
+                                Upload Timetable
+                            </button>
+                            <button
+                                onClick={() => setShowCreateCourse(true)}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-white text-indigo-700 rounded-xl text-sm font-medium hover:bg-indigo-50 transition-colors"
+                            >
+                                <FolderPlus className="w-4 h-4" />
+                                New Course
+                            </button>
+                        </div>
                     </div>
                 </motion.div>
 
                 {/* Search */}
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search courses or classes..."
-                        className="w-full pl-10 pr-4 py-3 bg-white border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+                        className="w-full pl-12 pr-4 py-3.5 bg-white border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 shadow-sm"
                     />
                 </div>
+
+                {/* Quick Tips for empty state */}
+                {courses.length === 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5"
+                    >
+                        <div className="flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                <AlertCircle className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-neutral-800 mb-1">Getting Started</h3>
+                                <p className="text-sm text-neutral-600 mb-3">
+                                    Create your first course to start managing classes. You can also upload a timetable
+                                    to automatically set up your schedule.
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-amber-200">
+                                        1. Create a Course (e.g., "Geography 8th Grade")
+                                    </span>
+                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-amber-200">
+                                        2. Add Class Sections (e.g., 8A, 8B)
+                                    </span>
+                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-amber-200">
+                                        3. Upload Student Lists
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Courses List */}
                 <div className="space-y-4">

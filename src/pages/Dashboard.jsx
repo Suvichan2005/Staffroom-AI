@@ -4,12 +4,12 @@ import { motion } from "framer-motion";
 import { 
   Clock, Users, BookOpen, ChevronRight, Mic, 
   CheckCircle2, AlertCircle, Calendar, Sparkles,
-  Play, ArrowRight, Bell
+  Play, ArrowRight, Bell, RotateCcw, FolderPlus, Settings
 } from "lucide-react";
 import { useTeacher } from "../context/TeacherContext";
 import { PageShell } from "../components/layout";
 import { UpcomingClasses, NoticesPanel } from "../components/dashboard";
-import { OnboardingWizard } from "../components/shared";
+import { SplashOnboarding, useSplashOnboarding } from "../components/shared";
 import { 
   getSyllabusByRef, 
   getTeacherTodayActions, 
@@ -34,6 +34,11 @@ export default function Dashboard() {
   const teacherCtx = useTeacher();
   const teacher = teacherCtx?.teacher || teacherData;
   const courses = teacher?.courses || [];
+  const { reset: resetOnboarding, isComplete } = useSplashOnboarding();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  
+  // Strip shows only when onboarding is NOT complete
+  const showSetupStrip = isComplete;
   
   const todayActions = useMemo(() => getTeacherTodayActions(teacher), [teacher]);
   
@@ -126,6 +131,33 @@ export default function Dashboard() {
 
   return (
     <PageShell width="5xl">
+      {/* Setup Strip - Shows when onboarding is not complete */}
+      {showSetupStrip && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-4 flex items-center justify-between gap-4 px-4 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+              <Settings className="w-4 h-4" />
+            </div>
+            <p className="text-sm font-medium">
+              Complete your setup to unlock all features
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              resetOnboarding();
+              setShowOnboarding(true);
+            }}
+            className="px-4 py-2 rounded-lg bg-white text-purple-700 text-sm font-medium hover:bg-purple-50 transition-colors"
+          >
+            Complete Setup
+          </button>
+        </motion.div>
+      )}
+
       {/* Header - Personalized greeting */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-black-800">
@@ -150,7 +182,7 @@ export default function Dashboard() {
               animate={{ opacity: 1, y: 0 }}
               className={`relative overflow-hidden rounded-2xl p-5 ${
                 nextClass.status === 'active' 
-                  ? 'bg-gradient-to-br from-green-600 to-emerald-700' 
+                  ? 'bg-gradient-to-br from-purple-700 to-indigo-400' 
                   : 'bg-gradient-to-br from-indigo-600 to-purple-700'
               } text-white`}
             >
@@ -304,8 +336,8 @@ export default function Dashboard() {
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-black-800">AI Assistant</h3>
-                <p className="text-xs text-black-500">Try these quick actions</p>
+                <h3 className="font-semibold text-neutral-800">AI Assistant</h3>
+                <p className="text-xs text-neutral-500">Try these quick actions</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -335,16 +367,19 @@ export default function Dashboard() {
 
         {/* Sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Today's Schedule */}
-          <UpcomingClasses compact daysAhead={0} />
+          {/* Today's Schedule with Day Navigation */}
+          <UpcomingClasses showDayNav daysAhead={0} />
           
           {/* Notices - Collapsed by default on mobile */}
           <NoticesPanel />
         </div>
       </div>
 
-      {/* Onboarding Wizard - Shows once for new users */}
-      <OnboardingWizard />
+      {/* Onboarding Wizard - Shows once for new users or when forced */}
+      <SplashOnboarding 
+        forceShow={showOnboarding} 
+        onComplete={() => setShowOnboarding(false)} 
+      />
     </PageShell>
   );
 }
