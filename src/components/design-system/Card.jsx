@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 
 /**
@@ -22,9 +22,9 @@ export function Card({
   const baseStyles = 'rounded-2xl transition-all duration-200';
 
   const variants = {
-    elevated: 'bg-white shadow-md border border-black-100',
-    outlined: 'bg-white border-2 border-black-200',
-    flat: 'bg-black-50',
+    elevated: 'bg-white shadow-md border border-neutral-100',
+    outlined: 'bg-white border-2 border-neutral-200',
+    flat: 'bg-neutral-50',
   };
 
   const paddings = {
@@ -72,11 +72,11 @@ export function CardHeader({
   return (
     <div className={`flex items-start justify-between gap-4 ${className}`}>
       <div className="min-w-0 flex-1">
-        <h3 className="text-base font-semibold text-black-800 truncate">
+        <h3 className="text-base font-semibold text-neutral-800 truncate">
           {title}
         </h3>
         {subtitle && (
-          <p className="text-sm text-black-500 mt-0.5 truncate">{subtitle}</p>
+          <p className="text-sm text-neutral-500 mt-0.5 truncate">{subtitle}</p>
         )}
       </div>
       {action && <div className="flex-shrink-0">{action}</div>}
@@ -103,7 +103,7 @@ export function CardFooter({
     <div
       className={`
         flex items-center justify-end gap-2 pt-4 mt-4
-        ${border ? 'border-t border-black-100' : ''}
+        ${border ? 'border-t border-neutral-100' : ''}
         ${className}
       `}
     >
@@ -126,17 +126,17 @@ export function StatCard({
   const changeColors = {
     positive: 'text-green-600 bg-green-50',
     negative: 'text-red-600 bg-red-50',
-    neutral: 'text-black-600 bg-black-50',
+    neutral: 'text-neutral-600 bg-neutral-50',
   };
 
   return (
     <Card className={className}>
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-black-500 uppercase tracking-wider">
+          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
             {label}
           </p>
-          <p className="text-2xl font-bold text-black-800 mt-1">{value}</p>
+          <p className="text-2xl font-bold text-neutral-800 mt-1">{value}</p>
           {change && (
             <span
               className={`
@@ -144,8 +144,8 @@ export function StatCard({
                 ${changeColors[changeType]}
               `}
             >
-              {changeType === 'positive' && '↑ '}
-              {changeType === 'negative' && '↓ '}
+              {changeType === 'positive' && 'â†‘ '}
+              {changeType === 'negative' && 'â†“ '}
               {change}
             </span>
           )}
@@ -182,8 +182,8 @@ export function FeatureCard({
           {icon}
         </div>
         <div className="min-w-0">
-          <h4 className="font-semibold text-black-800">{title}</h4>
-          <p className="text-sm text-black-500 mt-1">{description}</p>
+          <h4 className="font-semibold text-neutral-800">{title}</h4>
+          <p className="text-sm text-neutral-500 mt-1">{description}</p>
         </div>
       </div>
     </Card>

@@ -1,13 +1,11 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Mic, Send, Sparkles, ChevronUp, ChevronDown, Paperclip,
-  Loader2, MessageSquare, BookOpen, FileText, Lightbulb,
-  X, Image, File, Camera
+  Mic, Send, Sparkles, ChevronDown, Paperclip,
+  Loader2, X, Image, File, Camera
 } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import { useAI } from '../../context/AIContext';
-import { getChatPlugins } from '../../plugins';
 
 /**
  * Persistent Chat Bar - Mobile bottom bar with expandable chat panel
@@ -26,27 +24,22 @@ export default function PersistentChatBar({ className = '' }) {
     isRecording,
     toggleRecording,
     sendMessage,
-    aiContext,
-    getPluginAPI,
   } = useAI();
 
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState('chat');
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const hasText = inputValue.trim().length > 0;
-  const registeredPlugins = getChatPlugins();
-  const pluginAPI = getPluginAPI ? getPluginAPI() : null;
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (isExpanded && activeTab === 'chat') {
+    if (isExpanded) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages, isExpanded, activeTab]);
+  }, [messages, isExpanded]);
 
   // Handle send message
   const handleSend = useCallback(async (text = inputValue) => {
@@ -55,7 +48,7 @@ export default function PersistentChatBar({ className = '' }) {
     // Auto-expand to show the response
     if (!isExpanded) {
       setIsExpanded(true);
-      setActiveTab('chat');
+
     }
     
     await sendMessage(text);
@@ -86,7 +79,6 @@ export default function PersistentChatBar({ className = '' }) {
   // Handle input focus - expand chat
   const handleInputFocus = useCallback(() => {
     setIsExpanded(true);
-    setActiveTab('chat');
   }, []);
 
   // Attach menu options
@@ -102,12 +94,6 @@ export default function PersistentChatBar({ className = '' }) {
     "📊 Attendance summary",
     "📝 Pending tasks",
     "⚠️ Students at risk",
-  ];
-
-  // Tabs
-  const tabs = [
-    { id: 'chat', icon: MessageSquare, label: 'Chat' },
-    { id: 'tools', icon: Sparkles, label: 'Tools' },
   ];
 
   return (
@@ -209,46 +195,21 @@ export default function PersistentChatBar({ className = '' }) {
                       <ChevronDown className="w-5 h-5 text-slate-500" />
                     </button>
                   </div>
-
-                  {/* Tab Bar */}
-                  <div className="flex items-center gap-1.5 px-4 py-2 border-b border-slate-100">
-                    {tabs.map(tab => {
-                      const Icon = tab.icon;
-                      const isActive = activeTab === tab.id;
-                      return (
-                        <button
-                          key={tab.id}
-                          onClick={() => setActiveTab(tab.id)}
-                          className={`
-                            flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all
-                            ${isActive 
-                              ? 'bg-indigo-600 text-white shadow-md' 
-                              : 'text-slate-500 hover:bg-slate-100'
-                            }
-                          `}
-                        >
-                          <Icon className="w-4 h-4" />
-                          <span>{tab.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
                 </div>
 
                 {/* Scrollable Content */}
                 <div className="flex-1 overflow-y-auto bg-slate-50/50">
-                  {activeTab === 'chat' && (
-                    <div className="p-4 space-y-3">
-                      {messages.length === 0 ? (
-                        <div className="text-center py-6">
-                          <div className="w-14 h-14 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center mb-3">
-                            <Sparkles className="w-7 h-7 text-indigo-600" />
-                          </div>
-                          <p className="text-sm font-semibold text-slate-800 mb-1">How can I help?</p>
-                          <p className="text-xs text-slate-500 mb-4">Ask me anything about your classes</p>
-                          
-                          {/* Quick Suggestions */}
-                          <div className="flex flex-wrap justify-center gap-2 max-w-xs mx-auto">
+                  <div className="p-4 space-y-3">
+                    {messages.length === 0 ? (
+                      <div className="text-center py-6">
+                        <div className="w-14 h-14 mx-auto bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center mb-3">
+                          <Sparkles className="w-7 h-7 text-indigo-600" />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-800 mb-1">How can I help?</p>
+                        <p className="text-xs text-slate-500 mb-4">Ask me anything about your classes</p>
+                        
+                        {/* Quick Suggestions */}
+                        <div className="flex flex-wrap justify-center gap-2 max-w-xs mx-auto">
                             {suggestions.map((suggestion, i) => (
                               <button
                                 key={i}
@@ -287,41 +248,7 @@ export default function PersistentChatBar({ className = '' }) {
                           <div ref={messagesEndRef} />
                         </>
                       )}
-                    </div>
-                  )}
-
-                  {activeTab === 'tools' && (
-                    <div className="p-4 space-y-3">
-                      {(() => {
-                        const syllabusPlugin = registeredPlugins.find(p => p.id === 'syllabus-ai-helper');
-                        if (syllabusPlugin?.renderExpandedPanel) {
-                          return syllabusPlugin.renderExpandedPanel({
-                            context: aiContext,
-                            api: pluginAPI,
-                            onClose: () => setActiveTab('chat'),
-                          });
-                        }
-                        return [
-                          { icon: FileText, label: 'Generate Quiz', desc: 'Create questions for any topic', color: 'from-blue-500 to-indigo-500' },
-                          { icon: BookOpen, label: 'Create Assignment', desc: 'Generate homework with rubric', color: 'from-purple-500 to-pink-500' },
-                          { icon: Lightbulb, label: 'Suggest Topic', desc: 'AI-powered recommendations', color: 'from-amber-500 to-orange-500' },
-                        ].map((tool, i) => (
-                          <button
-                            key={i}
-                            className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all text-left"
-                          >
-                            <div className={`p-3 rounded-xl bg-gradient-to-br ${tool.color}`}>
-                              <tool.icon className="w-5 h-5 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-slate-800 text-sm">{tool.label}</p>
-                              <p className="text-xs text-slate-500">{tool.desc}</p>
-                            </div>
-                          </button>
-                        ));
-                      })()}
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </motion.div>

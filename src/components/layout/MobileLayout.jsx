@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import TopNav from './TopNav';
@@ -42,7 +42,7 @@ export default function MobileLayout({ children, title, showBack, onBack, hideNa
   }, [location.pathname, closeDrawer]);
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-black-50 flex flex-col">
+    <div className="min-h-screen min-h-[100dvh] bg-neutral-50 flex flex-col">
       {/* Top Navigation */}
       {!shouldHideNav && (
         <TopNav

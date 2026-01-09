@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+﻿import { useMemo } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -33,13 +33,13 @@ function CustomTooltip({ active, payload, label }) {
   if (!details) return null;
   const { topic, pages, rawPercent, pagesDone, chapterTitle } = details;
   return (
-    <div className="rounded-md border border-black-200 bg-white px-3 py-2 text-xs shadow-md">
-      <p className="font-semibold text-black-700">{topic}</p>
-      <p className="text-black-500">Chapter: {chapterTitle}</p>
-      <p className="mt-1 text-black-600">
+    <div className="rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs shadow-md">
+      <p className="font-semibold text-neutral-700">{topic}</p>
+      <p className="text-neutral-500">Chapter: {chapterTitle}</p>
+      <p className="mt-1 text-neutral-600">
         Section {label}: {Math.round(rawPercent)}% | {pagesDone} / {pages} pages
       </p>
-      <p className="mt-1 text-black-400">Stack contribution: {formatPercent(value)} of bar</p>
+      <p className="mt-1 text-neutral-400">Stack contribution: {formatPercent(value)} of bar</p>
     </div>
   );
 }
@@ -88,7 +88,7 @@ export default function SubtopicStackedBar({ courseId }) {
 
   if (!rows.length) {
     return (
-      <div className="rounded-xl border border-dashed border-black-300 bg-white/60 p-6 text-sm text-black-500">
+      <div className="rounded-xl border border-dashed border-neutral-300 bg-white/60 p-6 text-sm text-neutral-500">
         Subtopic analytics will populate once syllabus progress is captured.
       </div>
     );
@@ -97,8 +97,8 @@ export default function SubtopicStackedBar({ courseId }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-black-800">Section-wise Subtopic Coverage</h3>
-        <span className="text-xs uppercase tracking-wide text-black-400">
+        <h3 className="text-base font-semibold text-neutral-800">Section-wise Subtopic Coverage</h3>
+        <span className="text-xs uppercase tracking-wide text-neutral-400">
           {sectionOrder.length} sections | {topics.length} subtopics
         </span>
       </div>
@@ -139,7 +139,7 @@ export default function SubtopicStackedBar({ courseId }) {
           ))}
         </BarChart>
       </ResponsiveContainer>
-      <p className="text-xs text-black-500">
+      <p className="text-xs text-neutral-500">
         Sections prefixed with <span className="font-semibold text-red-500">!</span> have subtopics under 45%
         completion and should be prioritised before the next assessment.
       </p>

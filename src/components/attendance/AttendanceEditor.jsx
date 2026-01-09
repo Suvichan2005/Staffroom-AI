@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, Users, UserCheck, UserX, Save, Search, Mic, AlertCircle, CheckCircle2 } from "lucide-react";
 import VoiceAttendanceLogger from "../ai/VoiceAttendanceLogger";
@@ -36,43 +36,43 @@ function AttendanceConfirmationModal({
   const attendancePercent = Math.round((presentStudents.length / students.length) * 100);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-sm p-4">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.95 }} 
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
         className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden"
       >
         {/* Header */}
-        <div className="p-5 border-b border-black-100">
-          <h3 className="text-lg font-bold text-black-800">Confirm Attendance</h3>
-          <p className="text-sm text-black-500 mt-1">Review before submitting for {date}</p>
+        <div className="p-5 border-b border-neutral-100">
+          <h3 className="text-lg font-bold text-neutral-800">Confirm Attendance</h3>
+          <p className="text-sm text-neutral-500 mt-1">Review before submitting for {date}</p>
         </div>
 
         {/* Summary Stats */}
-        <div className="p-5 bg-black-50">
+        <div className="p-5 bg-neutral-50">
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-white rounded-xl p-3">
-              <p className="text-2xl font-bold text-black-800">{students.length}</p>
-              <p className="text-xs text-black-500">Total</p>
+              <p className="text-2xl font-bold text-neutral-800">{students.length}</p>
+              <p className="text-xs text-neutral-500">Total</p>
             </div>
             <div className="bg-white rounded-xl p-3">
               <p className="text-2xl font-bold text-green-600">{presentStudents.length}</p>
-              <p className="text-xs text-black-500">Present</p>
+              <p className="text-xs text-neutral-500">Present</p>
             </div>
             <div className="bg-white rounded-xl p-3">
               <p className="text-2xl font-bold text-red-600">{absentStudents.length}</p>
-              <p className="text-xs text-black-500">Absent</p>
+              <p className="text-xs text-neutral-500">Absent</p>
             </div>
           </div>
           
           {/* Attendance percentage bar */}
           <div className="mt-4">
             <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-black-600">Attendance Rate</span>
-              <span className="font-semibold text-black-800">{attendancePercent}%</span>
+              <span className="text-neutral-600">Attendance Rate</span>
+              <span className="font-semibold text-neutral-800">{attendancePercent}%</span>
             </div>
-            <div className="h-2 bg-black-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
               <div 
                 className={`h-full rounded-full transition-all ${
                   attendancePercent >= 75 ? 'bg-green-500' : 
@@ -86,16 +86,16 @@ function AttendanceConfirmationModal({
 
         {/* Absent Students List (if any) */}
         {absentStudents.length > 0 && (
-          <div className="p-5 border-t border-black-100">
+          <div className="p-5 border-t border-neutral-100">
             <div className="flex items-center gap-2 mb-3">
               <AlertCircle className="w-4 h-4 text-amber-500" />
-              <p className="text-sm font-medium text-black-700">
+              <p className="text-sm font-medium text-neutral-700">
                 {absentStudents.length} student{absentStudents.length > 1 ? 's' : ''} marked absent:
               </p>
             </div>
             <div className="max-h-32 overflow-y-auto space-y-1">
               {absentStudents.map((s, i) => (
-                <div key={s.studentId} className="flex items-center gap-2 text-sm text-black-600 py-1">
+                <div key={s.studentId} className="flex items-center gap-2 text-sm text-neutral-600 py-1">
                   <div className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xs font-medium">
                     {i + 1}
                   </div>
@@ -108,7 +108,7 @@ function AttendanceConfirmationModal({
 
         {/* All present message */}
         {absentStudents.length === 0 && (
-          <div className="p-5 border-t border-black-100">
+          <div className="p-5 border-t border-neutral-100">
             <div className="flex items-center gap-3 text-green-700 bg-green-50 rounded-xl p-3">
               <CheckCircle2 className="w-5 h-5" />
               <p className="text-sm font-medium">All students are present!</p>
@@ -117,10 +117,10 @@ function AttendanceConfirmationModal({
         )}
 
         {/* Actions */}
-        <div className="p-5 border-t border-black-100 flex gap-3">
+        <div className="p-5 border-t border-neutral-100 flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-black-100 text-black-700 hover:bg-black-200 transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-medium bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors"
           >
             Go Back
           </button>
@@ -183,20 +183,20 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
     <div className="space-y-4">
       {/* Stats Row */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-black-50 rounded-xl p-3 text-center">
-          <Users className="w-5 h-5 mx-auto mb-1 text-black-500" />
-          <p className="text-xl font-bold text-black-800">{students.length}</p>
-          <p className="text-xs text-black-500">Total</p>
+        <div className="bg-neutral-50 rounded-xl p-3 text-center">
+          <Users className="w-5 h-5 mx-auto mb-1 text-neutral-500" />
+          <p className="text-xl font-bold text-neutral-800">{students.length}</p>
+          <p className="text-xs text-neutral-500">Total</p>
         </div>
         <div className="bg-green-50 rounded-xl p-3 text-center">
           <UserCheck className="w-5 h-5 mx-auto mb-1 text-green-600" />
           <p className="text-xl font-bold text-green-700">{presentCount}</p>
-          <p className="text-xs text-black-500">Present</p>
+          <p className="text-xs text-neutral-500">Present</p>
         </div>
         <div className="bg-red-50 rounded-xl p-3 text-center">
           <UserX className="w-5 h-5 mx-auto mb-1 text-red-600" />
           <p className="text-xl font-bold text-red-700">{absentCount}</p>
-          <p className="text-xs text-black-500">Absent</p>
+          <p className="text-xs text-neutral-500">Absent</p>
         </div>
       </div>
 
@@ -222,7 +222,7 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
           className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
             showVoice
               ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-200'
-              : 'bg-black-100 text-black-600 hover:bg-black-200'
+              : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
           }`}
         >
           <Mic className="w-4 h-4" />
@@ -230,13 +230,13 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
         </button>
 
         <div className="relative flex-1 min-w-[150px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input
             type="text"
             placeholder="Search students..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-black-50 border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="w-full pl-10 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
           />
         </div>
       </div>
@@ -285,8 +285,8 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
                 {s.name.split(' ').map(n => n[0]).join('')}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-black-800">{s.name}</p>
-                <p className="text-xs text-black-500">Roll #{i + 1}</p>
+                <p className="font-medium text-neutral-800">{s.name}</p>
+                <p className="text-xs text-neutral-500">Roll #{i + 1}</p>
               </div>
               <div className={`
                 w-8 h-8 rounded-full flex items-center justify-center transition-all
@@ -303,8 +303,8 @@ export default function AttendanceEditor({ classId, date, students, initialPrese
       </div>
 
       {/* Save Button */}
-      <div className="flex items-center justify-between pt-4 border-t border-black-100 bg-white">
-        <p className="text-sm text-black-500">
+      <div className="flex items-center justify-between pt-4 border-t border-neutral-100">
+        <p className="text-sm text-neutral-500">
           <span className="font-medium text-green-600">{presentCount}</span> present, 
           <span className="font-medium text-red-600 ml-1">{absentCount}</span> absent
         </p>

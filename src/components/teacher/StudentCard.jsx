@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, AlertTriangle, TrendingDown, TrendingUp, MoreHorizontal } from 'lucide-react';
 
@@ -28,7 +28,7 @@ export function StudentCard({
   };
 
   const getGradeColor = (grade) => {
-    if (!grade) return 'text-black-500 bg-black-50';
+    if (!grade) return 'text-neutral-500 bg-neutral-50';
     const gradeUpper = grade.toUpperCase();
     if (gradeUpper.startsWith('A')) return 'text-green-600 bg-green-50';
     if (gradeUpper.startsWith('B')) return 'text-blue-600 bg-blue-50';
@@ -53,7 +53,7 @@ export function StudentCard({
         transition-all duration-200 cursor-pointer
         ${isAtRisk
           ? 'border-yellow-300 shadow-md shadow-yellow-50'
-          : 'border-black-200 hover:border-black-300 shadow-sm hover:shadow-md'
+          : 'border-neutral-200 hover:border-neutral-300 shadow-sm hover:shadow-md'
         }
         ${className}
       `}
@@ -82,13 +82,13 @@ export function StudentCard({
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-black-800 truncate">{name}</h3>
+              <h3 className="font-semibold text-neutral-800 truncate">{name}</h3>
               {isAtRisk && (
                 <AlertTriangle className="w-4 h-4 text-yellow-500 flex-shrink-0" />
               )}
             </div>
             {rollNumber && (
-              <p className="text-sm text-black-500">Roll #{rollNumber}</p>
+              <p className="text-sm text-neutral-500">Roll #{rollNumber}</p>
             )}
           </div>
 
@@ -97,9 +97,9 @@ export function StudentCard({
             onClick={(e) => {
               e.stopPropagation();
             }}
-            className="p-1.5 hover:bg-black-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-neutral-100 rounded-lg transition-colors"
           >
-            <MoreHorizontal className="w-4 h-4 text-black-400" />
+            <MoreHorizontal className="w-4 h-4 text-neutral-400" />
           </button>
         </div>
 
@@ -136,7 +136,7 @@ export function StudentCard({
 
         {/* Quick actions */}
         {(onMessage || email || phone) && (
-          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-black-100">
+          <div className="flex items-center gap-2 mt-3 pt-3 border-t border-neutral-100">
             {onMessage && (
               <button
                 onClick={(e) => {
@@ -153,7 +153,7 @@ export function StudentCard({
               <a
                 href={`tel:${phone}`}
                 onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-black-100 text-black-600 text-xs font-medium rounded-lg hover:bg-black-200 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-100 text-neutral-600 text-xs font-medium rounded-lg hover:bg-neutral-200 transition-colors"
               >
                 <Phone className="w-3 h-3" />
                 Call
@@ -194,7 +194,7 @@ export function StudentCardCompact({
         w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left
         ${selected
           ? 'bg-indigo-50 border-indigo-300'
-          : 'bg-white border-black-200 hover:border-black-300'
+          : 'bg-white border-neutral-200 hover:border-neutral-300'
         }
         ${className}
       `}
@@ -215,12 +215,12 @@ export function StudentCardCompact({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-black-800 truncate">{name}</span>
+          <span className="font-medium text-neutral-800 truncate">{name}</span>
           {isAtRisk && (
             <AlertTriangle className="w-3.5 h-3.5 text-yellow-500 flex-shrink-0" />
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5 text-xs text-black-500">
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-neutral-500">
           {rollNumber && <span>#{rollNumber}</span>}
           {attendance !== undefined && (
             <span className={attendance < 75 ? 'text-red-500' : ''}>

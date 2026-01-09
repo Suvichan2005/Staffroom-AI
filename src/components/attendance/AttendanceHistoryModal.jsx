@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, 
@@ -198,7 +198,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
   const getTrendIcon = (trend) => {
     if (trend > 5) return <TrendingUp className="w-4 h-4 text-green-500" />;
     if (trend < -5) return <TrendingDown className="w-4 h-4 text-red-500" />;
-    return <Minus className="w-4 h-4 text-black-400" />;
+    return <Minus className="w-4 h-4 text-neutral-400" />;
   };
 
   return (
@@ -228,7 +228,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                     : 'Student Attendance Profiles'
                   }
                 </h2>
-                <p className="text-sm text-white/80">{classId} • {classStats.totalStudents} students</p>
+                <p className="text-sm text-white/80">{classId} – {classStats.totalStudents} students</p>
               </div>
             </div>
             <button 
@@ -242,20 +242,20 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
 
         {/* Quick Stats Bar */}
         {view !== 'profile' && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-black-50 border-b">
-            <div className="bg-white rounded-xl p-3 border border-black-200">
-              <div className="flex items-center gap-2 text-black-500 text-xs mb-1">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-4 bg-neutral-50 border-b">
+            <div className="bg-white rounded-xl p-3 border border-neutral-200">
+              <div className="flex items-center gap-2 text-neutral-500 text-xs mb-1">
                 <Users className="w-3.5 h-3.5" />
                 <span>Avg Attendance</span>
               </div>
-              <p className="text-xl font-bold text-black-800">{classStats.avgAttendance}%</p>
+              <p className="text-xl font-bold text-neutral-800">{classStats.avgAttendance}%</p>
             </div>
-            <div className="bg-white rounded-xl p-3 border border-black-200">
-              <div className="flex items-center gap-2 text-black-500 text-xs mb-1">
+            <div className="bg-white rounded-xl p-3 border border-neutral-200">
+              <div className="flex items-center gap-2 text-neutral-500 text-xs mb-1">
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Total Sessions</span>
               </div>
-              <p className="text-xl font-bold text-black-800">{classStats.totalSessions}</p>
+              <p className="text-xl font-bold text-neutral-800">{classStats.totalSessions}</p>
             </div>
             <div className="bg-white rounded-xl p-3 border border-red-200 bg-red-50">
               <div className="flex items-center gap-2 text-red-600 text-xs mb-1">
@@ -283,7 +283,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                   view === 'students' 
                     ? 'bg-indigo-100 text-indigo-700' 
-                    : 'text-black-600 hover:bg-black-100'
+                    : 'text-neutral-600 hover:bg-neutral-100'
                 }`}
               >
                 <User className="w-4 h-4" />
@@ -294,7 +294,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
                   view === 'calendar' 
                     ? 'bg-indigo-100 text-indigo-700' 
-                    : 'text-black-600 hover:bg-black-100'
+                    : 'text-neutral-600 hover:bg-neutral-100'
                 }`}
               >
                 <Calendar className="w-4 h-4" />
@@ -306,13 +306,13 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
               <div className="flex items-center gap-2">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-black-400" />
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
                   <input
                     type="text"
                     placeholder="Search students..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-3 py-2 text-sm border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-48"
+                    className="pl-9 pr-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent w-48"
                   />
                 </div>
                 
@@ -320,7 +320,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-3 py-2 text-sm border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="all">All Students</option>
                   <option value="at-risk">At Risk</option>
@@ -331,7 +331,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 text-sm border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="px-3 py-2 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="name">Sort: Name</option>
                   <option value="attendance">Sort: Attendance</option>
@@ -360,7 +360,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => openStudentProfile(student)}
-                    className="bg-white rounded-xl border border-black-200 p-4 cursor-pointer hover:shadow-lg hover:border-indigo-200 transition-all"
+                    className="bg-white rounded-xl border border-neutral-200 p-4 cursor-pointer hover:shadow-lg hover:border-indigo-200 transition-all"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -368,17 +368,17 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                           {student.name?.charAt(0) || '?'}
                         </div>
                         <div>
-                          <h3 className="font-medium text-black-800">{student.name}</h3>
-                          <p className="text-xs text-black-500">{student.studentId}</p>
+                          <h3 className="font-medium text-neutral-800">{student.name}</h3>
+                          <p className="text-xs text-neutral-500">{student.studentId}</p>
                         </div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-black-400" />
+                      <ChevronRight className="w-5 h-5 text-neutral-400" />
                     </div>
                     
                     {/* Attendance Rate Bar */}
                     <div className="mb-3">
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-black-600">Attendance</span>
+                        <span className="text-neutral-600">Attendance</span>
                         <span className={`font-semibold ${
                           student.attendanceRate >= 90 ? 'text-green-600' :
                           student.attendanceRate < 75 ? 'text-red-600' : 'text-blue-600'
@@ -386,7 +386,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                           {student.attendanceRate}%
                         </span>
                       </div>
-                      <div className="h-2 bg-black-100 rounded-full overflow-hidden">
+                      <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full transition-all ${
                             student.attendanceRate >= 90 ? 'bg-green-500' :
@@ -401,11 +401,11 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                     <div className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-1">
                         {getTrendIcon(student.trend)}
-                        <span className="text-black-500">Trend</span>
+                        <span className="text-neutral-500">Trend</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <span className="text-black-500">Streak:</span>
-                        <span className="font-medium text-black-700">{student.currentStreak}</span>
+                        <span className="text-neutral-500">Streak:</span>
+                        <span className="font-medium text-neutral-700">{student.currentStreak}</span>
                       </div>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(student.status)}`}>
                         {student.status === 'at-risk' ? 'At Risk' : 
@@ -415,7 +415,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                     
                     {/* Recent Pattern */}
                     <div className="mt-3 flex items-center gap-1">
-                      <span className="text-xs text-black-400 mr-1">Recent:</span>
+                      <span className="text-xs text-neutral-400 mr-1">Recent:</span>
                       {student.pattern.map((present, idx) => (
                         <div
                           key={idx}
@@ -436,8 +436,8 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                 
                 {filteredStudents.length === 0 && (
                   <div className="col-span-full text-center py-12">
-                    <Users className="w-12 h-12 text-black-300 mx-auto mb-3" />
-                    <p className="text-black-500">No students found</p>
+                    <Users className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+                    <p className="text-neutral-500">No students found</p>
                   </div>
                 )}
               </motion.div>
@@ -455,7 +455,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                 {calendarData.map((day) => (
                   <div
                     key={day.date}
-                    className="bg-white rounded-xl border border-black-200 p-4 hover:shadow-md transition-all"
+                    className="bg-white rounded-xl border border-neutral-200 p-4 hover:shadow-md transition-all"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -466,14 +466,14 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                           <Calendar className="w-5 h-5" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-black-800">
+                          <h3 className="font-medium text-neutral-800">
                             {new Date(day.date + 'T00:00:00').toLocaleDateString('en-US', { 
                               weekday: 'long', 
                               month: 'short', 
                               day: 'numeric' 
                             })}
                           </h3>
-                          <p className="text-xs text-black-500">{day.date}</p>
+                          <p className="text-xs text-neutral-500">{day.date}</p>
                         </div>
                       </div>
                       
@@ -501,8 +501,8 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                 
                 {calendarData.length === 0 && (
                   <div className="text-center py-12">
-                    <Calendar className="w-12 h-12 text-black-300 mx-auto mb-3" />
-                    <p className="text-black-500">No attendance records</p>
+                    <Calendar className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
+                    <p className="text-neutral-500">No attendance records</p>
                   </div>
                 )}
               </motion.div>
@@ -518,14 +518,14 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                 className="space-y-4"
               >
                 {/* Profile Header */}
-                <div className="bg-gradient-to-br from-black-50 to-white rounded-xl border border-black-200 p-6">
+                <div className="bg-gradient-to-br from-neutral-50 to-white rounded-xl border border-neutral-200 p-6">
                   <div className="flex items-start gap-4">
                     <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">
                       {selectedStudent.name?.charAt(0) || '?'}
                     </div>
                     <div className="flex-1">
-                      <h2 className="text-xl font-bold text-black-800">{selectedStudent.name}</h2>
-                      <p className="text-black-500">{selectedStudent.studentId}</p>
+                      <h2 className="text-xl font-bold text-neutral-800">{selectedStudent.name}</h2>
+                      <p className="text-neutral-500">{selectedStudent.studentId}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedStudent.status)}`}>
                           {getStatusIcon(selectedStudent.status)}
@@ -538,62 +538,62 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                       <p className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                         {selectedStudent.attendanceRate}%
                       </p>
-                      <p className="text-sm text-black-500">Overall Attendance</p>
+                      <p className="text-sm text-neutral-500">Overall Attendance</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="bg-white rounded-xl border border-black-200 p-4">
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4">
                     <div className="flex items-center gap-2 text-green-600 mb-2">
                       <CheckCircle className="w-5 h-5" />
                       <span className="text-sm font-medium">Present</span>
                     </div>
-                    <p className="text-2xl font-bold text-black-800">{selectedStudent.presentCount}</p>
-                    <p className="text-xs text-black-500">sessions</p>
+                    <p className="text-2xl font-bold text-neutral-800">{selectedStudent.presentCount}</p>
+                    <p className="text-xs text-neutral-500">sessions</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-black-200 p-4">
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4">
                     <div className="flex items-center gap-2 text-red-600 mb-2">
                       <XCircle className="w-5 h-5" />
                       <span className="text-sm font-medium">Absent</span>
                     </div>
-                    <p className="text-2xl font-bold text-black-800">{selectedStudent.absentCount}</p>
-                    <p className="text-xs text-black-500">sessions</p>
+                    <p className="text-2xl font-bold text-neutral-800">{selectedStudent.absentCount}</p>
+                    <p className="text-xs text-neutral-500">sessions</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-black-200 p-4">
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4">
                     <div className="flex items-center gap-2 text-indigo-600 mb-2">
                       <BarChart3 className="w-5 h-5" />
                       <span className="text-sm font-medium">Streak</span>
                     </div>
-                    <p className="text-2xl font-bold text-black-800">{selectedStudent.currentStreak}</p>
-                    <p className="text-xs text-black-500">consecutive</p>
+                    <p className="text-2xl font-bold text-neutral-800">{selectedStudent.currentStreak}</p>
+                    <p className="text-xs text-neutral-500">consecutive</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-black-200 p-4">
-                    <div className="flex items-center gap-2 text-black-600 mb-2">
+                  <div className="bg-white rounded-xl border border-neutral-200 p-4">
+                    <div className="flex items-center gap-2 text-neutral-600 mb-2">
                       {getTrendIcon(selectedStudent.trend)}
                       <span className="text-sm font-medium">Trend</span>
                     </div>
                     <p className={`text-2xl font-bold ${
                       selectedStudent.trend > 0 ? 'text-green-600' : 
-                      selectedStudent.trend < 0 ? 'text-red-600' : 'text-black-600'
+                      selectedStudent.trend < 0 ? 'text-red-600' : 'text-neutral-600'
                     }`}>
                       {selectedStudent.trend > 0 ? '+' : ''}{selectedStudent.trend}%
                     </p>
-                    <p className="text-xs text-black-500">vs previous</p>
+                    <p className="text-xs text-neutral-500">vs previous</p>
                   </div>
                 </div>
 
                 {/* Attendance History */}
-                <div className="bg-white rounded-xl border border-black-200 overflow-hidden">
-                  <div className="px-4 py-3 border-b border-black-100 bg-black-50">
-                    <h3 className="font-semibold text-black-800">Attendance History</h3>
+                <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50">
+                    <h3 className="font-semibold text-neutral-800">Attendance History</h3>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
                     {selectedStudent.logs.map((log, idx) => (
                       <div 
                         key={idx}
-                        className="flex items-center justify-between px-4 py-3 border-b border-black-50 last:border-0 hover:bg-black-50"
+                        className="flex items-center justify-between px-4 py-3 border-b border-neutral-50 last:border-0 hover:bg-neutral-50"
                       >
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
@@ -606,14 +606,14 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                             )}
                           </div>
                           <div>
-                            <p className="font-medium text-black-800">
+                            <p className="font-medium text-neutral-800">
                               {new Date(log.date + 'T00:00:00').toLocaleDateString('en-US', { 
                                 weekday: 'short', 
                                 month: 'short', 
                                 day: 'numeric' 
                               })}
                             </p>
-                            <p className="text-xs text-black-500">{log.method || 'Manual'}</p>
+                            <p className="text-xs text-neutral-500">{log.method || 'Manual'}</p>
                           </div>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -628,7 +628,7 @@ export default function AttendanceHistoryModal({ classId, onClose, mergeTodayOve
                     
                     {selectedStudent.logs.length === 0 && (
                       <div className="text-center py-8">
-                        <p className="text-black-500">No attendance records</p>
+                        <p className="text-neutral-500">No attendance records</p>
                       </div>
                     )}
                   </div>

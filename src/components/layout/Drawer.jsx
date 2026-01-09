@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -15,12 +15,17 @@ import {
   Calendar,
   MessageSquare,
   ChevronRight,
+  ChevronDown,
   ListTodo,
+  GraduationCap,
+  Home,
+  User,
 } from 'lucide-react';
 import { useLayout } from '../../context/LayoutContext';
 import { useTeacher } from '../../context/TeacherContext';
 import { useAuth } from '../../context/AuthContext';
 import { Avatar } from '../design-system';
+import { teacherData } from '../../data/dummyData';
 
 /**
  * Mobile Navigation Drawer
@@ -33,21 +38,50 @@ export default function Drawer() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const teacher = teacherCtx?.teacher || { name: 'Teacher', role: 'teacher' };
+  const teacher = teacherCtx?.teacher || teacherData;
+  const courses = teacher?.courses || [];
 
+  // Persist expanded state
+  const [showCourses, setShowCourses] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('drawer-show-courses') || 'false');
+    } catch { return false; }
+  });
+  const [expandedCourses, setExpandedCourses] = useState(() => {
+    try {
+      const saved = localStorage.getItem('drawer-expanded-courses');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('drawer-show-courses', JSON.stringify(showCourses));
+  }, [showCourses]);
+
+  useEffect(() => {
+    localStorage.setItem('drawer-expanded-courses', JSON.stringify([...expandedCourses]));
+  }, [expandedCourses]);
+
+  const toggleCourse = (courseId) => {
+    setExpandedCourses(prev => {
+      const next = new Set(prev);
+      if (next.has(courseId)) next.delete(courseId);
+      else next.add(courseId);
+      return next;
+    });
+  };
+
+  // Match desktop sidebar navigation items
   const primaryMenuItems = [
-    { icon: BookOpen, label: 'My Classes', path: '/classes', description: 'View all classes' },
+    { icon: Home, label: 'Dashboard', path: '/dashboard', description: 'Home' },
     { icon: Calendar, label: 'Schedule', path: '/schedule', description: 'View timetable' },
     { icon: ListTodo, label: 'Assessments', path: '/assessments', description: 'Tests & assignments' },
-    { icon: FolderOpen, label: 'Resources', path: '/resources', description: 'Shared materials' },
-    { icon: MessageSquare, label: 'AI Assistant', path: '/chat', description: 'Get help from AI' },
   ];
 
+  // Account items matching desktop
   const secondaryMenuItems = [
-    { icon: Bell, label: 'Notifications', path: '/notifications' },
-    { icon: MessageSquare, label: 'Messages', path: '/messages' },
+    { icon: User, label: 'Profile', path: '/profile' },
     { icon: Settings, label: 'Settings', path: '/settings' },
-    { icon: HelpCircle, label: 'Help & Support', path: '/help' },
   ];
 
   const roleOptions = [
@@ -91,7 +125,7 @@ export default function Drawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeDrawer}
-            className="absolute inset-0 bg-black-900/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm"
           />
 
           {/* Drawer Panel */}
@@ -142,11 +176,133 @@ export default function Drawer() {
 
             {/* Main Menu */}
             <div className="flex-1 overflow-y-auto">
-              {/* Primary Navigation */}
+              {/* My Classes with Nested Navigation */}
               <div className="p-3">
-                <p className="px-3 py-2 text-xs font-semibold text-black-400 uppercase tracking-wider">
+                <p className="px-3 py-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
                   Navigation
                 </p>
+                
+                {/* My Classes - Expandable */}
+                <div className="mb-1">
+                  <div
+                    className={`
+                      flex items-center gap-3 px-3 py-3 rounded-xl transition-all
+                      ${location.pathname === '/classes' || location.pathname.includes('/course/')
+                        ? 'bg-indigo-50 text-indigo-700'
+                        : 'text-neutral-700 hover:bg-neutral-50'
+                      }
+                    `}
+                  >
+                    <button
+                      onClick={() => handleNavigation('/classes')}
+                      className="flex items-center gap-3 flex-1"
+                    >
+                      <div className={`p-2 rounded-lg ${
+                        location.pathname === '/classes' || location.pathname.includes('/course/') 
+                          ? 'bg-indigo-100' : 'bg-neutral-100'
+                      }`}>
+                        <GraduationCap className={`w-5 h-5 ${
+                          location.pathname === '/classes' || location.pathname.includes('/course/') 
+                            ? 'text-indigo-600' : 'text-neutral-500'
+                        }`} />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="font-medium">My Classes</p>
+                        <p className="text-xs text-neutral-500">{courses.length} courses</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setShowCourses(!showCourses)}
+                      className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
+                    >
+                      <ChevronDown className={`w-4 h-4 text-neutral-400 transition-transform ${showCourses ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+                  
+                  {/* Courses List */}
+                  <AnimatePresence initial={false}>
+                    {showCourses && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="ml-6 mt-1 space-y-1 border-l-2 border-neutral-100 pl-3">
+                          {courses.slice(0, 5).map((course) => {
+                            const isExpanded = expandedCourses.has(course.id);
+                            const isCourseActive = location.pathname === `/course/${course.id}`;
+                            
+                            return (
+                              <div key={course.id}>
+                                <div className="flex items-center">
+                                  <button
+                                    onClick={() => toggleCourse(course.id)}
+                                    className="p-1 hover:bg-neutral-100 rounded"
+                                  >
+                                    {course.sections?.length > 0 ? (
+                                      <ChevronRight className={`w-3.5 h-3.5 text-neutral-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                                    ) : <div className="w-3.5 h-3.5" />}
+                                  </button>
+                                  <button
+                                    onClick={() => handleNavigation(`/course/${course.id}`)}
+                                    className={`flex-1 flex items-center gap-2 px-2 py-2 rounded-lg text-left text-sm ${
+                                      isCourseActive ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-neutral-600 hover:bg-neutral-50'
+                                    }`}
+                                  >
+                                    <BookOpen className="w-4 h-4" />
+                                    <span className="truncate">{course.title}</span>
+                                  </button>
+                                </div>
+                                
+                                {/* Sections */}
+                                <AnimatePresence initial={false}>
+                                  {isExpanded && course.sections?.length > 0 && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: 'auto', opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="ml-5 space-y-0.5 py-1">
+                                        {course.sections.map((section) => {
+                                          const isSectionActive = location.pathname === `/course/${course.id}/class/${section.id}`;
+                                          return (
+                                            <button
+                                              key={section.id}
+                                              onClick={() => handleNavigation(`/course/${course.id}/class/${section.id}`)}
+                                              className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-left ${
+                                                isSectionActive ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-neutral-500 hover:bg-neutral-50'
+                                              }`}
+                                            >
+                                              <Users className="w-3.5 h-3.5" />
+                                              Section {section.id}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            );
+                          })}
+                          {courses.length > 5 && (
+                            <button
+                              onClick={() => handleNavigation('/classes')}
+                              className="text-xs text-indigo-600 font-medium px-3 py-2"
+                            >
+                              View all {courses.length} courses →
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                
+                {/* Other Navigation Items */}
                 <div className="space-y-1">
                   {primaryMenuItems.map((item) => (
                     <button
@@ -156,20 +312,20 @@ export default function Drawer() {
                         w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all
                         ${isActive(item.path)
                           ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-black-700 hover:bg-black-50'
+                          : 'text-neutral-700 hover:bg-neutral-50'
                         }
                       `}
                     >
                       <div className={`
                         p-2 rounded-lg
-                        ${isActive(item.path) ? 'bg-indigo-100' : 'bg-black-100'}
+                        ${isActive(item.path) ? 'bg-indigo-100' : 'bg-neutral-100'}
                       `}>
-                        <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-indigo-600' : 'text-black-500'}`} />
+                        <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-indigo-600' : 'text-neutral-500'}`} />
                       </div>
                       <div className="flex-1 text-left">
                         <p className="font-medium">{item.label}</p>
                         {item.description && (
-                          <p className="text-xs text-black-500">{item.description}</p>
+                          <p className="text-xs text-neutral-500">{item.description}</p>
                         )}
                       </div>
                     </button>
@@ -178,7 +334,7 @@ export default function Drawer() {
               </div>
 
               {/* Secondary Navigation */}
-              <div className="p-3 border-t border-black-100">
+              <div className="p-3 border-t border-neutral-100">
                 <div className="space-y-0.5">
                   {secondaryMenuItems.map((item) => (
                     <button
@@ -188,11 +344,11 @@ export default function Drawer() {
                         w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all
                         ${isActive(item.path)
                           ? 'bg-indigo-50 text-indigo-700'
-                          : 'text-black-600 hover:bg-black-50'
+                          : 'text-neutral-600 hover:bg-neutral-50'
                         }
                       `}
                     >
-                      <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-indigo-600' : 'text-black-400'}`} />
+                      <item.icon className={`w-5 h-5 ${isActive(item.path) ? 'text-indigo-600' : 'text-neutral-400'}`} />
                       <span className="font-medium">{item.label}</span>
                     </button>
                   ))}
@@ -200,11 +356,11 @@ export default function Drawer() {
               </div>
 
               {/* Role Switcher */}
-              <div className="p-3 border-t border-black-100">
-                <p className="px-3 py-2 text-xs font-semibold text-black-400 uppercase tracking-wider">
+              <div className="p-3 border-t border-neutral-100">
+                <p className="px-3 py-2 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
                   Switch Role
                 </p>
-                <div className="bg-black-50 rounded-xl p-2 space-y-1">
+                <div className="bg-neutral-50 rounded-xl p-2 space-y-1">
                   {roleOptions.map((role) => (
                     <button
                       key={role.id}
@@ -213,7 +369,7 @@ export default function Drawer() {
                         w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium
                         ${teacherCtx?.persona === role.id
                           ? 'bg-white text-indigo-700 shadow-sm'
-                          : 'text-black-600 hover:bg-white/50'
+                          : 'text-neutral-600 hover:bg-white/50'
                         }
                         transition-all
                       `}
@@ -229,7 +385,7 @@ export default function Drawer() {
             </div>
 
             {/* Bottom Menu */}
-            <div className="border-t border-black-100 p-3 bg-black-50/50">
+            <div className="border-t border-neutral-100 p-3 bg-neutral-50/50">
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors font-medium"

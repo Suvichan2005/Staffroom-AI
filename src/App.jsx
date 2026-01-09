@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+﻿import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import React, { Suspense, useEffect, useRef, lazy } from "react";
 
@@ -16,11 +16,11 @@ import { logInfo, LogCategory } from "./services/activityLogger";
 // Core pages (loaded immediately for fast initial load)
 import Login from "./pages/Login";
 import Landing from "./pages/Landing";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/DashboardNew";
 
 // Lazy-loaded pages (code split for smaller initial bundle)
-const ClassPage = lazy(() => import("./pages/ClassPage"));
-const CoursePage = lazy(() => import("./pages/CoursePage"));
+const ClassPage = lazy(() => import("./pages/ClassPageNew"));
+const CoursePage = lazy(() => import("./pages/CoursePageNew"));
 const ClassesPage = lazy(() => import("./pages/ClassesPage"));
 const ClassManagementPage = lazy(() => import("./pages/ClassManagementPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
@@ -28,7 +28,7 @@ const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const SchedulePage = lazy(() => import("./pages/SchedulePage"));
 
 // Hidden/Role-gated pages (accessible but not in main nav)
-const Assessments = lazy(() => import("./pages/Assessments"));
+const Assessments = lazy(() => import("./pages/AssessmentsNew"));
 const SharedResources = lazy(() => import("./pages/SharedResources"));
 const HODDashboard = lazy(() => import("./pages/HODDashboard"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));

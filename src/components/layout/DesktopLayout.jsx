@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import TopNav from './TopNav';
@@ -38,7 +38,7 @@ export default function DesktopLayout({ children, hideNav, hideChatbox }) {
   // Full-width layout for landing/auth
   if (shouldHideNav) {
     return (
-      <div className="min-h-screen bg-black-50">
+      <div className="min-h-screen bg-neutral-50">
         <main>
           <motion.div
             key={location.pathname}
@@ -54,7 +54,7 @@ export default function DesktopLayout({ children, hideNav, hideChatbox }) {
   }
 
   return (
-    <div className="min-h-screen bg-black-50">
+    <div className="min-h-screen bg-neutral-50">
       {/* Top Navigation */}
       <TopNav />
 

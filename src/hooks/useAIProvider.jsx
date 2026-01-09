@@ -1,4 +1,4 @@
-/**
+﻿/**
  * useAIProvider Hook
  * 
  * React hook for interacting with the AI provider system.

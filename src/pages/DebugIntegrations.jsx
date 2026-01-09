@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Eye, Code, CheckCircle, AlertTriangle, XCircle,
@@ -135,18 +135,18 @@ export default function DebugIntegrations() {
   ];
 
   return (
-    <div className="min-h-screen bg-black-50">
+    <div className="min-h-screen bg-neutral-50">
       {/* Header */}
-      <div className="bg-white border-b border-black-200 sticky top-0 z-10">
+      <div className="bg-white border-b border-neutral-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-black-800 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-neutral-800 flex items-center gap-2">
                 <Code className="w-6 h-6 text-indigo-600" />
                 Debug Integrations
               </h1>
-              <p className="text-sm text-black-500 mt-1">
-                Showcase of all wired components • {sections.reduce((acc, s) => acc + s.components.length, 0)} total
+              <p className="text-sm text-neutral-500 mt-1">
+                Showcase of all wired components – {sections.reduce((acc, s) => acc + s.components.length, 0)} total
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -179,7 +179,7 @@ export default function DebugIntegrations() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               activeSection === 'all'
                 ? 'bg-indigo-600 text-white'
-                : 'bg-white text-black-600 hover:bg-black-100'
+                : 'bg-white text-neutral-600 hover:bg-neutral-100'
             }`}
           >
             All Sections
@@ -193,7 +193,7 @@ export default function DebugIntegrations() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                   activeSection === section.id
                     ? 'bg-indigo-600 text-white'
-                    : 'bg-white text-black-600 hover:bg-black-100'
+                    : 'bg-white text-neutral-600 hover:bg-neutral-100'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -214,26 +214,26 @@ export default function DebugIntegrations() {
               key={section.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-sm border border-black-200 overflow-hidden"
+              className="bg-white rounded-2xl shadow-sm border border-neutral-200 overflow-hidden"
             >
               {/* Section Header */}
               <button
                 onClick={() => toggleSection(section.id)}
-                className="w-full flex items-center justify-between p-4 hover:bg-black-50 transition-colors"
+                className="w-full flex items-center justify-between p-4 hover:bg-neutral-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-xl bg-gradient-to-br ${section.color}`}>
                     <Icon className="w-5 h-5 text-white" />
                   </div>
                   <div className="text-left">
-                    <h2 className="text-lg font-semibold text-black-800">{section.title}</h2>
-                    <p className="text-sm text-black-500">{section.components.length} components</p>
+                    <h2 className="text-lg font-semibold text-neutral-800">{section.title}</h2>
+                    <p className="text-sm text-neutral-500">{section.components.length} components</p>
                   </div>
                 </div>
                 {isExpanded ? (
-                  <ChevronUp className="w-5 h-5 text-black-400" />
+                  <ChevronUp className="w-5 h-5 text-neutral-400" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-black-400" />
+                  <ChevronDown className="w-5 h-5 text-neutral-400" />
                 )}
               </button>
 
@@ -243,16 +243,16 @@ export default function DebugIntegrations() {
                   {/* Attendance Section */}
                   {section.id === 'attendance' && (
                     <div className="space-y-6">
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">AttendanceTable</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">AttendanceTable</h3>
                         <AttendanceTable records={attendanceRecords} />
                       </div>
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">StudentSummary</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">StudentSummary</h3>
                         <StudentSummary students={students?.slice(0, 5) || []} />
                       </div>
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">AttendanceAIInsights</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">AttendanceAIInsights</h3>
                         <AttendanceAIInsights
                           courseId="geography-6"
                           sectionId="6A"
@@ -265,28 +265,28 @@ export default function DebugIntegrations() {
                   {/* AI Section */}
                   {section.id === 'ai' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">ChatBox</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">ChatBox</h3>
                         <div className="h-64">
                           <ChatBox
                             messages={[
                               { role: 'assistant', content: 'Hello! How can I help you today?' },
                               { role: 'user', content: 'Show me today\'s schedule' },
-                              { role: 'assistant', content: 'You have 3 classes scheduled today:\n\n• 9:00 AM - Math 6A\n• 11:00 AM - Math 7B\n• 2:00 PM - Math 8A' },
+                              { role: 'assistant', content: 'You have 3 classes scheduled today:\n\n– 9:00 AM - Math 6A\n– 11:00 AM - Math 7B\n– 2:00 PM - Math 8A' },
                             ]}
                           />
                         </div>
                       </div>
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">MicInput</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">MicInput</h3>
                         <MicInput
                           onCommand={(cmd) => addToast({ type: 'info', message: `Voice command: ${cmd}` })}
                           placeholder="Say a command or type here..."
                         />
                       </div>
-                      <div className="bg-black-50 rounded-xl p-4 lg:col-span-2">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">AIChatBox (Floating)</h3>
-                        <p className="text-sm text-black-500 mb-4">
+                      <div className="bg-neutral-50 rounded-xl p-4 lg:col-span-2">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">AIChatBox (Floating)</h3>
+                        <p className="text-sm text-neutral-500 mb-4">
                           The AIChatBox is a full floating chat interface. Click below to open it.
                         </p>
                         <AIChatBox />
@@ -297,12 +297,12 @@ export default function DebugIntegrations() {
                   {/* Dashboard Section */}
                   {section.id === 'dashboard' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">WeeklySchedule</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">WeeklySchedule</h3>
                         <WeeklySchedule schedule={scheduleData} />
                       </div>
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">UpcomingClassesNew</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">UpcomingClassesNew</h3>
                         <UpcomingClassesNew />
                       </div>
                     </div>
@@ -311,12 +311,12 @@ export default function DebugIntegrations() {
                   {/* Teacher Section */}
                   {section.id === 'teacher' && (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">AssignmentCard</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">AssignmentCard</h3>
                         <AssignmentCard assignment={assignmentData} />
                       </div>
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">StudentCard</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">StudentCard</h3>
                         <StudentCard student={studentCardData} />
                       </div>
                     </div>
@@ -326,8 +326,8 @@ export default function DebugIntegrations() {
                   {section.id === 'design-system' && (
                     <div className="space-y-6">
                       {/* Buttons */}
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">Buttons</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">Buttons</h3>
                         <div className="flex flex-wrap gap-3">
                           <Button variant="primary">Primary</Button>
                           <Button variant="secondary">Secondary</Button>
@@ -342,15 +342,15 @@ export default function DebugIntegrations() {
                       </div>
 
                       {/* Cards */}
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">Cards</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">Cards</h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <Card>
                             <CardHeader>
                               <h4 className="font-semibold">Basic Card</h4>
                             </CardHeader>
                             <CardContent>
-                              <p className="text-sm text-black-500">Card content goes here</p>
+                              <p className="text-sm text-neutral-500">Card content goes here</p>
                             </CardContent>
                             <CardFooter>
                               <Button variant="outline" size="sm">Action</Button>
@@ -373,8 +373,8 @@ export default function DebugIntegrations() {
                       </div>
 
                       {/* Inputs */}
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">Inputs</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">Inputs</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <Input label="Email" placeholder="Enter email" />
                           <Input label="With Icon" placeholder="Search..." icon={Eye} />
@@ -391,8 +391,8 @@ export default function DebugIntegrations() {
                       </div>
 
                       {/* Modals & Sheets */}
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">Modals & Sheets</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">Modals & Sheets</h3>
                         <div className="flex flex-wrap gap-3">
                           <Button variant="outline" onClick={() => setShowModal(true)}>
                             Open Modal
@@ -410,8 +410,8 @@ export default function DebugIntegrations() {
                       </div>
 
                       {/* Empty States */}
-                      <div className="bg-black-50 rounded-xl p-4">
-                        <h3 className="text-sm font-semibold text-black-700 mb-3">Empty States</h3>
+                      <div className="bg-neutral-50 rounded-xl p-4">
+                        <h3 className="text-sm font-semibold text-neutral-700 mb-3">Empty States</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                           <EmptyState title="No Data" description="Nothing to show yet" />
                           <ErrorState message="Something went wrong" onRetry={() => {}} />
@@ -435,7 +435,7 @@ export default function DebugIntegrations() {
 
       {/* Modals */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Sample Modal">
-        <p className="text-black-600">This is a sample modal from the design system.</p>
+        <p className="text-neutral-600">This is a sample modal from the design system.</p>
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
           <Button variant="primary" onClick={() => setShowModal(false)}>Confirm</Button>
@@ -457,7 +457,7 @@ export default function DebugIntegrations() {
 
       <Sheet isOpen={showSheet} onClose={() => setShowSheet(false)} title="Sheet Panel">
         <div className="p-4">
-          <p className="text-black-600">This is a sheet panel that slides in from the side.</p>
+          <p className="text-neutral-600">This is a sheet panel that slides in from the side.</p>
         </div>
       </Sheet>
 

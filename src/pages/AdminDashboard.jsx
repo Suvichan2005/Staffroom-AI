@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+﻿import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { 
@@ -127,15 +127,15 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-2xl border border-black-200 p-5"
+              className="bg-white rounded-2xl border border-neutral-200 p-5"
             >
               <div className={`inline-flex p-2.5 rounded-xl bg-${stat.color}-100 mb-3`}>
                 <Icon className={`w-5 h-5 text-${stat.color}-600`} />
               </div>
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="text-2xl font-bold text-black-800">{stat.value}</p>
-                  <p className="text-sm text-black-500">{stat.label}</p>
+                  <p className="text-2xl font-bold text-neutral-800">{stat.value}</p>
+                  <p className="text-sm text-neutral-500">{stat.label}</p>
                 </div>
                 {stat.change && (
                   <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
@@ -154,11 +154,11 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl border border-black-200 p-5"
+          className="bg-white rounded-2xl border border-neutral-200 p-5"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-black-800">Attendance Trend</h3>
-            <span className="text-xs text-black-500">Last 7 days</span>
+            <h3 className="font-semibold text-neutral-800">Attendance Trend</h3>
+            <span className="text-xs text-neutral-500">Last 7 days</span>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -185,11 +185,11 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl border border-black-200 p-5"
+          className="bg-white rounded-2xl border border-neutral-200 p-5"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-black-800">Syllabus Coverage</h3>
-            <span className="text-xs text-black-500">By section</span>
+            <h3 className="font-semibold text-neutral-800">Syllabus Coverage</h3>
+            <span className="text-xs text-neutral-500">By section</span>
           </div>
           <div className="h-64 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
@@ -217,7 +217,7 @@ export default function AdminDashboard() {
                   className="w-3 h-3 rounded-full" 
                   style={{ background: COLORS[index % COLORS.length] }}
                 />
-                <span className="text-xs text-black-600">{entry.section}: {entry.percent}%</span>
+                <span className="text-xs text-neutral-600">{entry.section}: {entry.percent}%</span>
               </div>
             ))}
           </div>
@@ -230,18 +230,18 @@ export default function AdminDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="lg:col-span-2 bg-white rounded-2xl border border-black-200 p-5"
+          className="lg:col-span-2 bg-white rounded-2xl border border-neutral-200 p-5"
         >
-          <h3 className="font-semibold text-black-800 mb-4">Recent Activity</h3>
+          <h3 className="font-semibold text-neutral-800 mb-4">Recent Activity</h3>
           <div className="space-y-3">
             {(summary.schoolStats?.systemLogs || []).slice(0, 5).map((log, idx) => (
-              <div key={log.id || idx} className="flex items-start gap-3 p-3 bg-black-50 rounded-xl">
+              <div key={log.id || idx} className="flex items-start gap-3 p-3 bg-neutral-50 rounded-xl">
                 <div className="p-2 bg-indigo-100 rounded-lg">
                   <Clock className="w-4 h-4 text-indigo-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-black-700">{log.detail}</p>
-                  <p className="text-xs text-black-500 mt-0.5">{log.time}</p>
+                  <p className="text-sm text-neutral-700">{log.detail}</p>
+                  <p className="text-xs text-neutral-500 mt-0.5">{log.time}</p>
                 </div>
               </div>
             ))}
@@ -287,25 +287,25 @@ export default function AdminDashboard() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-black-200 p-6"
+      className="bg-white rounded-2xl border border-neutral-200 p-6"
     >
       <div className="flex items-center gap-3 mb-4">
         <div className="p-3 bg-indigo-100 rounded-xl">
           <UploadCloud className="w-6 h-6 text-indigo-600" />
         </div>
         <div>
-          <h3 className="font-semibold text-black-800">Timetable Upload</h3>
-          <p className="text-sm text-black-500">Upload CSV/XLSX to refresh the central timetable</p>
+          <h3 className="font-semibold text-neutral-800">Timetable Upload</h3>
+          <p className="text-sm text-neutral-500">Upload CSV/XLSX to refresh the central timetable</p>
         </div>
       </div>
       
-      <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-black-200 hover:border-indigo-400 rounded-2xl py-12 text-black-500 hover:bg-indigo-50/50 cursor-pointer transition-all">
+      <label className="flex flex-col items-center justify-center gap-3 border-2 border-dashed border-neutral-200 hover:border-indigo-400 rounded-2xl py-12 text-neutral-500 hover:bg-indigo-50/50 cursor-pointer transition-all">
         <div className="p-4 bg-indigo-100 rounded-full">
           <UploadCloud className="h-8 w-8 text-indigo-600" />
         </div>
         <div className="text-center">
-          <p className="font-medium text-black-700">Drop your file here, or click to browse</p>
-          <p className="text-xs text-black-400 mt-1">Supports CSV and XLSX files</p>
+          <p className="font-medium text-neutral-700">Drop your file here, or click to browse</p>
+          <p className="text-xs text-neutral-400 mt-1">Supports CSV and XLSX files</p>
         </div>
         <input
           type="file"
@@ -336,7 +336,7 @@ export default function AdminDashboard() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-black-200 p-6"
+      className="bg-white rounded-2xl border border-neutral-200 p-6"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -344,8 +344,8 @@ export default function AdminDashboard() {
             <ClipboardList className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-black-800">Teacher – Class Mapping</h3>
-            <p className="text-sm text-black-500">Assign teachers to their respective classes</p>
+            <h3 className="font-semibold text-neutral-800">Teacher - Class Mapping</h3>
+            <p className="text-sm text-neutral-500">Assign teachers to their respective classes</p>
           </div>
         </div>
         <button
@@ -357,7 +357,7 @@ export default function AdminDashboard() {
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-[640px] text-sm">
-          <thead className="text-xs uppercase text-black-500">
+          <thead className="text-xs uppercase text-neutral-500">
             <tr>
               <th className="text-left py-2">Class</th>
               <th className="text-left py-2">Assigned Teacher</th>
@@ -373,8 +373,8 @@ export default function AdminDashboard() {
                   teacherId: departmentTeachers[0]?.id,
                 };
                 return (
-                  <tr key={classId} className="border-t border-black-100">
-                    <td className="py-3 font-medium text-black-700">{classId}</td>
+                  <tr key={classId} className="border-t border-neutral-100">
+                    <td className="py-3 font-medium text-neutral-700">{classId}</td>
                     <td className="py-3">
                       <select
                         value={currentEntry.teacherId}
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
                           );
                           persistMapping(next);
                         }}
-                        className="border border-black-200 rounded-lg px-2 py-1 text-sm"
+                        className="border border-neutral-200 rounded-lg px-2 py-1 text-sm"
                       >
                         {departmentTeachers.map((teacher) => (
                           <option key={teacher.id} value={teacher.id}>
@@ -393,7 +393,7 @@ export default function AdminDashboard() {
                         ))}
                       </select>
                     </td>
-                    <td className="py-3 text-xs text-black-500">{department.name}</td>
+                    <td className="py-3 text-xs text-neutral-500">{department.name}</td>
                   </tr>
                 );
               })
@@ -408,7 +408,7 @@ export default function AdminDashboard() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-black-200 p-6"
+      className="bg-white rounded-2xl border border-neutral-200 p-6"
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
@@ -416,8 +416,8 @@ export default function AdminDashboard() {
             <Users className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-black-800">Student Management</h3>
-            <p className="text-sm text-black-500">{filteredStudents.length} students found</p>
+            <h3 className="font-semibold text-neutral-800">Student Management</h3>
+            <p className="text-sm text-neutral-500">{filteredStudents.length} students found</p>
           </div>
         </div>
         <div className="flex gap-2">
@@ -425,12 +425,12 @@ export default function AdminDashboard() {
             value={studentQuery}
             onChange={(event) => setStudentQuery(event.target.value)}
             placeholder="Search by name..."
-            className="border border-black-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
+            className="border border-neutral-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300"
           />
           <select
             value={studentClassFilter}
             onChange={(event) => setStudentClassFilter(event.target.value)}
-            className="border border-black-200 rounded-xl px-4 py-2.5 text-sm bg-white"
+            className="border border-neutral-200 rounded-xl px-4 py-2.5 text-sm bg-white"
           >
             <option value="all">All Classes</option>
             {Array.from(new Set(students.map((student) => student.classId))).sort().map((classId) => (
@@ -444,29 +444,29 @@ export default function AdminDashboard() {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-black-200">
-              <th className="text-left py-3 px-4 font-semibold text-black-600">Student</th>
-              <th className="text-left py-3 px-4 font-semibold text-black-600">Class</th>
-              <th className="text-left py-3 px-4 font-semibold text-black-600">ID</th>
+            <tr className="border-b border-neutral-200">
+              <th className="text-left py-3 px-4 font-semibold text-neutral-600">Student</th>
+              <th className="text-left py-3 px-4 font-semibold text-neutral-600">Class</th>
+              <th className="text-left py-3 px-4 font-semibold text-neutral-600">ID</th>
             </tr>
           </thead>
           <tbody>
             {filteredStudents.map((student, idx) => (
-              <tr key={student.studentId} className="border-b border-black-50 hover:bg-black-50">
+              <tr key={student.studentId} className="border-b border-neutral-50 hover:bg-neutral-50">
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-sm">
                       {student.name.charAt(0)}
                     </div>
-                    <span className="font-medium text-black-700">{student.name}</span>
+                    <span className="font-medium text-neutral-700">{student.name}</span>
                   </div>
                 </td>
                 <td className="py-3 px-4">
-                  <span className="px-2 py-1 bg-black-100 rounded-lg text-xs font-medium text-black-600">
+                  <span className="px-2 py-1 bg-neutral-100 rounded-lg text-xs font-medium text-neutral-600">
                     {student.classId}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-black-500 font-mono text-xs">{student.studentId}</td>
+                <td className="py-3 px-4 text-neutral-500 font-mono text-xs">{student.studentId}</td>
               </tr>
             ))}
           </tbody>
@@ -474,8 +474,8 @@ export default function AdminDashboard() {
       </div>
       {filteredStudents.length === 0 && (
         <div className="text-center py-8">
-          <Users className="w-12 h-12 mx-auto text-black-300 mb-3" />
-          <p className="text-black-500">No students found</p>
+          <Users className="w-12 h-12 mx-auto text-neutral-300 mb-3" />
+          <p className="text-neutral-500">No students found</p>
         </div>
       )}
     </motion.div>
@@ -485,7 +485,7 @@ export default function AdminDashboard() {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-black-200 p-6"
+      className="bg-white rounded-2xl border border-neutral-200 p-6"
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
@@ -493,8 +493,8 @@ export default function AdminDashboard() {
             <FileText className="w-6 h-6 text-yellow-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-black-800">System Logs</h3>
-            <p className="text-sm text-black-500">Recent system activity</p>
+            <h3 className="font-semibold text-neutral-800">System Logs</h3>
+            <p className="text-sm text-neutral-500">Recent system activity</p>
           </div>
         </div>
         <button
@@ -511,14 +511,14 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: idx * 0.05 }}
-            className="flex items-start gap-4 p-4 bg-black-50 rounded-xl hover:bg-black-100 transition-colors"
+            className="flex items-start gap-4 p-4 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors"
           >
-            <div className="p-2 bg-white rounded-lg border border-black-200">
-              <Clock className="w-4 h-4 text-black-500" />
+            <div className="p-2 bg-white rounded-lg border border-neutral-200">
+              <Clock className="w-4 h-4 text-neutral-500" />
             </div>
             <div className="flex-1">
-              <p className="text-sm text-black-700">{log.detail}</p>
-              <p className="text-xs text-black-400 mt-1">{log.time}</p>
+              <p className="text-sm text-neutral-700">{log.detail}</p>
+              <p className="text-xs text-neutral-400 mt-1">{log.time}</p>
             </div>
           </motion.div>
         ))}
@@ -540,20 +540,20 @@ export default function AdminDashboard() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-black-800">Admin Dashboard</h1>
-        <p className="text-sm text-black-500 mt-1">Manage school operations and monitor system health</p>
+        <h1 className="text-2xl font-bold text-neutral-800">Admin Dashboard</h1>
+        <p className="text-sm text-neutral-500 mt-1">Manage school operations and monitor system health</p>
       </div>
       
       <div className="flex flex-col lg:flex-row gap-6">
         <aside className="lg:w-64 shrink-0">
-          <div className="bg-white rounded-2xl border border-black-200 p-4 sticky top-24">
-            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-black-100">
+          <div className="bg-white rounded-2xl border border-neutral-200 p-4 sticky top-24">
+            <div className="flex items-center gap-3 mb-4 pb-4 border-b border-neutral-100">
               <div className="p-2 bg-indigo-100 rounded-xl">
                 <Shield className="w-5 h-5 text-indigo-600" />
               </div>
               <div>
-                <h2 className="font-semibold text-black-800">IT Admin Panel</h2>
-                <p className="text-xs text-black-500">System Management</p>
+                <h2 className="font-semibold text-neutral-800">IT Admin Panel</h2>
+                <p className="text-xs text-neutral-500">System Management</p>
               </div>
             </div>
             <nav className="space-y-1">
@@ -567,7 +567,7 @@ export default function AdminDashboard() {
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                       active 
                         ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200" 
-                        : "hover:bg-black-100 text-black-600"
+                        : "hover:bg-neutral-100 text-neutral-600"
                     }`}
                   >
                     <Icon className="h-4 w-4" />

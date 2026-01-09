@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useEffect } from "react";
+﻿import React, { useMemo, useState, useEffect } from "react";
 import { students as allStudents, getAssignmentsForClass } from "../../data/dummyData";
 
-const MODAL_BACKDROP = "fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4";
+const MODAL_BACKDROP = "fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4";
 
 export default function AssessmentManager({ classId, type = "assignment" }) {
   const typeLabel = type === "assignment" ? "Assignment" : "Test";
@@ -117,7 +117,7 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
           <option value="">Select {typeLabel.toLowerCase()}</option>
           {assessments.map((a) => (
             <option value={a.id} key={a.id}>
-              {a.title} • {a.date}
+              {a.title} – {a.date}
             </option>
           ))}
         </select>
@@ -132,7 +132,7 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
           disabled={!activeId}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${activeId
               ? "border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
-              : "border-black-200 text-black-400 bg-black-100 cursor-not-allowed"
+              : "border-neutral-200 text-neutral-400 bg-neutral-100 cursor-not-allowed"
             }`}
         >
           Open Grading
@@ -140,11 +140,11 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
       </div>
 
       {activeAssessment ? (
-        <p className="text-xs text-black-500">
-          Editing: <span className="font-medium text-black-600">{activeAssessment.title}</span> (Due {activeAssessment.date})
+        <p className="text-xs text-neutral-500">
+          Editing: <span className="font-medium text-neutral-600">{activeAssessment.title}</span> (Due {activeAssessment.date})
         </p>
       ) : (
-        <p className="text-xs text-black-500">Select a {typeLabel.toLowerCase()} to view or update grades.</p>
+        <p className="text-xs text-neutral-500">Select a {typeLabel.toLowerCase()} to view or update grades.</p>
       )}
 
       {statusMessage ? (
@@ -155,13 +155,13 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
         <div className={MODAL_BACKDROP} role="dialog" aria-modal="true">
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between px-4 py-3 border-b">
-              <h4 className="text-sm font-semibold text-black-800">Create {typeLabel}</h4>
+              <h4 className="text-sm font-semibold text-neutral-800">Create {typeLabel}</h4>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="text-black-500 hover:text-black-700 text-lg"
+                className="text-neutral-500 hover:text-neutral-700 text-lg"
                 aria-label="Close create modal"
               >
-                ×
+                Ã—
               </button>
             </div>
             <form
@@ -172,7 +172,7 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
               }}
             >
               <div className="space-y-1">
-                <label className="block text-xs font-medium text-black-600">Title</label>
+                <label className="block text-xs font-medium text-neutral-600">Title</label>
                 <input
                   value={createForm.title}
                   onChange={(e) => setCreateForm((f) => ({ ...f, title: e.target.value }))}
@@ -183,7 +183,7 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-xs font-medium text-black-600">Due date</label>
+                  <label className="block text-xs font-medium text-neutral-600">Due date</label>
                   <input
                     type="date"
                     value={createForm.date}
@@ -193,7 +193,7 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-xs font-medium text-black-600">Max points</label>
+                  <label className="block text-xs font-medium text-neutral-600">Max points</label>
                   <input
                     type="number"
                     value={createForm.maxPoints}
@@ -208,7 +208,7 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="px-3 py-2 text-sm rounded-lg border border-black-200 text-black-600 hover:bg-black-100"
+                  className="px-3 py-2 text-sm rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-100"
                 >
                   Cancel
                 </button>
@@ -229,23 +229,23 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
           <div className="w-full max-w-3xl rounded-2xl bg-white shadow-xl">
             <div className="flex items-center justify-between px-4 py-3 border-b">
               <div>
-                <h4 className="text-sm font-semibold text-black-800">Grade {typeLabel}</h4>
-                <p className="text-xs text-black-500">
-                  {activeAssessment.title} • Due {activeAssessment.date}
+                <h4 className="text-sm font-semibold text-neutral-800">Grade {typeLabel}</h4>
+                <p className="text-xs text-neutral-500">
+                  {activeAssessment.title} – Due {activeAssessment.date}
                 </p>
               </div>
               <button
                 onClick={() => setShowGradesModal(false)}
-                className="text-black-500 hover:text-black-700 text-lg"
+                className="text-neutral-500 hover:text-neutral-700 text-lg"
                 aria-label="Close grading modal"
               >
-                ×
+                Ã—
               </button>
             </div>
             <div className="max-h-[60vh] overflow-y-auto px-4 py-3">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left text-xs uppercase tracking-wide text-black-500">
+                  <tr className="text-left text-xs uppercase tracking-wide text-neutral-500">
                     <th className="py-2">Student</th>
                     <th className="py-2">Grade</th>
                   </tr>
@@ -276,7 +276,7 @@ export default function AssessmentManager({ classId, type = "assignment" }) {
               <button
                 type="button"
                 onClick={() => setShowGradesModal(false)}
-                className="px-3 py-2 text-sm rounded-lg border border-black-200 text-black-600 hover:bg-black-100"
+                className="px-3 py-2 text-sm rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-100"
               >
                 Close
               </button>

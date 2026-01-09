@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 
 /**
@@ -42,19 +42,19 @@ export function Button({
       shadow-sm hover:shadow-md
     `,
     secondary: `
-      bg-black-100 text-black-800
-      hover:bg-black-200
-      focus-visible:ring-black-400
+      bg-neutral-100 text-neutral-800
+      hover:bg-neutral-200
+      focus-visible:ring-neutral-400
     `,
     outline: `
-      border-2 border-black-200 text-black-700 bg-transparent
-      hover:bg-black-50 hover:border-black-300
-      focus-visible:ring-black-400
+      border-2 border-neutral-200 text-neutral-700 bg-transparent
+      hover:bg-neutral-50 hover:border-neutral-300
+      focus-visible:ring-neutral-400
     `,
     ghost: `
-      text-black-600 bg-transparent
-      hover:bg-black-100 hover:text-black-800
-      focus-visible:ring-black-400
+      text-neutral-600 bg-transparent
+      hover:bg-neutral-100 hover:text-neutral-800
+      focus-visible:ring-neutral-400
     `,
     danger: `
       bg-red-600 text-white
@@ -124,14 +124,14 @@ export function IconButton({
       focus-visible:ring-indigo-500
     `,
     secondary: `
-      bg-black-100 text-black-700
-      hover:bg-black-200
-      focus-visible:ring-black-400
+      bg-neutral-100 text-neutral-700
+      hover:bg-neutral-200
+      focus-visible:ring-neutral-400
     `,
     ghost: `
-      text-black-500 bg-transparent
-      hover:bg-black-100 hover:text-black-700
-      focus-visible:ring-black-400
+      text-neutral-500 bg-transparent
+      hover:bg-neutral-100 hover:text-neutral-700
+      focus-visible:ring-neutral-400
     `,
     danger: `
       text-red-500 bg-transparent

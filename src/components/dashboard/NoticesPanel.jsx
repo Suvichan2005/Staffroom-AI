@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { notices } from "../../data/dummyData";
 
 export default function NoticesPanel({ className = "" }) {
@@ -7,9 +7,9 @@ export default function NoticesPanel({ className = "" }) {
       <h3 className="sc-heading text-base mb-2">Notices</h3>
       <div className="space-y-3">
         {notices.map((n) => (
-          <div key={n.id} className="p-3 rounded-xl border border-black-200 bg-black-50">
+          <div key={n.id} className="p-3 rounded-xl border border-neutral-200 bg-neutral-50">
             <p className="font-medium text-sm">{n.title}</p>
-            <p className="text-xs text-black-600 mt-1">{n.detail}</p>
+            <p className="text-xs text-neutral-600 mt-1">{n.detail}</p>
           </div>
         ))}
       </div>

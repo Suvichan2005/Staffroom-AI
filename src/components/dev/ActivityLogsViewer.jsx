@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Download, Trash2, RefreshCcw, Cloud,
@@ -142,31 +142,31 @@ export default function ActivityLogsViewer() {
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-black-200 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-neutral-200 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-black-100 bg-black-50">
+      <div className="p-4 border-b border-neutral-100 bg-neutral-50">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-black-800 flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
             <Cloud className="w-5 h-5 text-indigo-600" />
             Activity Logs
-            <span className="text-xs font-normal text-black-500">
+            <span className="text-xs font-normal text-neutral-500">
               (Cloud - All Users)
             </span>
           </h2>
           <div className="flex items-center gap-2">
             <button
               onClick={loadLogs}
-              className="p-2 hover:bg-black-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
               title="Refresh"
             >
-              <RefreshCcw className={`w-4 h-4 text-black-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCcw className={`w-4 h-4 text-neutral-600 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={handleDownload}
-              className="p-2 hover:bg-black-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
               title="Export JSON"
             >
-              <Download className="w-4 h-4 text-black-600" />
+              <Download className="w-4 h-4 text-neutral-600" />
             </button>
             <button
               onClick={handleClearLogs}
@@ -182,24 +182,24 @@ export default function ActivityLogsViewer() {
         {stats && (
           <div className="grid grid-cols-5 gap-3 mb-3">
             <div className="bg-white rounded-lg p-2 text-center">
-              <p className="text-lg font-bold text-black-800">{stats.total}</p>
-              <p className="text-xs text-black-500">Total Logs</p>
+              <p className="text-lg font-bold text-neutral-800">{stats.total}</p>
+              <p className="text-xs text-neutral-500">Total Logs</p>
             </div>
             <div className="bg-white rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-indigo-600">{stats.geminiCalls.total}</p>
-              <p className="text-xs text-black-500">Gemini Calls</p>
+              <p className="text-xs text-neutral-500">Gemini Calls</p>
             </div>
             <div className="bg-white rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-purple-600">{stats.byCategory?.auth || 0}</p>
-              <p className="text-xs text-black-500">Auth Events</p>
+              <p className="text-xs text-neutral-500">Auth Events</p>
             </div>
             <div className="bg-white rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-red-600">{stats.byLevel?.error || 0}</p>
-              <p className="text-xs text-black-500">Errors</p>
+              <p className="text-xs text-neutral-500">Errors</p>
             </div>
             <div className="bg-white rounded-lg p-2 text-center">
               <p className="text-lg font-bold text-green-600">{uniqueEmails.length}</p>
-              <p className="text-xs text-black-500">Users</p>
+              <p className="text-xs text-neutral-500">Users</p>
             </div>
           </div>
         )}
@@ -219,20 +219,20 @@ export default function ActivityLogsViewer() {
           </select>
           <div className="flex-1 min-w-[200px]">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <input
                 type="text"
                 placeholder="Search logs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 border border-black-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="w-full pl-9 pr-3 py-2 border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
               />
             </div>
           </div>
           <select
             value={selectedLevel}
             onChange={(e) => setSelectedLevel(e.target.value)}
-            className="px-3 py-2 border border-black-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
           >
             <option value="all">All Levels</option>
             <option value="info">Info</option>
@@ -243,7 +243,7 @@ export default function ActivityLogsViewer() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-black-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
+            className="px-3 py-2 border border-neutral-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200"
           >
             <option value="all">All Categories</option>
             <option value="auth">Auth</option>
@@ -258,19 +258,19 @@ export default function ActivityLogsViewer() {
       {/* Logs List */}
       <div className="max-h-[500px] overflow-y-auto">
         {filteredLogs.length === 0 ? (
-          <div className="p-8 text-center text-black-500">
-            <Clock className="w-12 h-12 mx-auto mb-3 text-black-300" />
+          <div className="p-8 text-center text-neutral-500">
+            <Clock className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
             <p>No logs found</p>
-            <p className="text-sm text-black-400">Activity will appear here as you use the app</p>
+            <p className="text-sm text-neutral-400">Activity will appear here as you use the app</p>
           </div>
         ) : (
-          <div className="divide-y divide-black-100">
+          <div className="divide-y divide-neutral-100">
             {filteredLogs.slice(0, 100).map((log) => (
               <motion.div
                 key={log.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="hover:bg-black-50 transition-colors"
+                className="hover:bg-neutral-50 transition-colors"
               >
                 <button
                   onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)}
@@ -291,21 +291,21 @@ export default function ActivityLogsViewer() {
                             {log.userEmail}
                           </span>
                         )}
-                        <span className="text-sm font-medium text-black-700 truncate">
+                        <span className="text-sm font-medium text-neutral-700 truncate">
                           {log.message}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-black-500">
+                      <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
                         <span>{formatTimestamp(log.timestamp)}</span>
-                        <span>•</span>
+                        <span>–</span>
                         <span className="truncate">{log.url}</span>
                       </div>
                     </div>
                     <div className="flex-shrink-0">
                       {expandedLog === log.id ? (
-                        <ChevronUp className="w-4 h-4 text-black-400" />
+                        <ChevronUp className="w-4 h-4 text-neutral-400" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-black-400" />
+                        <ChevronDown className="w-4 h-4 text-neutral-400" />
                       )}
                     </div>
                   </div>
@@ -338,12 +338,12 @@ export default function ActivityLogsViewer() {
                             </div>
                           </div>
                         )}
-                        <div className="bg-black-50 rounded-lg p-3 text-xs font-mono overflow-x-auto">
-                          <pre className="whitespace-pre-wrap text-black-600">
+                        <div className="bg-neutral-50 rounded-lg p-3 text-xs font-mono overflow-x-auto">
+                          <pre className="whitespace-pre-wrap text-neutral-600">
                             {JSON.stringify(log.data, null, 2)}
                           </pre>
                         </div>
-                        <div className="mt-2 flex items-center gap-4 text-xs text-black-500">
+                        <div className="mt-2 flex items-center gap-4 text-xs text-neutral-500">
                           <span>Session: {log.sessionId?.slice(-8)}</span>
                           <span>User ID: {log.userId?.slice(0, 8)}</span>
                           <span>{new Date(log.timestamp).toLocaleString()}</span>
@@ -360,7 +360,7 @@ export default function ActivityLogsViewer() {
 
       {/* Footer */}
       {filteredLogs.length > 100 && (
-        <div className="p-3 border-t border-black-100 text-center text-sm text-black-500">
+        <div className="p-3 border-t border-neutral-100 text-center text-sm text-neutral-500">
           Showing 100 of {filteredLogs.length} logs. Download full logs for complete history.
         </div>
       )}

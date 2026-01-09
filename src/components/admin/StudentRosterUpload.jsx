@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Upload, FileSpreadsheet, CheckCircle2, AlertCircle, X, 
@@ -221,8 +221,8 @@ export default function StudentRosterUpload() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold text-black-800">Student Roster Upload</h2>
-          <p className="text-sm text-black-500">
+          <h2 className="text-lg font-semibold text-neutral-800">Student Roster Upload</h2>
+          <p className="text-sm text-neutral-500">
             {importedCount > 0 
               ? `${importedCount} students imported so far`
               : 'Bulk import students from CSV file'
@@ -249,7 +249,7 @@ export default function StudentRosterUpload() {
             relative p-8 border-2 border-dashed rounded-2xl text-center transition-all
             ${dragActive 
               ? 'border-indigo-500 bg-indigo-50' 
-              : 'border-black-300 hover:border-indigo-400 hover:bg-indigo-50/50'
+              : 'border-neutral-300 hover:border-indigo-400 hover:bg-indigo-50/50'
             }
           `}
         >
@@ -262,20 +262,20 @@ export default function StudentRosterUpload() {
           />
           
           <FileSpreadsheet className={`w-12 h-12 mx-auto mb-4 ${
-            dragActive ? 'text-indigo-600' : 'text-black-400'
+            dragActive ? 'text-indigo-600' : 'text-neutral-400'
           }`} />
           
-          <p className="font-medium text-black-700 mb-1">
+          <p className="font-medium text-neutral-700 mb-1">
             {dragActive ? 'Drop your CSV file here' : 'Drag & drop your CSV file here'}
           </p>
-          <p className="text-sm text-black-500 mb-4">or click to browse</p>
+          <p className="text-sm text-neutral-500 mb-4">or click to browse</p>
           
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl">
             <Upload className="w-4 h-4" />
             Select CSV File
           </div>
           
-          <p className="text-xs text-black-400 mt-4">
+          <p className="text-xs text-neutral-400 mt-4">
             Required columns: Name, Roll Number, Class, Section
           </p>
         </div>
@@ -299,7 +299,7 @@ export default function StudentRosterUpload() {
                 </div>
                 <ul className="text-sm text-red-600 space-y-1 max-h-32 overflow-y-auto">
                   {parseErrors.map((error, idx) => (
-                    <li key={idx}>• {error}</li>
+                    <li key={idx}>– {error}</li>
                   ))}
                 </ul>
               </div>
@@ -320,7 +320,7 @@ export default function StudentRosterUpload() {
                     setUploadedStudents([]);
                     setParseErrors([]);
                   }}
-                  className="px-4 py-2 text-black-600 hover:bg-black-100 rounded-xl transition-colors"
+                  className="px-4 py-2 text-neutral-600 hover:bg-neutral-100 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
@@ -335,29 +335,29 @@ export default function StudentRosterUpload() {
             </div>
 
             {/* Preview Table */}
-            <div className="bg-white rounded-xl border border-black-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead className="bg-black-50">
+                  <thead className="bg-neutral-50">
                     <tr>
-                      <th className="px-4 py-3 text-left font-medium text-black-600">Name</th>
-                      <th className="px-4 py-3 text-left font-medium text-black-600">Roll #</th>
-                      <th className="px-4 py-3 text-left font-medium text-black-600">Class</th>
-                      <th className="px-4 py-3 text-left font-medium text-black-600">Email</th>
-                      <th className="px-4 py-3 text-center font-medium text-black-600 w-16">Action</th>
+                      <th className="px-4 py-3 text-left font-medium text-neutral-600">Name</th>
+                      <th className="px-4 py-3 text-left font-medium text-neutral-600">Roll #</th>
+                      <th className="px-4 py-3 text-left font-medium text-neutral-600">Class</th>
+                      <th className="px-4 py-3 text-left font-medium text-neutral-600">Email</th>
+                      <th className="px-4 py-3 text-center font-medium text-neutral-600 w-16">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-black-100">
+                  <tbody className="divide-y divide-neutral-100">
                     {uploadedStudents.slice(0, 10).map((student, idx) => (
-                      <tr key={idx} className="hover:bg-black-50">
-                        <td className="px-4 py-3 font-medium text-black-800">{student.name}</td>
-                        <td className="px-4 py-3 text-black-600">{student.rollNumber}</td>
+                      <tr key={idx} className="hover:bg-neutral-50">
+                        <td className="px-4 py-3 font-medium text-neutral-800">{student.name}</td>
+                        <td className="px-4 py-3 text-neutral-600">{student.rollNumber}</td>
                         <td className="px-4 py-3">
                           <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
                             {student.classId}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-black-500">{student.email || '—'}</td>
+                        <td className="px-4 py-3 text-neutral-500">{student.email || '─'}</td>
                         <td className="px-4 py-3 text-center">
                           <button
                             onClick={() => removeFromPreview(idx)}
@@ -371,7 +371,7 @@ export default function StudentRosterUpload() {
                   </tbody>
                 </table>
                 {uploadedStudents.length > 10 && (
-                  <div className="px-4 py-3 bg-black-50 text-sm text-black-500 text-center">
+                  <div className="px-4 py-3 bg-neutral-50 text-sm text-neutral-500 text-center">
                     ... and {uploadedStudents.length - 10} more students
                   </div>
                 )}
@@ -389,10 +389,10 @@ export default function StudentRosterUpload() {
             { icon: Users, title: 'Required Fields', desc: 'Name, Roll Number, Class, and Section are mandatory' },
             { icon: CheckCircle2, title: 'Duplicates', desc: 'Students with same roll number in same class will be skipped' },
           ].map((tip, idx) => (
-            <div key={idx} className="p-4 bg-black-50 rounded-xl">
+            <div key={idx} className="p-4 bg-neutral-50 rounded-xl">
               <tip.icon className="w-5 h-5 text-indigo-600 mb-2" />
-              <h4 className="font-medium text-black-700 text-sm">{tip.title}</h4>
-              <p className="text-xs text-black-500 mt-1">{tip.desc}</p>
+              <h4 className="font-medium text-neutral-700 text-sm">{tip.title}</h4>
+              <p className="text-xs text-neutral-500 mt-1">{tip.desc}</p>
             </div>
           ))}
         </div>

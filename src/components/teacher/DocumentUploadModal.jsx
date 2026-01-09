@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Upload, FileSpreadsheet, Users, Check, X, AlertCircle,
@@ -157,15 +157,15 @@ export default function DocumentUploadModal({
             border-2 border-dashed rounded-2xl p-8 text-center transition-all
             ${dragActive
                             ? 'border-indigo-500 bg-indigo-50'
-                            : 'border-black-200 hover:border-black-300'}
-            ${file ? 'bg-black-50' : ''}
+                            : 'border-neutral-200 hover:border-neutral-300'}
+            ${file ? 'bg-neutral-50' : ''}
           `}
                 >
                     {parsing ? (
                         <div className="flex flex-col items-center gap-3">
                             <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
-                            <p className="text-black-600 font-medium">Parsing with AI...</p>
-                            <p className="text-sm text-black-500">
+                            <p className="text-neutral-600 font-medium">Parsing with AI...</p>
+                            <p className="text-sm text-neutral-500">
                                 Extracting {mode === 'timetable' ? 'schedule' : 'student'} data from your file
                             </p>
                         </div>
@@ -175,8 +175,8 @@ export default function DocumentUploadModal({
                                 <FileIcon className="w-7 h-7 text-indigo-600" />
                             </div>
                             <div>
-                                <p className="font-medium text-black-800">{file.name}</p>
-                                <p className="text-sm text-black-500">
+                                <p className="font-medium text-neutral-800">{file.name}</p>
+                                <p className="text-sm text-neutral-500">
                                     {(file.size / 1024).toFixed(1)} KB
                                 </p>
                             </div>
@@ -194,11 +194,11 @@ export default function DocumentUploadModal({
                         </div>
                     ) : (
                         <div className="flex flex-col items-center gap-3">
-                            <div className="w-14 h-14 bg-black-100 rounded-xl flex items-center justify-center">
-                                <Upload className="w-7 h-7 text-black-400" />
+                            <div className="w-14 h-14 bg-neutral-100 rounded-xl flex items-center justify-center">
+                                <Upload className="w-7 h-7 text-neutral-400" />
                             </div>
                             <div>
-                                <p className="font-medium text-black-800">
+                                <p className="font-medium text-neutral-800">
                                     Drop your file here, or{' '}
                                     <label className="text-indigo-600 cursor-pointer hover:text-indigo-700">
                                         browse
@@ -210,7 +210,7 @@ export default function DocumentUploadModal({
                                         />
                                     </label>
                                 </p>
-                                <p className="text-sm text-black-500 mt-1">
+                                <p className="text-sm text-neutral-500 mt-1">
                                     Supports CSV, Excel, PDF, and images
                                 </p>
                             </div>
@@ -250,7 +250,7 @@ export default function DocumentUploadModal({
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
                         >
-                            <h3 className="font-medium text-black-700 mb-3 flex items-center gap-2">
+                            <h3 className="font-medium text-neutral-700 mb-3 flex items-center gap-2">
                                 <Check className="w-4 h-4 text-green-500" />
                                 Preview
                             </h3>
@@ -268,10 +268,10 @@ export default function DocumentUploadModal({
                                         <tbody className="divide-y divide-green-200">
                                             {parsedData.schedules.slice(0, 5).map((schedule, i) => (
                                                 <tr key={i}>
-                                                    <td className="px-4 py-2 text-black-700">{schedule.classId}</td>
-                                                    <td className="px-4 py-2 text-black-700">{schedule.day}</td>
-                                                    <td className="px-4 py-2 text-black-700">
-                                                        {schedule.startTime}–{schedule.endTime}
+                                                    <td className="px-4 py-2 text-neutral-700">{schedule.classId}</td>
+                                                    <td className="px-4 py-2 text-neutral-700">{schedule.day}</td>
+                                                    <td className="px-4 py-2 text-neutral-700">
+                                                        {schedule.startTime}-{schedule.endTime}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -308,9 +308,9 @@ export default function DocumentUploadModal({
                                         <tbody className="divide-y divide-green-200">
                                             {parsedData.students.slice(0, 5).map((student, i) => (
                                                 <tr key={i}>
-                                                    <td className="px-4 py-2 text-black-700">{student.rollNo || i + 1}</td>
-                                                    <td className="px-4 py-2 text-black-700">{student.name}</td>
-                                                    <td className="px-4 py-2 text-black-500">{student.email || '—'}</td>
+                                                    <td className="px-4 py-2 text-neutral-700">{student.rollNo || i + 1}</td>
+                                                    <td className="px-4 py-2 text-neutral-700">{student.name}</td>
+                                                    <td className="px-4 py-2 text-neutral-500">{student.email || '─'}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -328,9 +328,9 @@ export default function DocumentUploadModal({
 
                 {/* Format Guide */}
                 {!file && (
-                    <div className="bg-black-50 rounded-xl p-4">
-                        <p className="text-sm font-medium text-black-700 mb-2">Supported formats:</p>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-black-600">
+                    <div className="bg-neutral-50 rounded-xl p-4">
+                        <p className="text-sm font-medium text-neutral-700 mb-2">Supported formats:</p>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-neutral-600">
                             <div className="flex items-center gap-2">
                                 <Table className="w-4 h-4" />
                                 <span>CSV, Excel (.xlsx)</span>
@@ -344,7 +344,7 @@ export default function DocumentUploadModal({
                                 <span>Images (PNG, JPG)</span>
                             </div>
                         </div>
-                        <p className="text-xs text-black-500 mt-3">
+                        <p className="text-xs text-neutral-500 mt-3">
                             AI will automatically extract {mode === 'timetable' ? 'schedule' : 'student'} data from your file
                         </p>
                     </div>

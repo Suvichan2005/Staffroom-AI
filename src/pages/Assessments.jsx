@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+﻿import React, { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, Plus, Search, Clock, Users, CheckCircle2, 
@@ -174,7 +174,7 @@ export default function Assessments() {
       case 'final': return 'bg-red-100 text-red-700';
       case 'project': return 'bg-green-100 text-green-700';
       case 'homework': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-black-100 text-black-700';
+      default: return 'bg-neutral-100 text-neutral-700';
     }
   };
 
@@ -350,18 +350,18 @@ export default function Assessments() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-black-800">Assessments</h1>
-          <p className="text-sm text-black-500 mt-1">Manage assignments, tests, and quizzes across all classes</p>
+          <h1 className="text-2xl font-bold text-neutral-800">Assessments</h1>
+          <p className="text-sm text-neutral-500 mt-1">Manage assignments, tests, and quizzes across all classes</p>
         </div>
         <div className="flex items-center gap-3">
           {/* View Toggle */}
-          <div className="flex items-center bg-black-100 rounded-xl p-1">
+          <div className="flex items-center bg-neutral-100 rounded-xl p-1">
             <button
               onClick={() => setViewMode('list')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 viewMode === 'list' 
                   ? 'bg-white text-indigo-600 shadow-sm' 
-                  : 'text-black-500 hover:text-black-700'
+                  : 'text-neutral-500 hover:text-neutral-700'
               }`}
             >
               <List className="w-4 h-4" />
@@ -378,7 +378,7 @@ export default function Assessments() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                 viewMode === 'gradebook' 
                   ? 'bg-white text-indigo-600 shadow-sm' 
-                  : 'text-black-500 hover:text-black-700'
+                  : 'text-neutral-500 hover:text-neutral-700'
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -400,11 +400,11 @@ export default function Assessments() {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
         {[
-          { label: 'Total', value: stats.total, icon: ClipboardList, color: 'indigo', bg: 'bg-indigo-50' },
-          { label: 'Assignments', value: stats.assignments, icon: FileText, color: 'blue', bg: 'bg-blue-50' },
-          { label: 'Tests', value: stats.tests, icon: BookOpen, color: 'purple', bg: 'bg-purple-50' },
-          { label: 'Needs Grading', value: stats.needsGrading, icon: Edit, color: 'yellow', bg: 'bg-yellow-50' },
-          { label: 'Overdue', value: stats.overdue, icon: AlertTriangle, color: 'red', bg: 'bg-red-50' },
+          { label: 'Total', value: stats.total, icon: ClipboardList, bg: 'bg-indigo-50', iconColor: 'text-indigo-600' },
+          { label: 'Assignments', value: stats.assignments, icon: FileText, bg: 'bg-blue-50', iconColor: 'text-blue-600' },
+          { label: 'Tests', value: stats.tests, icon: BookOpen, bg: 'bg-purple-50', iconColor: 'text-purple-600' },
+          { label: 'Needs Grading', value: stats.needsGrading, icon: Edit, bg: 'bg-yellow-50', iconColor: 'text-yellow-600' },
+          { label: 'Overdue', value: stats.overdue, icon: AlertTriangle, bg: 'bg-red-50', iconColor: 'text-red-600' },
         ].map((stat, idx) => (
           <motion.div
             key={idx}
@@ -413,15 +413,15 @@ export default function Assessments() {
             transition={{ delay: idx * 0.05 }}
             className={`${stat.bg} rounded-2xl p-4`}
           >
-            <stat.icon className={`w-5 h-5 text-${stat.color}-600 mb-2`} />
-            <p className="text-2xl font-bold text-black-800">{stat.value}</p>
-            <p className="text-xs text-black-500">{stat.label}</p>
+            <stat.icon className={`w-5 h-5 ${stat.iconColor} mb-2`} />
+            <p className="text-2xl font-bold text-neutral-800">{stat.value}</p>
+            <p className="text-xs text-neutral-500">{stat.label}</p>
           </motion.div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl border border-black-200 p-4 mb-6">
+      <div className="bg-white rounded-2xl border border-neutral-200 p-4 mb-6">
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Status Filter Tabs */}
           <div className="flex gap-2 overflow-x-auto pb-2 lg:pb-0 flex-shrink-0">
@@ -433,14 +433,14 @@ export default function Assessments() {
                   flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all
                   ${activeFilter === filter.id
                     ? 'bg-indigo-600 text-white shadow-md'
-                    : 'bg-black-100 text-black-600 hover:bg-black-200'
+                    : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                   }
                 `}
               >
                 {filter.label}
                 <span className={`
                   px-1.5 py-0.5 rounded-full text-xs
-                  ${activeFilter === filter.id ? 'bg-white/20' : 'bg-white text-black-500'}
+                  ${activeFilter === filter.id ? 'bg-white/20' : 'bg-white text-neutral-500'}
                 `}>
                   {filter.count}
                 </span>
@@ -453,7 +453,7 @@ export default function Assessments() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-3 py-2 bg-black-50 border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
             >
               <option value="all">All Types</option>
               <option value="assignment">Assignments</option>
@@ -463,7 +463,7 @@ export default function Assessments() {
             <select
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
-              className="px-3 py-2 bg-black-50 border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              className="px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
             >
               <option value="all">All Classes</option>
               {allClasses.map(cls => (
@@ -473,13 +473,13 @@ export default function Assessments() {
 
             {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-black-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <input
                 type="text"
                 placeholder="Search assessments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-black-50 border border-black-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="w-full pl-10 pr-4 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
               />
             </div>
           </div>
@@ -498,7 +498,7 @@ export default function Assessments() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ delay: idx * 0.03 }}
-              className="bg-white rounded-2xl border border-black-200 p-4 hover:shadow-lg hover:border-indigo-200 transition-all group"
+              className="bg-white rounded-2xl border border-neutral-200 p-4 hover:shadow-lg hover:border-indigo-200 transition-all group"
             >
               <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                 {/* Left: Info */}
@@ -514,13 +514,13 @@ export default function Assessments() {
                     </span>
                     {getStatusBadge(assessment.status)}
                   </div>
-                  <h3 className="font-semibold text-black-800 text-lg group-hover:text-indigo-600 transition-colors">
+                  <h3 className="font-semibold text-neutral-800 text-lg group-hover:text-indigo-600 transition-colors">
                     {assessment.title}
                   </h3>
                   {assessment.description && (
-                    <p className="text-sm text-black-500 mt-1 line-clamp-1">{assessment.description}</p>
+                    <p className="text-sm text-neutral-500 mt-1 line-clamp-1">{assessment.description}</p>
                   )}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-black-500">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-neutral-500">
                     <span className="flex items-center gap-1">
                       <GraduationCap className="w-4 h-4" />
                       {assessment.course} - {assessment.section}
@@ -539,31 +539,31 @@ export default function Assessments() {
                 {/* Middle: Progress */}
                 <div className="flex items-center gap-4 lg:gap-6">
                   <div className="text-center min-w-[60px]">
-                    <p className="text-xs text-black-500 mb-1">Submitted</p>
-                    <p className="text-xl font-bold text-black-800">
-                      {assessment.submitted}<span className="text-sm text-black-400">/{assessment.totalStudents}</span>
+                    <p className="text-xs text-neutral-500 mb-1">Submitted</p>
+                    <p className="text-xl font-bold text-neutral-800">
+                      {assessment.submitted}<span className="text-sm text-neutral-400">/{assessment.totalStudents}</span>
                     </p>
                   </div>
                   <div className="text-center min-w-[60px]">
-                    <p className="text-xs text-black-500 mb-1">Graded</p>
+                    <p className="text-xs text-neutral-500 mb-1">Graded</p>
                     <p className="text-xl font-bold text-green-600">
-                      {assessment.graded}<span className="text-sm text-black-400">/{assessment.submitted}</span>
+                      {assessment.graded}<span className="text-sm text-neutral-400">/{assessment.submitted}</span>
                     </p>
                   </div>
                   <div className="hidden sm:block">
-                    <p className="text-xs text-black-500 mb-1">Avg Score</p>
+                    <p className="text-xs text-neutral-500 mb-1">Avg Score</p>
                     <p className="text-xl font-bold text-indigo-600">
                       {assessment.averageGrade || '-'}
                     </p>
                   </div>
                   <div className="w-24 hidden md:block">
-                    <div className="h-2 bg-black-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-neutral-100 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
                         style={{ width: `${assessment.totalStudents ? (assessment.submitted / assessment.totalStudents) * 100 : 0}%` }}
                       />
                     </div>
-                    <p className="text-xs text-black-400 mt-1 text-center">
+                    <p className="text-xs text-neutral-400 mt-1 text-center">
                       {assessment.totalStudents ? Math.round((assessment.submitted / assessment.totalStudents) * 100) : 0}%
                     </p>
                   </div>
@@ -578,12 +578,12 @@ export default function Assessments() {
                     <Edit className="w-4 h-4" />
                     <span className="hidden sm:inline">Grade</span>
                   </button>
-                  <button className="p-2 text-black-400 hover:text-black-600 hover:bg-black-100 rounded-lg transition-colors">
+                  <button className="p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded-lg transition-colors">
                     <Eye className="w-5 h-5" />
                   </button>
                   <button 
                     onClick={() => handleDeleteAssessment(assessment.id)}
-                    className="p-2 text-black-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-neutral-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -594,23 +594,23 @@ export default function Assessments() {
         </AnimatePresence>
 
         {filteredAssessments.length === 0 && (
-          <div className="text-center py-16 bg-white rounded-2xl border border-black-200">
-            <div className="w-16 h-16 mx-auto bg-black-100 rounded-full flex items-center justify-center mb-4">
-              <ClipboardList className="w-8 h-8 text-black-400" />
+          <div className="text-center py-16 bg-white rounded-2xl border border-neutral-200">
+            <div className="w-16 h-16 mx-auto bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+              <ClipboardList className="w-8 h-8 text-neutral-400" />
             </div>
-            <p className="text-black-600 font-medium">No assessments found</p>
-            <p className="text-sm text-black-500 mt-1">Try adjusting your filters or create a new assessment</p>
+            <p className="text-neutral-600 font-medium">No assessments found</p>
+            <p className="text-sm text-neutral-500 mt-1">Try adjusting your filters or create a new assessment</p>
           </div>
         )}
       </div>
       ) : (
         /* Grade Book Matrix View */
-        <div className="bg-white rounded-2xl border border-black-200 p-6">
+        <div className="bg-white rounded-2xl border border-neutral-200 p-6">
           {classFilter === 'all' ? (
             <div className="text-center py-12">
-              <LayoutGrid className="w-12 h-12 mx-auto mb-3 text-black-300" />
-              <p className="text-black-600 font-medium">Select a class to view grades</p>
-              <p className="text-sm text-black-500 mt-1">Choose a specific class from the filter above</p>
+              <LayoutGrid className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
+              <p className="text-neutral-600 font-medium">Select a class to view grades</p>
+              <p className="text-sm text-neutral-500 mt-1">Choose a specific class from the filter above</p>
             </div>
           ) : (
             <GradeBookMatrix 
@@ -624,26 +624,26 @@ export default function Assessments() {
       {/* Create Assessment Modal */}
       <AnimatePresence>
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden"
+              className="w-full max-w-lg bg-white rounded-2xl shadow-xl max-h-[90vh] flex flex-col overflow-hidden"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-black-100 bg-gradient-to-r from-indigo-50 to-purple-50">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-gradient-to-r from-indigo-50 to-purple-50 flex-shrink-0">
                 <div>
-                  <h3 className="text-lg font-semibold text-black-800">Create Assessment</h3>
-                  <p className="text-sm text-black-500">Add a new assignment or test</p>
+                  <h3 className="text-lg font-semibold text-neutral-800">Create Assessment</h3>
+                  <p className="text-sm text-neutral-500">Add a new assignment or test</p>
                 </div>
                 <button
                   onClick={() => setShowCreateModal(false)}
                   className="p-2 hover:bg-white/50 rounded-xl transition-colors"
                 >
-                  <X className="w-5 h-5 text-black-500" />
+                  <X className="w-5 h-5 text-neutral-500" />
                 </button>
               </div>
-              <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+              <div className="flex-1 min-h-0 p-6 space-y-4 overflow-y-auto">
                 {/* Type Selection */}
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -651,52 +651,52 @@ export default function Assessments() {
                     className={`p-4 rounded-xl border-2 transition-all ${
                       formData.type === 'assignment'
                         ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
-                        : 'border-black-200 hover:border-indigo-300 hover:bg-indigo-50'
+                        : 'border-neutral-200 hover:border-indigo-300 hover:bg-indigo-50'
                     }`}
                   >
                     <FileText className="w-6 h-6 mx-auto mb-2" />
                     <p className="font-medium">Assignment</p>
-                    <p className="text-xs text-black-500">Homework, Project</p>
+                    <p className="text-xs text-neutral-500">Homework, Project</p>
                   </button>
                   <button
                     onClick={() => setFormData(prev => ({ ...prev, type: 'quiz' }))}
                     className={`p-4 rounded-xl border-2 transition-all ${
                       formData.type === 'quiz'
                         ? 'border-purple-400 bg-purple-50 text-purple-700'
-                        : 'border-black-200 hover:border-purple-300 hover:bg-purple-50'
+                        : 'border-neutral-200 hover:border-purple-300 hover:bg-purple-50'
                     }`}
                   >
                     <BookOpen className="w-6 h-6 mx-auto mb-2" />
                     <p className="font-medium">Test/Quiz</p>
-                    <p className="text-xs text-black-500">Quiz, Unit Test</p>
+                    <p className="text-xs text-neutral-500">Quiz, Unit Test</p>
                   </button>
                 </div>
 
                 {/* Form Fields */}
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-medium text-black-700 mb-1">Title *</label>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">Title *</label>
                     <input
                       type="text"
                       placeholder="e.g., Chapter 3 Quiz"
                       value={formData.title}
                       onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                      className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-black-700 mb-1">Description</label>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">Description</label>
                     <textarea
                       placeholder="Optional description or instructions"
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       rows={2}
-                      className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
+                      className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-black-700 mb-1">Class *</label>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">Class *</label>
                       <select
                         value={formData.classId}
                         onChange={(e) => {
@@ -710,7 +710,7 @@ export default function Assessments() {
                             courseId: course?.id || '',
                           }));
                         }}
-                        className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                       >
                         <option value="">Select class</option>
                         {allClasses.map(cls => (
@@ -719,34 +719,34 @@ export default function Assessments() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-black-700 mb-1">Due Date *</label>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">Due Date *</label>
                       <input
                         type="date"
                         value={formData.dueDate}
                         onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                        className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-sm font-medium text-black-700 mb-1">Max Points</label>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">Max Points</label>
                       <input
                         type="number"
                         placeholder="100"
                         value={formData.maxPoints}
                         onChange={(e) => setFormData(prev => ({ ...prev, maxPoints: Number(e.target.value) }))}
-                        className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-black-700 mb-1">Chapter</label>
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">Chapter</label>
                       <input
                         type="text"
                         placeholder="e.g., 3"
                         value={formData.chapterRef}
                         onChange={(e) => setFormData(prev => ({ ...prev, chapterRef: e.target.value }))}
-                        className="w-full px-4 py-2.5 border border-black-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                        className="w-full px-4 py-2.5 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-200"
                       />
                     </div>
                   </div>
@@ -778,15 +778,15 @@ export default function Assessments() {
                   )}
                 </div>
               </div>
-              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-black-100 bg-black-50">
-                <p className="text-xs text-black-500">* Required fields</p>
+              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-neutral-100 bg-neutral-50 flex-shrink-0">
+                <p className="text-xs text-neutral-500">* Required fields</p>
                 <div className="flex gap-3">
                   <button
                     onClick={() => {
                       setShowCreateModal(false);
                       resetForm();
                     }}
-                    className="px-4 py-2 text-black-600 hover:bg-black-200 rounded-xl transition-colors"
+                    className="px-4 py-2 text-neutral-600 hover:bg-neutral-200 rounded-xl transition-colors"
                   >
                     Cancel
                   </button>
@@ -806,36 +806,36 @@ export default function Assessments() {
       {/* Grading Modal */}
       <AnimatePresence>
         {showGradingModal && selectedAssessment && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black-900/50 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm p-4">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col"
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-black-100 bg-gradient-to-r from-green-50 to-teal-50 flex-shrink-0">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-100 bg-gradient-to-r from-green-50 to-teal-50 flex-shrink-0">
                 <div>
-                  <h3 className="text-lg font-semibold text-black-800">Grade Assessment</h3>
-                  <p className="text-sm text-black-500">{selectedAssessment.title} • Max {selectedAssessment.maxPoints} pts</p>
+                  <h3 className="text-lg font-semibold text-neutral-800">Grade Assessment</h3>
+                  <p className="text-sm text-neutral-500">{selectedAssessment.title} – Max {selectedAssessment.maxPoints} pts</p>
                 </div>
                 <button
                   onClick={() => setShowGradingModal(false)}
                   className="p-2 hover:bg-white/50 rounded-xl transition-colors"
                 >
-                  <X className="w-5 h-5 text-black-500" />
+                  <X className="w-5 h-5 text-neutral-500" />
                 </button>
               </div>
               
               {/* Quick Stats */}
-              <div className="px-6 py-3 bg-black-50 border-b border-black-100 flex-shrink-0">
+              <div className="px-6 py-3 bg-neutral-50 border-b border-neutral-100 flex-shrink-0">
                 <div className="flex items-center gap-6 text-sm">
-                  <span className="text-black-500">
-                    <span className="font-semibold text-black-800">{selectedAssessment.section}</span> • {classStudents.length} students
+                  <span className="text-neutral-500">
+                    <span className="font-semibold text-neutral-800">{selectedAssessment.section}</span> – {classStudents.length} students
                   </span>
-                  <span className="text-black-500">
+                  <span className="text-neutral-500">
                     Submitted: <span className="font-semibold text-green-600">{selectedAssessment.submitted}</span>
                   </span>
-                  <span className="text-black-500">
+                  <span className="text-neutral-500">
                     Graded: <span className="font-semibold text-indigo-600">{selectedAssessment.graded}</span>
                   </span>
                 </div>
@@ -857,18 +857,18 @@ export default function Assessments() {
                         transition={{ delay: idx * 0.02 }}
                         className={`flex items-center gap-4 p-3 rounded-xl border transition-all ${
                           hasSubmitted 
-                            ? 'bg-white border-black-200 hover:border-indigo-200' 
-                            : 'bg-black-50 border-black-100'
+                            ? 'bg-white border-neutral-200 hover:border-indigo-200' 
+                            : 'bg-neutral-50 border-neutral-100'
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium ${
-                          hasSubmitted ? 'bg-green-100 text-green-700' : 'bg-black-200 text-black-500'
+                          hasSubmitted ? 'bg-green-100 text-green-700' : 'bg-neutral-200 text-neutral-500'
                         }`}>
                           {student.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-black-800">{student.name}</p>
-                          <p className="text-xs text-black-500">
+                          <p className="font-medium text-neutral-800">{student.name}</p>
+                          <p className="text-xs text-neutral-500">
                             {hasSubmitted 
                               ? `Submitted ${new Date(submission.submittedDate).toLocaleDateString()}`
                               : 'Not submitted'
@@ -889,11 +889,11 @@ export default function Assessments() {
                             placeholder="-"
                             className={`w-20 px-3 py-2 text-center border rounded-xl text-sm font-medium transition-all ${
                               hasSubmitted 
-                                ? 'border-black-200 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300' 
-                                : 'border-black-100 bg-black-100 text-black-400 cursor-not-allowed'
+                                ? 'border-neutral-200 focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300' 
+                                : 'border-neutral-100 bg-neutral-100 text-neutral-400 cursor-not-allowed'
                             }`}
                           />
-                          <span className="text-sm text-black-400">/ {selectedAssessment.maxPoints}</span>
+                          <span className="text-sm text-neutral-400">/ {selectedAssessment.maxPoints}</span>
                         </div>
                       </motion.div>
                     );
@@ -901,14 +901,14 @@ export default function Assessments() {
                 </div>
               </div>
 
-              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-black-100 bg-black-50 flex-shrink-0">
-                <div className="text-sm text-black-500">
+              <div className="flex justify-between items-center gap-3 px-6 py-4 border-t border-neutral-100 bg-neutral-50 flex-shrink-0">
+                <div className="text-sm text-neutral-500">
                   {Object.keys(grades).filter(k => grades[k] !== '').length} grades entered
                 </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setShowGradingModal(false)}
-                    className="px-4 py-2 text-black-600 hover:bg-black-200 rounded-xl transition-colors"
+                    className="px-4 py-2 text-neutral-600 hover:bg-neutral-200 rounded-xl transition-colors"
                   >
                     Cancel
                   </button>

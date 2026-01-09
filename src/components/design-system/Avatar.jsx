@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { User } from 'lucide-react';
 
 /**
@@ -43,7 +43,7 @@ export function Avatar({
 
   const statusColors = {
     online: 'bg-green-500',
-    offline: 'bg-black-400',
+    offline: 'bg-neutral-400',
     busy: 'bg-red-500',
     away: 'bg-yellow-500',
   };
@@ -64,7 +64,7 @@ export function Avatar({
 
   // Generate consistent color from name
   const getColorFromName = (name) => {
-    if (!name) return 'bg-black-200';
+    if (!name) return 'bg-neutral-200';
     const colors = [
       'bg-red-200 text-red-700',
       'bg-orange-200 text-orange-700',
@@ -88,7 +88,7 @@ export function Avatar({
           ${shapes[shape]}
           ${ring ? 'ring-2 ring-white ring-offset-2' : ''}
           overflow-hidden flex items-center justify-center font-semibold
-          ${src ? 'bg-black-100' : getColorFromName(name)}
+          ${src ? 'bg-neutral-100' : getColorFromName(name)}
         `}
         {...props}
       >
@@ -108,7 +108,7 @@ export function Avatar({
         
         {/* Fallback */}
         <span className={src ? 'hidden' : ''}>
-          {initials || <User className="w-1/2 h-1/2 text-black-400" />}
+          {initials || <User className="w-1/2 h-1/2 text-neutral-400" />}
         </span>
       </div>
 
@@ -182,7 +182,7 @@ export function AvatarGroup({
             ${overlapSizes[size]}
             ${countSizes[size]}
             flex items-center justify-center
-            rounded-full bg-black-100 text-black-600 font-medium
+            rounded-full bg-neutral-100 text-neutral-600 font-medium
             ring-2 ring-white
           `}
           style={{ zIndex: 0 }}

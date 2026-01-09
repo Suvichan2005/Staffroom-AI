@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+﻿import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from 'firebase/auth';
 import { auth, googleProvider } from '../firebase/client';
 import { setStorageUserId, clearStorageUserId } from '../utils/userScopedStorage';

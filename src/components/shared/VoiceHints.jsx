@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, X, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 

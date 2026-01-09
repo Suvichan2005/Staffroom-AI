@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Calendar, FileText, CheckCircle, AlertCircle, ChevronRight } from 'lucide-react';
 
@@ -53,10 +53,10 @@ export function AssignmentCard({
   const toGradeCount = submittedCount - gradedCount;
 
   const statusConfig = {
-    draft: { color: 'text-black-500 bg-black-100', label: 'Draft' },
+    draft: { color: 'text-neutral-500 bg-neutral-100', label: 'Draft' },
     active: { color: 'text-green-600 bg-green-50', label: 'Active' },
     'past-due': { color: 'text-yellow-600 bg-yellow-50', label: 'Past Due' },
-    closed: { color: 'text-black-500 bg-black-100', label: 'Closed' },
+    closed: { color: 'text-neutral-500 bg-neutral-100', label: 'Closed' },
   };
 
   const typeConfig = {
@@ -77,13 +77,13 @@ export function AssignmentCard({
         transition-all duration-200 cursor-pointer
         ${isPastDue && status === 'active'
           ? 'border-yellow-300 shadow-md shadow-yellow-50'
-          : 'border-black-200 hover:border-black-300 shadow-sm hover:shadow-md'
+          : 'border-neutral-200 hover:border-neutral-300 shadow-sm hover:shadow-md'
         }
         ${cardClassName}
       `}
     >
       {/* Progress bar */}
-      <div className="h-1 bg-black-100">
+      <div className="h-1 bg-neutral-100">
         <div
           className={`h-full transition-all duration-500 ${
             submissionRate === 100
@@ -107,14 +107,14 @@ export function AssignmentCard({
           {/* Title & meta */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-black-800 truncate">{title}</h3>
+              <h3 className="font-semibold text-neutral-800 truncate">{title}</h3>
               <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusConfig[status]?.color}`}>
                 {statusConfig[status]?.label}
               </span>
             </div>
-            <div className="flex items-center gap-2 mt-1 text-sm text-black-500">
+            <div className="flex items-center gap-2 mt-1 text-sm text-neutral-500">
               {classSection && <span>{classSection}</span>}
-              {classSection && subject && <span>•</span>}
+              {classSection && subject && <span>–</span>}
               {subject && <span>{subject}</span>}
             </div>
           </div>
@@ -122,12 +122,12 @@ export function AssignmentCard({
 
         {/* Description */}
         {description && (
-          <p className="text-sm text-black-600 line-clamp-2 mb-3">{description}</p>
+          <p className="text-sm text-neutral-600 line-clamp-2 mb-3">{description}</p>
         )}
 
         {/* Due date */}
         {dueDate && (
-          <div className={`flex items-center gap-2 text-sm mb-3 ${isPastDue ? 'text-yellow-600' : 'text-black-500'}`}>
+          <div className={`flex items-center gap-2 text-sm mb-3 ${isPastDue ? 'text-yellow-600' : 'text-neutral-500'}`}>
             <Clock className="w-4 h-4" />
             <span>
               Due {formatDate(dueDate)} at {formatTime(dueDate)}
@@ -143,8 +143,8 @@ export function AssignmentCard({
         {/* Stats */}
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-black-800">{submittedCount}/{totalStudents}</span>
-            <span className="text-black-500">submitted</span>
+            <span className="font-semibold text-neutral-800">{submittedCount}/{totalStudents}</span>
+            <span className="text-neutral-500">submitted</span>
           </div>
           {toGradeCount > 0 && (
             <div className="flex items-center gap-1.5">
@@ -154,7 +154,7 @@ export function AssignmentCard({
             </div>
           )}
           {pendingCount > 0 && status === 'active' && (
-            <div className="flex items-center gap-1.5 text-black-500">
+            <div className="flex items-center gap-1.5 text-neutral-500">
               <AlertCircle className="w-4 h-4 text-yellow-500" />
               <span>{pendingCount} pending</span>
             </div>
@@ -162,7 +162,7 @@ export function AssignmentCard({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-black-100">
+        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-neutral-100">
           {onGrade && toGradeCount > 0 && (
             <motion.button
               onClick={(e) => {
@@ -184,7 +184,7 @@ export function AssignmentCard({
               whileTap={{ scale: 0.95 }}
               className={`flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-xl transition-colors ${
                 onGrade && toGradeCount > 0
-                  ? 'bg-black-100 text-black-700 hover:bg-black-200'
+                  ? 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
                   : 'flex-1 bg-indigo-600 text-white hover:bg-indigo-700'
               }`}
             >
@@ -219,8 +219,8 @@ export function AssignmentCardCompact({
       onClick={onClick}
       whileTap={{ scale: 0.98 }}
       className={`
-        w-full flex items-center gap-3 p-3 bg-white rounded-xl border border-black-200
-        hover:border-black-300 hover:shadow-sm transition-all text-left
+        w-full flex items-center gap-3 p-3 bg-white rounded-xl border border-neutral-200
+        hover:border-neutral-300 hover:shadow-sm transition-all text-left
         ${className}
       `}
     >
@@ -246,7 +246,7 @@ export function AssignmentCardCompact({
             strokeLinecap="round"
           />
         </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-black-700">
+        <span className="absolute inset-0 flex items-center justify-center text-xs font-semibold text-neutral-700">
           {submissionRate}%
         </span>
       </div>
@@ -254,16 +254,16 @@ export function AssignmentCardCompact({
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-black-800 truncate">{title}</span>
+          <span className="font-medium text-neutral-800 truncate">{title}</span>
           {isPastDue && status === 'active' && (
             <span className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0" />
           )}
         </div>
-        <div className="flex items-center gap-2 mt-0.5 text-xs text-black-500">
+        <div className="flex items-center gap-2 mt-0.5 text-xs text-neutral-500">
           {classSection && <span>{classSection}</span>}
           {dueDate && (
             <>
-              <span>•</span>
+              <span>–</span>
               <span className={isPastDue ? 'text-yellow-600' : ''}>
                 Due {new Date(dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
@@ -272,7 +272,7 @@ export function AssignmentCardCompact({
         </div>
       </div>
 
-      <ChevronRight className="w-4 h-4 text-black-400 flex-shrink-0" />
+      <ChevronRight className="w-4 h-4 text-neutral-400 flex-shrink-0" />
     </motion.button>
   );
 }
