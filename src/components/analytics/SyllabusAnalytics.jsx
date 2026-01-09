@@ -174,7 +174,7 @@ export default function SyllabusAnalytics({
                   </div>
                 </div>
                 {/* Progress bar */}
-                <div className="h-2 bg-black-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-black rounded-full overflow-hidden">
                   <div className="h-full flex">
                     <div className="bg-green-500 transition-all" style={{ width: `${(chapter.done / chapter.topics) * 100}%` }} />
                     <div className="bg-yellow-400 transition-all" style={{ width: `${(chapter.inProgress / chapter.topics) * 100}%` }} />

@@ -371,7 +371,7 @@ export default function Sidebar() {
           <div className={`px-3 py-2 rounded-lg text-xs font-medium ${
             persona === 'hod' 
               ? 'bg-purple-50 text-purple-700' 
-              : 'bg-amber-50 text-amber-700'
+              : 'bg-yellow-50 text-yellow-700'
           }`}>
             Viewing as {persona === 'hod' ? 'Head of Dept' : 'Admin'}
           </div>

@@ -1678,12 +1678,12 @@ const COLOR_STYLES = {
     iconBg: 'bg-red-100', iconColor: 'text-red-600',
   },
   yellow: {
-    bg: 'bg-amber-50', border: 'border-amber-200',
-    iconBg: 'bg-amber-100', iconColor: 'text-amber-600',
+    bg: 'bg-yellow-50', border: 'border-yellow-200',
+    iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600',
   },
   green: {
-    bg: 'bg-emerald-50', border: 'border-emerald-200',
-    iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600',
+    bg: 'bg-green-50', border: 'border-green-200',
+    iconBg: 'bg-green-100', iconColor: 'text-green-600',
   },
 };
 ```

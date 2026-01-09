@@ -144,8 +144,8 @@ export default function OnboardingWizard({ onComplete, forceShow = false }) {
   const colorClasses = {
     indigo: 'bg-gradient-to-br from-indigo-600 to-purple-700',
     purple: 'bg-gradient-to-br from-purple-600 to-pink-700',
-    green: 'bg-gradient-to-br from-green-600 to-emerald-700',
-    emerald: 'bg-gradient-to-br from-emerald-600 to-teal-700',
+    green: 'bg-gradient-to-br from-green-600 to-green-700',
+    emerald: 'bg-gradient-to-br from-green-600 to-teal-700',
   };
 
   return (

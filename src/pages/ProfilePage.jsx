@@ -228,7 +228,7 @@ export default function ProfilePage() {
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-neutral-800">Account Settings</h2>
-            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">In Progress</span>
+            <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">In Progress</span>
           </div>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
             {[

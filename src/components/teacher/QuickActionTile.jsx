@@ -177,7 +177,7 @@ export function QuickActionChip({
         transition-all duration-200
         ${active
           ? 'bg-indigo-600 text-white shadow-md'
-          : 'bg-black-100 text-black-700 hover:bg-black-200'
+          : 'bg-black-100 text-black-700 hover:bg-black'
         }
         ${className}
       `}

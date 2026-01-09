@@ -88,7 +88,7 @@ function AttendanceConfirmationModal({
         {absentStudents.length > 0 && (
           <div className="p-5 border-t border-neutral-100">
             <div className="flex items-center gap-2 mb-3">
-              <AlertCircle className="w-4 h-4 text-amber-500" />
+              <AlertCircle className="w-4 h-4 text-yellow-500" />
               <p className="text-sm font-medium text-neutral-700">
                 {absentStudents.length} student{absentStudents.length > 1 ? 's' : ''} marked absent:
               </p>

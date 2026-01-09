@@ -577,7 +577,7 @@ export default function ClassPage() {
                         </div>
                         <span className="text-sm font-medium text-black-700">{action.label}</span>
                         {action.inProgress && (
-                          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 rounded-full">In Progress</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-medium bg-yellow-100 text-yellow-700 rounded-full">In Progress</span>
                         )}
                         <ChevronRight className="w-4 h-4 text-black-400 ml-auto" />
                       </button>
@@ -639,7 +639,7 @@ export default function ClassPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowHistory(true)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-black-100 text-black-700 hover:bg-black-200 transition-all"
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-black-100 text-black-700 hover:bg-black transition-all"
                   >
                     <Calendar className="w-4 h-4" />
                     View History

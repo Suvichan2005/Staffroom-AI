@@ -111,7 +111,7 @@ export default function ActivityLogsViewer() {
   const getLevelIcon = (level) => {
     switch (level) {
       case LogLevel.ERROR: return <XCircle className="w-4 h-4 text-red-500" />;
-      case LogLevel.WARN: return <AlertTriangle className="w-4 h-4 text-amber-500" />;
+      case LogLevel.WARN: return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case LogLevel.INFO: return <Info className="w-4 h-4 text-blue-500" />;
       default: return <Bug className="w-4 h-4 text-gray-400" />;
     }
@@ -124,7 +124,7 @@ export default function ActivityLogsViewer() {
       case LogCategory.NAVIGATION: return 'bg-green-100 text-green-700';
       case LogCategory.AI: return 'bg-blue-100 text-blue-700';
       case LogCategory.ERROR: return 'bg-red-100 text-red-700';
-      case LogCategory.ACTION: return 'bg-amber-100 text-amber-700';
+      case LogCategory.ACTION: return 'bg-yellow-100 text-yellow-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -333,8 +333,8 @@ export default function ActivityLogsViewer() {
                             <div className="bg-purple-50 rounded px-2 py-1">
                               <span className="text-purple-600 font-medium">Viewport:</span> {log.data.device.viewport}
                             </div>
-                            <div className="bg-amber-50 rounded px-2 py-1">
-                              <span className="text-amber-600 font-medium">Timezone:</span> {log.data.device.timezone}
+                            <div className="bg-yellow-50 rounded px-2 py-1">
+                              <span className="text-yellow-600 font-medium">Timezone:</span> {log.data.device.timezone}
                             </div>
                           </div>
                         )}

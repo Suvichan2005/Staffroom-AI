@@ -38,7 +38,7 @@ export default function MicInput({ onSubmit }) {
           className="flex-1 border border-black-200 rounded-xl px-3 py-2 text-sm"
         />
         <button
-          className="px-4 py-2 rounded-xl bg-black-200 text-black-700 text-sm font-medium hover:bg-black-300"
+          className="px-4 py-2 rounded-xl bg-black text-black-700 text-sm font-medium hover:bg-black-300"
           onClick={handleSend}
         >
           Send

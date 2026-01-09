@@ -307,12 +307,12 @@ export default function TimetableManager() {
               {TIME_SLOTS.map((timeSlot, idx) => (
                 <tr 
                   key={timeSlot}
-                  className={isBreak(timeSlot) ? 'bg-amber-50 dark:bg-amber-900/20' : ''}
+                  className={isBreak(timeSlot) ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}
                 >
                   <td className="p-3 text-sm font-medium text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-600 whitespace-nowrap">
                     {timeSlot}
                     {isBreak(timeSlot) && (
-                      <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">
+                      <span className="ml-2 text-xs text-yellow-600 dark:text-yellow-400">
                         {timeSlot.includes('10:15') ? '(Break)' : '(Lunch)'}
                       </span>
                     )}
@@ -325,7 +325,7 @@ export default function TimetableManager() {
                       return (
                         <td 
                           key={day} 
-                          className="p-3 text-center text-sm text-amber-600 dark:text-amber-400 border-b border-gray-200 dark:border-gray-600"
+                          className="p-3 text-center text-sm text-yellow-600 dark:text-yellow-400 border-b border-gray-200 dark:border-gray-600"
                         >
                           —
                         </td>
@@ -563,7 +563,7 @@ function getSubjectColor(subject) {
     'Mathematics': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
     'English': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
     'Science': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    'Social Studies': 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    'Social Studies': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
     'Hindi': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
     'Computer Science': 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
     'Physical Education': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',

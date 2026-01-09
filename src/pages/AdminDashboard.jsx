@@ -272,7 +272,7 @@ export default function AdminDashboard() {
               >
                 <span className="flex items-center gap-2">
                   {action.label}
-                  {action.inProgress && <span className="px-1.5 py-0.5 bg-amber-500/30 text-amber-200 text-[10px] rounded">WIP</span>}
+                  {action.inProgress && <span className="px-1.5 py-0.5 bg-yellow-500/30 text-yellow-200 text-[10px] rounded">WIP</span>}
                 </span>
                 <ChevronRight className="w-4 h-4" />
               </button>

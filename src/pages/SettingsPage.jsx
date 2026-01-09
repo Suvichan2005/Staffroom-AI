@@ -185,7 +185,7 @@ export default function SettingsPage() {
       onClick={onChange}
       className={`
         relative w-12 h-7 rounded-full transition-colors
-        ${value ? 'bg-indigo-600' : 'bg-black-200'}
+        ${value ? 'bg-indigo-600' : 'bg-black'}
       `}
     >
       <motion.div
@@ -226,7 +226,7 @@ export default function SettingsPage() {
                 </div>
                 <h2 className="text-sm font-semibold text-black-800">{section.title}</h2>
                 {section.inProgress && (
-                  <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">In Progress</span>
+                  <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">In Progress</span>
                 )}
               </div>
 
@@ -253,7 +253,7 @@ export default function SettingsPage() {
 
                       {item.type === 'link' && (
                         <div className="flex items-center gap-2">
-                          {item.inProgress && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">WIP</span>}
+                          {item.inProgress && <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-medium rounded">WIP</span>}
                           <ChevronRight className="w-5 h-5 text-black-400" />
                         </div>
                       )}
@@ -298,13 +298,13 @@ export default function SettingsPage() {
               <button 
                 onClick={handleResetDemoData}
                 disabled={resetting}
-                className="w-full flex items-center justify-between p-4 rounded-xl border border-amber-200 hover:bg-amber-50 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-between p-4 rounded-xl border border-yellow-200 hover:bg-yellow-50 transition-colors disabled:opacity-50"
               >
                 <div className="flex items-center gap-3">
-                  <RefreshCcw className={`w-5 h-5 text-amber-500 ${resetting ? 'animate-spin' : ''}`} />
+                  <RefreshCcw className={`w-5 h-5 text-yellow-500 ${resetting ? 'animate-spin' : ''}`} />
                   <div className="text-left">
-                    <p className="text-sm font-medium text-amber-600">Reset Demo Data</p>
-                    <p className="text-xs text-amber-500">Clear your sandbox and start fresh with demo data</p>
+                    <p className="text-sm font-medium text-yellow-600">Reset Demo Data</p>
+                    <p className="text-xs text-yellow-500">Clear your sandbox and start fresh with demo data</p>
                   </div>
                 </div>
               </button>

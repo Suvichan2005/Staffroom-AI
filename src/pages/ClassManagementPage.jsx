@@ -181,11 +181,11 @@ export default function ClassManagementPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-5"
+                        className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-5"
                     >
                         <div className="flex items-start gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                                <AlertCircle className="w-5 h-5 text-amber-600" />
+                            <div className="w-10 h-10 rounded-xl bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                                <AlertCircle className="w-5 h-5 text-yellow-600" />
                             </div>
                             <div>
                                 <h3 className="font-semibold text-neutral-800 mb-1">Getting Started</h3>
@@ -194,13 +194,13 @@ export default function ClassManagementPage() {
                                     to automatically set up your schedule.
                                 </p>
                                 <div className="flex flex-wrap gap-2">
-                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-amber-200">
+                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-yellow-200">
                                         1. Create a Course (e.g., "Geography 8th Grade")
                                     </span>
-                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-amber-200">
+                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-yellow-200">
                                         2. Add Class Sections (e.g., 8A, 8B)
                                     </span>
-                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-amber-200">
+                                    <span className="text-xs px-3 py-1.5 bg-white rounded-lg text-neutral-600 border border-yellow-200">
                                         3. Upload Student Lists
                                     </span>
                                 </div>
