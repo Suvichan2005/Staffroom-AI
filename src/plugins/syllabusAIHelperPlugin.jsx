@@ -747,7 +747,7 @@ function SyllabusQuickActions({ context, onMessage, expanded, onToggleExpanded }
         const questions = await generateQuiz({
           subject, grade, chapterTitle: currentChapter, topicTitle: currentTopic, count: 5
         });
-        response = `ðŸ“ **Generated Quiz** for ${subject} ${grade ? `Grade ${grade}` : ''}\n` +
+        response = ` **Generated Quiz** for ${subject} ${grade ? `Grade ${grade}` : ''}\n` +
           `Topic: ${currentChapter} â†’ ${currentTopic}\n\n` +
           questions.map((q, i) => 
             `**${i + 1}. ${q.question}**\n` +
@@ -931,7 +931,7 @@ const SyllabusAIHelperPlugin = {
           
           return {
             handled: true,
-            response: `ðŸ“ **Generated Quiz** for ${subject} ${grade ? `Grade ${grade}` : ''}\n` +
+            response: `\ **Generated Quiz** for ${subject} ${grade ? `Grade ${grade}` : ''}\n` +
               `Topic: ${chapterTitle} â†’ ${topicTitle}\n\n` +
               questions.map((q, i) => 
                 `**${i + 1}. ${q.question}**\n` +

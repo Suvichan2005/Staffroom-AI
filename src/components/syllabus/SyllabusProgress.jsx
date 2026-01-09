@@ -893,7 +893,7 @@ export default function SyllabusProgress({
                                     className="w-full text-left text-[11px] px-2 py-1 rounded hover:bg-white/60 transition-colors"
                                   >
                                     {notes ? (
-                                      <span className="text-neutral-600 italic">ðŸ“ {notes}</span>
+                                      <span className="text-neutral-600 italic"> {notes}</span>
                                     ) : (
                                       <span className="text-neutral-400">+ Add notes...</span>
                                     )}
@@ -905,7 +905,7 @@ export default function SyllabusProgress({
                             {/* Read-only notes */}
                             {!editable && notes && (
                               <div className="px-2 pb-1.5 pt-0">
-                                <p className="text-[11px] text-neutral-600 italic">ðŸ“ {notes}</p>
+                                <p className="text-[11px] text-neutral-600 italic">\ {notes}</p>
                               </div>
                             )}
                           </li>
