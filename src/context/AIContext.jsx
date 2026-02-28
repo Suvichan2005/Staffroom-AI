@@ -308,12 +308,17 @@ export function AIProvider({ children }) {
   const sessionsListListenerRef = useRef(null);
   // Ref that always mirrors the latest `messages` state (for sync comparison)
   const messagesRef = useRef([]);
+  // Refs that mirror latest values for use in voice callbacks (stable closures)
+  const currentSessionIdRef = useRef(null);
+  const isAuthedRef = useRef(false);
   // Flag: set to true by local mutations (addUserMessage, addAssistantMessage, etc.)
   // Read by save effect — only saves when a local change happened
   const pendingSaveRef = useRef(false);
 
-  // Keep messagesRef always in sync with the latest messages state
+  // Keep refs always in sync with latest state
   useEffect(() => { messagesRef.current = messages; });
+  useEffect(() => { currentSessionIdRef.current = currentSessionId; }, [currentSessionId]);
+  useEffect(() => { isAuthedRef.current = isAuthed; }, [isAuthed]);
 
   // Helper: format a session's messages for display
   const formatSessionMessages = (session) => {
@@ -683,15 +688,17 @@ export function AIProvider({ children }) {
 
   // ------------------------------------------------------------------
   // EFFECT 5: beforeunload safety net — save to localStorage on page close
-  //           Ensures messages survive even if React effect didn't fire yet
+  //           Saves ALL messages (including mid-stream) to prevent data loss
   // ------------------------------------------------------------------
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (!currentSessionId || !sessionInitializedRef.current) return;
       const msgs = messagesRef.current;
-      if (msgs.length === 0 || msgs.some(m => m.isStreaming)) return;
-      // Synchronous save to localStorage (Firestore requires async, can't do here)
-      const serialized = msgs.map(serializeMessageForStorage);
+      if (msgs.length === 0) return;
+      // Strip streaming flags — save whatever we have, even mid-stream
+      const serialized = msgs.map(m => serializeMessageForStorage(
+        m.isStreaming ? { ...m, isStreaming: false } : m
+      ));
       const existing = getChatSession(currentSessionId);
       const session = {
         id: currentSessionId,
@@ -1087,13 +1094,18 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
           }
         },
         onTurnComplete: () => {
-          // Mark streaming message as complete
+          // Mark streaming messages as complete AND save in the same setMessages callback
+          // This ensures we save the absolute latest messages (including the last onTranscript update)
           setMessages(prev => {
-            return prev.map(msg => 
+            const finalized = prev.map(msg => 
               msg.isStreaming ? { ...msg, isStreaming: false } : msg
             );
+            // Save directly from the setState callback — `finalized` is the authoritative latest state
+            if (finalized.length > 0) {
+              buildAndSaveSession(finalized, currentSessionIdRef.current, isAuthedRef.current);
+            }
+            return finalized;
           });
-          pendingSaveRef.current = true; // Save voice messages after streaming completes
           
           // Clear transcript display for next turn
           setLiveTranscript('');
