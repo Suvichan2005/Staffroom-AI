@@ -1,7 +1,7 @@
 ﻿import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Mic, Send, Sparkles, ChevronDown, Paperclip,
+  Mic, Send, Sparkles, ChevronDown, ChevronUp, Paperclip,
   Loader2, X, Square, Trash2, Plus, History, Check,
   FileText
 } from 'lucide-react';
@@ -473,6 +473,17 @@ function PersistentChatBarInner({ className = '' }) {
                   {liveStatus === 'streaming' ? '🔴 Live' : liveStatus}
                 </span>
               </div>
+            )}
+
+            {/* Expand button — when recording and collapsed */}
+            {isRecording && !isExpanded && (
+              <button
+                onClick={() => { setIsExpanded(true); setShowHistory(false); }}
+                className="p-2.5 rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all flex-shrink-0"
+                title="Expand chat"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
             )}
 
             {/* Action button — Send / Mic / Stop */}

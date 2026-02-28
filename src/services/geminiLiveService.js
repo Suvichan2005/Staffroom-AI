@@ -143,6 +143,7 @@ export class GeminiLiveSession {
     // Callbacks
     this.onTranscript = options.onTranscript || (() => {});
     this.onToolCall = options.onToolCall || (() => {});
+    this.onTurnComplete = options.onTurnComplete || null;
     this.onError = options.onError || console.error;
     this.onStatusChange = options.onStatusChange || (() => {});
     this.onAudioResponse = options.onAudioResponse || (() => {});

@@ -1172,11 +1172,24 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
         console.error('Error stopping voice session:', err);
       }
       
+      // Finalize any remaining streaming messages and save
+      setMessages(prev => {
+        const hasStreaming = prev.some(m => m.isStreaming);
+        if (!hasStreaming && prev.length === 0) return prev;
+        const finalized = prev.map(msg =>
+          msg.isStreaming ? { ...msg, isStreaming: false } : msg
+        );
+        if (finalized.length > 0) {
+          buildAndSaveSession(finalized, currentSessionIdRef.current, isAuthedRef.current);
+        }
+        return finalized;
+      });
+      
       setIsRecording(false);
       setLiveStatus('disconnected');
       setLiveTranscript('');
     }
-  }, []);
+  }, [buildAndSaveSession]);
 
   // Start voice recording (fallback to browser)
   const startRecording = useCallback(() => {
