@@ -19,9 +19,9 @@ const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 // Disable proxy - use direct browser API calls
 const USE_PROXY = false;
 
-// Use gemini-2.0-flash-exp for Live API - cheapest model that supports audio→tool calling
-// Audio input: $2.10/1M, Text output: $1.50/1M (~$0.41/hour for attendance)
-const LIVE_API_MODEL = 'gemini-2.0-flash-exp';
+// Use gemini-live-2.5-flash-preview for Live API - supports audio input with TEXT responses + tool calling
+// The native-audio model requires responseModalities: ['AUDIO'] and cannot return TEXT
+const LIVE_API_MODEL = 'gemini-live-2.5-flash-preview';
 
 // Direct URL (only used in development mode with local API key)
 const LIVE_API_URL_DIRECT = GEMINI_API_KEY 
@@ -314,7 +314,7 @@ export class GeminiLiveSession {
       setup: {
         model: `models/${LIVE_API_MODEL}`,
         generationConfig: {
-          responseModalities: ['TEXT'],
+          responseModalities: ['AUDIO'],
           temperature: 0.3,
         },
         systemInstruction: {
