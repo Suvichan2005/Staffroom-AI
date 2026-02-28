@@ -162,6 +162,8 @@ export class GeminiLiveSession {
     this.currentTranscript = '';
     this.interimTranscript = '';
     this.lastTranscriptText = ''; // For deduplication
+    this.currentThinking = ''; // Model's inner reasoning text
+    this.currentResponse = ''; // Model's spoken response transcript
   }
 
   /**
@@ -341,8 +343,9 @@ Instructions:
           }]
         },
         // Enable input audio transcription with explicit English language
-        inputAudioTranscription: {
-        }
+        inputAudioTranscription: {},
+        // Enable output audio transcription so we can show what the model says as text
+        outputAudioTranscription: {}
       }
     };
     
@@ -437,19 +440,34 @@ Instructions:
           }
         }
         
-        // Handle model turn (text responses from the model)
+        // Handle model turn - text parts are THINKING (inner monologue)
+        // With native-audio model, text = reasoning, audio = actual spoken response
         if (content.modelTurn) {
           for (const part of content.modelTurn.parts || []) {
             if (part.text) {
-              console.log('🤖 Model response:', part.text);
-              this.interimTranscript = part.text;
+              console.log('💭 Model thinking:', part.text);
+              this.currentThinking += part.text;
               this.onTranscript({
-                type: 'model',
+                type: 'thinking',
                 text: part.text,
-                combined: this.turnTranscript // Use turn transcript, not full session
+                combined: this.turnTranscript
               });
             }
-            // Silently skip audio inlineData
+            // Audio inlineData = actual spoken response (played by browser)
+          }
+        }
+
+        // Handle output transcription - this is what the model ACTUALLY SAID (spoken response)
+        if (content.outputTranscription) {
+          const spokenText = content.outputTranscription.text || '';
+          if (spokenText && spokenText.trim()) {
+            console.log('🤖 Model spoken response:', spokenText);
+            this.currentResponse += spokenText;
+            this.onTranscript({
+              type: 'model',
+              text: spokenText,
+              combined: this.turnTranscript
+            });
           }
         }
 
@@ -462,6 +480,8 @@ Instructions:
           // This prevents accumulation across turns
           this.turnTranscript = '';
           this.lastTranscriptText = '';
+          this.currentThinking = '';
+          this.currentResponse = '';
           
           // Notify callback that turn is complete
           if (this.onTurnComplete) {

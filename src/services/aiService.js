@@ -2752,10 +2752,13 @@ export async function   processChat(message, conversationHistory = [], context =
     // Get temporal context (current time, class status)
     const temporal = getTemporalContext();
 
-    // Create model with function calling
+    // Create model with function calling and Google Search grounding
     const model = genAI.getGenerativeModel({
       model: MODELS.TEXT, // Using gemini-2.5-flash for best function calling support
-      tools: [{ functionDeclarations: chatToolDeclarations }],
+      tools: [
+        { functionDeclarations: chatToolDeclarations },
+        { googleSearch: {} }, // Enable Google Search grounding for real-time info
+      ],
       systemInstruction: `You are a helpful AI teaching assistant for a school management app. You help teachers with:
 - Tracking syllabus progress
 - Finding the next topic to teach
@@ -2842,6 +2845,11 @@ RESPONSE RULES:
 3. If you're unsure about a section or topic, ask for clarification
 4. Available sections: ${teacherData.courses.flatMap(c => c.sections.map(s => `${s.id} (${c.title})`)).join(', ')}
 
+GOOGLE SEARCH:
+- You have Google Search grounding enabled — use it for factual questions, current events, pedagogical research, subject-specific queries, or anything outside the school app's data
+- When the teacher asks about teaching methods, educational resources, subject content, exam tips, or curriculum info, leverage search
+- For YouTube recommendations, search for relevant educational videos and include links
+
 EXAMPLE RESPONSES:
 - For "what page?": "In section 6A, you're currently on **Plains and Valleys** (pages 29-36). You left off at page 32."
 - For "where was I?": "Your current topic in ${context.urlContext?.sectionId || '[section]'} is **[Topic Name]** in chapter **[Chapter]**. Continue from page [X]."`
@@ -2850,8 +2858,31 @@ EXAMPLE RESPONSES:
     // Start chat with history
     const chat = model.startChat({ history: historyMessages });
     
-    // Send message (use enhanced message if context was added)
-    let response = await chat.sendMessage(enhancedMessage);
+    // Build message parts - text + any attachments (images, files)
+    const messageParts = [{ text: enhancedMessage }];
+    
+    if (context.attachments && context.attachments.length > 0) {
+      for (const att of context.attachments) {
+        if (att.type === 'image' && att.data) {
+          // Add inline image data for Gemini vision
+          messageParts.push({
+            inlineData: {
+              mimeType: att.mimeType,
+              data: att.data, // base64
+            }
+          });
+        } else if (att.type === 'text' && att.data) {
+          // Add file content as text context
+          const label = att.name ? `[File: ${att.name}]` : '[Attached file]';
+          messageParts.push({
+            text: `\n\n${label}\n${att.data}`
+          });
+        }
+      }
+    }
+    
+    // Send message (use enhanced message with attachments if any)
+    let response = await chat.sendMessage(messageParts);
     
     // Track navigation intent if navigateTo is called
     let navigationIntent = null;
@@ -2950,8 +2981,25 @@ EXAMPLE RESPONSES:
     }
     
     // Extract final text response
-    const finalText = response.response.text();
+    let finalText = response.response.text();
     console.log('[Chat] Final response:', finalText || '(empty)');
+    
+    // Extract grounding metadata (Google Search citations)
+    try {
+      const candidate = response.response.candidates?.[0];
+      const groundingMeta = candidate?.groundingMetadata;
+      if (groundingMeta?.groundingChunks?.length > 0) {
+        const sources = groundingMeta.groundingChunks
+          .filter(c => c.web?.uri)
+          .map(c => `- [${c.web.title || c.web.uri}](${c.web.uri})`)
+          .slice(0, 5); // Max 5 sources
+        if (sources.length > 0) {
+          finalText += '\n\n**Sources:**\n' + sources.join('\n');
+        }
+      }
+    } catch (groundingErr) {
+      console.warn('[Chat] Failed to extract grounding metadata:', groundingErr);
+    }
     
     // Log successful chat completion
     logGeminiCall('processChat', {

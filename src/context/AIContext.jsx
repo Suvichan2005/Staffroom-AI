@@ -60,6 +60,31 @@ const USE_AZURE_VOICE = AI_PROVIDER === 'azure';
 // Helper to check if user is authenticated
 const isAuthenticated = () => !!auth.currentUser;
 
+// Helper: Read a File as base64 (strip data URL prefix, return only base64)
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      // Strip "data:image/png;base64," prefix
+      const base64 = dataUrl.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+// Helper: Read a File as text
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsText(file);
+  });
+}
+
 export function AIProvider({ children }) {
   // Router navigation (use this instead of window.location to preserve state)
   const navigate = useNavigate();
@@ -720,6 +745,14 @@ CRITICAL LANGUAGE RULE - MANDATORY:
 - Do NOT repeat the user's words in their original language
 - Your ONLY output language is English
 
+CRITICAL RESPONSE STYLE - MANDATORY:
+- Respond CONVERSATIONALLY and DIRECTLY to the user
+- NEVER output your inner reasoning, thought process, or chain-of-thought as your response
+- NEVER say things like "I need to identify...", "Let me process...", "The user is asking...", "I should..."
+- Instead, speak DIRECTLY like a human assistant: "Sure!", "Done!", "Marked Aarav as present.", "Your next topic is..."
+- Keep responses SHORT and NATURAL — as if speaking to someone in person
+- When executing tools, just confirm the action: "Got it, Aarav is present." NOT "I am now calling the mark_student_present function..."
+
 You help teachers with:
 - Lesson planning and curriculum design
 - Generating quizzes, assignments, and assessments
@@ -818,8 +851,9 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
             // Show live transcription - but NOT in input box (separate from text mode)
             setLiveTranscript(data.combined || data.transcript || '');
             liveTranscriptRef.current = data.combined || data.transcript || '';
-          } else if (data.type === 'model' && data.text) {
-            // When model starts responding, first add the user message if not added
+          } else if (data.type === 'thinking' && data.text) {
+            // Model is thinking/reasoning — store as collapsible thinking text
+            // First add the user message if not added yet
             const currentTranscript = liveTranscriptRef.current;
             if (currentTranscript && currentTranscript.trim()) {
               setMessages(prev => {
@@ -841,17 +875,62 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
               liveTranscriptRef.current = '';
             }
             
-            // Stream model response - update last assistant message or create new one
+            // Stream thinking text into the message's thinking field
             setMessages(prev => {
               const lastMsg = prev[prev.length - 1];
               if (lastMsg && lastMsg.role === 'assistant' && lastMsg.isStreaming) {
-                // Update existing streaming message
                 return [
                   ...prev.slice(0, -1),
-                  { ...lastMsg, content: lastMsg.content + data.text }
+                  { ...lastMsg, thinking: (lastMsg.thinking || '') + data.text }
                 ];
               } else {
-                // Create new streaming message
+                return [
+                  ...prev,
+                  {
+                    id: Date.now(),
+                    role: 'assistant',
+                    content: '', // Will be filled by outputTranscription
+                    thinking: data.text,
+                    timestamp: new Date(),
+                    isStreaming: true,
+                    isVoice: true,
+                  }
+                ];
+              }
+            });
+          } else if (data.type === 'model' && data.text) {
+            // Model's actual spoken response (from outputTranscription)
+            // First add the user message if not added yet
+            const currentTranscript = liveTranscriptRef.current;
+            if (currentTranscript && currentTranscript.trim()) {
+              setMessages(prev => {
+                const lastUserMsg = prev.filter(m => m.role === 'user').slice(-1)[0];
+                if (lastUserMsg && lastUserMsg.content === currentTranscript.trim()) {
+                  return prev;
+                }
+                return [
+                  ...prev,
+                  {
+                    id: Date.now() - 1,
+                    role: 'user',
+                    content: currentTranscript.trim(),
+                    timestamp: new Date(),
+                    isVoice: true,
+                  }
+                ];
+              });
+              liveTranscriptRef.current = '';
+            }
+            
+            // Stream actual response into the message's content field
+            setMessages(prev => {
+              const lastMsg = prev[prev.length - 1];
+              if (lastMsg && lastMsg.role === 'assistant' && lastMsg.isStreaming) {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...lastMsg, content: (lastMsg.content || '') + data.text }
+                ];
+              } else {
                 return [
                   ...prev,
                   {
@@ -859,7 +938,8 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
                     role: 'assistant',
                     content: data.text,
                     timestamp: new Date(),
-                    isStreaming: true
+                    isStreaming: true,
+                    isVoice: true,
                   }
                 ];
               }
@@ -894,21 +974,12 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
             );
           });
           
-          // Clear transcript display
+          // Clear transcript display for next turn
           setLiveTranscript('');
           liveTranscriptRef.current = '';
           
-          // Auto-stop recording after turn completes
-          if (geminiLiveSessionRef.current) {
-            setTimeout(() => {
-              if (geminiLiveSessionRef.current) {
-                geminiLiveSessionRef.current.disconnect();
-                geminiLiveSessionRef.current = null;
-              }
-              setIsRecording(false);
-              setLiveStatus('disconnected');
-            }, 500);
-          }
+          // Don't auto-disconnect — keep session alive for multi-turn conversation.
+          // User must press stop button to end session.
         },
         onStatusChange: (status) => {
           console.log(`[Voice ${USE_AZURE_VOICE ? 'Azure' : 'Gemini'}] Status:`, status);
@@ -1011,10 +1082,35 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
 
     const userContent = content || inputValue;
     setInputValue('');
+    
+    // Capture current attachments before addUserMessage clears them
+    const currentAttachments = [...attachments];
     const userMessage = addUserMessage(userContent);
     setIsLoading(true);
 
     try {
+      // Process file attachments for the AI
+      let fileContents = [];
+      if (currentAttachments.length > 0) {
+        fileContents = await Promise.all(currentAttachments.map(async (att) => {
+          const file = att.file || att;
+          try {
+            if (file.type?.startsWith('image/')) {
+              // Read image as base64 for Gemini vision
+              const base64 = await readFileAsBase64(file);
+              return { type: 'image', mimeType: file.type, data: base64, name: file.name || att.name };
+            } else {
+              // Read text-based files (CSV, TXT, JSON, etc.)
+              const text = await readFileAsText(file);
+              return { type: 'text', mimeType: file.type, data: text, name: file.name || att.name };
+            }
+          } catch (err) {
+            console.error(`[sendMessage] Failed to read file ${att.name}:`, err);
+            return { type: 'error', name: att.name, error: err.message };
+          }
+        }));
+      }
+
       // Check if this is a response to a pending clarification
       if (pendingAction) {
         const clarificationResult = await handleClarificationResponse(userContent, pendingAction);
@@ -1067,7 +1163,8 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
         {
           currentCourseId: dynamicContext.currentCourseId,
           currentSectionId: dynamicContext.currentSectionId,
-          urlContext: dynamicContext.urlContext
+          urlContext: dynamicContext.urlContext,
+          attachments: fileContents.length > 0 ? fileContents : undefined,
         }
       );
       
@@ -1615,6 +1712,14 @@ export function useAI() {
     throw new Error('useAI must be used within an AIProvider');
   }
   return context;
+}
+
+/**
+ * Safe version of useAI that returns null instead of throwing.
+ * Use in components wrapped by error boundaries to prevent crashes during HMR.
+ */
+export function useAISafe() {
+  return useContext(AIContext);
 }
 
 export default AIContext;

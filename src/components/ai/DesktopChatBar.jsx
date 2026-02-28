@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mic, MicOff, Send, Sparkles, ChevronDown, ChevronUp, Paperclip,
   Loader2, MessageSquare, X, Maximize2, Minimize2,
-  Square, Trash2, Plus, History, Check
+  Square, Trash2, Plus, History, Check, FileText, Image as ImageIcon
 } from 'lucide-react';
 import ChatMessage from './ChatMessage';
 import { useLayout } from '../../context/LayoutContext';
-import { useAI } from '../../context/AIContext';
+import { useAISafe } from '../../context/AIContext';
 import { getChatPlugins } from '../../plugins';
 
 /**
@@ -20,6 +20,19 @@ import { getChatPlugins } from '../../plugins';
  * - Properly centered accounting for sidebar width
  */
 function DesktopChatBarContent({ className = '' }) {
+  const ai = useAISafe();
+
+  // Gracefully handle missing context (e.g., during HMR)
+  if (!ai) {
+    return (
+      <div className={`fixed bottom-4 z-50 ${className}`}>
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 px-4 py-3 opacity-50">
+          <span className="text-sm text-slate-400">Loading chat...</span>
+        </div>
+      </div>
+    );
+  }
+
   const {
     messages,
     inputValue,
@@ -39,7 +52,10 @@ function DesktopChatBarContent({ className = '' }) {
     loadChatSession,
     startNewChatSession,
     deleteChatSessionById,
-  } = useAI();
+    attachments,
+    addAttachment,
+    removeAttachment,
+  } = ai;
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -48,13 +64,39 @@ function DesktopChatBarContent({ className = '' }) {
   const { sidebarCollapsed } = useLayout();
   const inputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const hasText = inputValue.trim().length > 0;
+  const hasContent = hasText || (attachments && attachments.length > 0);
   const sidebarWidth = sidebarCollapsed ? 64 : 240;
 
   // Get registered plugins
   const registeredPlugins = getChatPlugins();
   const pluginAPI = getPluginAPI ? getPluginAPI() : null;
+
+  // Handle file selection
+  const handleFileSelect = useCallback((e) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      // Store file object with preview URL for images
+      const fileData = {
+        file,
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+      };
+      addAttachment(fileData);
+    });
+    // Reset input so user can re-select same file
+    e.target.value = '';
+    setIsExpanded(true);
+  }, [addAttachment]);
+
+  // Open file picker
+  const handleAttachClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -128,15 +170,15 @@ function DesktopChatBarContent({ className = '' }) {
 
   // Handle mic button - start recording or send text
   const handleMicClick = useCallback(() => {
-    if (hasText) {
-      // If there's text, send it
+    if (hasContent) {
+      // If there's text or attachments, send it
       handleSend();
     } else {
       // Start voice recording
       setIsExpanded(true);
       startRecording();
     }
-  }, [hasText, handleSend, startRecording]);
+  }, [hasContent, handleSend, startRecording]);
 
   // Handle stop recording
   const handleStopRecording = useCallback(() => {
@@ -385,12 +427,46 @@ function DesktopChatBarContent({ className = '' }) {
 
         {/* Always-Visible Input Bar */}
         <div className={`bg-white ${isExpanded ? 'rounded-b-2xl border-x border-b' : 'rounded-2xl shadow-lg border'} border-slate-200 overflow-hidden`}>
+          {/* Attachment Previews */}
+          {attachments && attachments.length > 0 && (
+            <div className="px-4 pt-2 flex flex-wrap gap-2">
+              {attachments.map((att, idx) => (
+                <div key={idx} className="relative group flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs">
+                  {att.previewUrl ? (
+                    <img src={att.previewUrl} alt={att.name} className="w-8 h-8 rounded object-cover" />
+                  ) : att.type?.includes('csv') || att.type?.includes('spreadsheet') ? (
+                    <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <FileText className="w-4 h-4 text-slate-500 flex-shrink-0" />
+                  )}
+                  <span className="truncate max-w-[100px] text-slate-700">{att.name}</span>
+                  <button
+                    onClick={() => removeAttachment(idx)}
+                    className="ml-1 p-0.5 hover:bg-red-100 rounded text-slate-400 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="px-4 py-3">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.csv,.xlsx,.xls,.pdf,.txt,.json"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
           <div className="flex items-center gap-3">
             {/* Attach Button - hide when recording */}
             {!isRecording && (
               <button
+                onClick={handleAttachClick}
                 className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors flex-shrink-0"
+                title="Attach file (images, CSV, PDF)"
               >
                 <Paperclip className="w-5 h-5" />
               </button>
@@ -467,7 +543,7 @@ function DesktopChatBarContent({ className = '' }) {
                 disabled={isLoading}
                 className={`
                   p-2.5 rounded-xl transition-all flex-shrink-0
-                  ${hasText 
+                  ${hasContent 
                     ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
                     : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'
                   }
@@ -476,7 +552,7 @@ function DesktopChatBarContent({ className = '' }) {
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
-                ) : hasText ? (
+                ) : hasContent ? (
                   <Send className="w-5 h-5" />
                 ) : (
                   <Mic className="w-5 h-5" />
@@ -498,26 +574,30 @@ function DesktopChatBarContent({ className = '' }) {
 class DesktopChatBarErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, errorCount: 0 };
+    this.state = { hasError: false };
+    this._retryTimer = null;
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.warn('[DesktopChatBar] Error caught:', error.message);
-    // Auto-recover after a short delay (for HMR issues)
-    this.setState(prev => ({ errorCount: prev.errorCount + 1 }));
-    if (this.state.errorCount < 3) {
-      setTimeout(() => {
-        this.setState({ hasError: false });
-      }, 100);
-    }
+    console.warn('[DesktopChatBar] Error caught, will auto-recover:', error.message);
+    // Always auto-recover after a short delay
+    clearTimeout(this._retryTimer);
+    this._retryTimer = setTimeout(() => {
+      this.setState({ hasError: false });
+    }, 500);
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this._retryTimer);
   }
 
   render() {
     if (this.state.hasError) {
+      // Show a minimal placeholder instead of nothing
       return null;
     }
     return this.props.children;
