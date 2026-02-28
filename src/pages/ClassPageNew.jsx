@@ -90,6 +90,19 @@ export default function ClassPage() {
     setTopicProgress(normalizeSectionProgress(syllabus, loadStoredProgress(classId, baseProgress)));
   }, [classId, baseProgress, syllabus]);
 
+  // React to external progress updates (e.g., AI chat agent updating syllabus progress)
+  useEffect(() => {
+    const handler = (e) => {
+      if (e?.detail?.classId === classId) {
+        const updated = loadStoredProgress(classId, baseProgress);
+        setTopicProgress(normalizeSectionProgress(syllabus, updated));
+        setSaveMessage('');
+      }
+    };
+    window.addEventListener('syllabus-progress-updated', handler);
+    return () => window.removeEventListener('syllabus-progress-updated', handler);
+  }, [classId, baseProgress, syllabus]);
+
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const attendanceByDate = useMemo(() => {

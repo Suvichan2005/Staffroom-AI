@@ -19,9 +19,9 @@ const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 // Disable proxy - use direct browser API calls
 const USE_PROXY = false;
 
-// Use gemini-live-2.5-flash-preview for Live API - supports audio input with TEXT responses + tool calling
+// Use gemini-2.5-flash-native-audio-preview-12-2025 for Live API - supports audio input with TEXT responses + tool calling
 // The native-audio model requires responseModalities: ['AUDIO'] and cannot return TEXT
-const LIVE_API_MODEL = 'gemini-live-2.5-flash-preview';
+const LIVE_API_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
 
 // Direct URL (only used in development mode with local API key)
 const LIVE_API_URL_DIRECT = GEMINI_API_KEY 

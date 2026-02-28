@@ -13,7 +13,7 @@ import {
   loadStoredProgress,
   calculateTopicProgressPercent,
 } from "../data/dummyData";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PageShell } from "../components/layout";
 import { useTeacher } from "../context/TeacherContext";
 import { ScrollContainer } from "../components/shared/ScrollableList";
@@ -52,6 +52,20 @@ export default function CoursePage() {
   // State for expanded analytics and syllabus chapters
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [expandedChapters, setExpandedChapters] = useState(new Set());
+  const [progressVersion, setProgressVersion] = useState(0);
+  
+  // React to external progress updates (e.g., AI chat agent updating syllabus progress)
+  useEffect(() => {
+    const handler = (e) => {
+      // Any section of this course updated — bump version to recalculate metrics
+      const updatedClassId = e?.detail?.classId;
+      if (updatedClassId && sections.some(s => s.id === updatedClassId)) {
+        setProgressVersion(v => v + 1);
+      }
+    };
+    window.addEventListener('syllabus-progress-updated', handler);
+    return () => window.removeEventListener('syllabus-progress-updated', handler);
+  }, [sections]);
   
   const toggleChapter = (chapterIdx) => {
     setExpandedChapters(prev => {
@@ -84,7 +98,7 @@ export default function CoursePage() {
         progressPercent,
       };
     });
-  }, [sections, syllabus]);
+  }, [sections, syllabus, progressVersion]);
   
   const totalStudents = sectionMetrics.reduce((sum, s) => sum + s.studentCount, 0);
   const avgProgress = Math.round(

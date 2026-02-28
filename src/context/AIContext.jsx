@@ -534,12 +534,33 @@ export function AIProvider({ children }) {
           ...msg,
           timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp,
         }));
+        
+        // Auto-generate title from first user message if still "New Chat"
+        if (session.title === 'New Chat') {
+          const firstUserMsg = messages.find(m => m.role === 'user');
+          if (firstUserMsg && firstUserMsg.content) {
+            const text = firstUserMsg.content;
+            session.title = text.length > 50 ? `${text.substring(0, 50)}...` : text;
+          }
+        }
+        
         // Always save to local storage
         saveChatSession(session);
         // Save to Firestore only if authenticated
         if (isAuthenticated()) {
           saveChatSessionToFirestore(session);
         }
+        
+        // Update chatHistory state to reflect the latest messages/title
+        setChatHistory(prev => {
+          const idx = prev.findIndex(s => s.id === session.id);
+          if (idx >= 0) {
+            const updated = [...prev];
+            updated[idx] = { ...session };
+            return updated;
+          }
+          return [session, ...prev];
+        });
       }
     }
   }, [messages, currentSessionId]);

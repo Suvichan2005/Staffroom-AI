@@ -162,7 +162,7 @@ export default function ChatHistory() {
                           <Clock size={12} />
                           <span>{formatDate(session.updatedAt)}</span>
                           <span>•</span>
-                          <span>{session.messages.length} messages</span>
+                          <span>{(session.messages || []).length} messages</span>
                         </div>
                       </button>
                     )}
@@ -201,7 +201,7 @@ export default function ChatHistory() {
               {isExpanded && (
                 <div className="border-t border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-900/30">
                   <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {session.messages.slice(0, 5).map((msg, idx) => (
+                    {(session.messages || []).slice(0, 5).map((msg, idx) => (
                       <div key={idx} className="text-sm">
                         <span className={`font-medium ${
                           msg.role === 'user' 
@@ -211,14 +211,14 @@ export default function ChatHistory() {
                           {msg.role === 'user' ? 'You' : 'Assistant'}:
                         </span>
                         <span className="ml-2 text-gray-700 dark:text-gray-300">
-                          {msg.content?.substring(0, 100)}
-                          {msg.content?.length > 100 && '...'}
+                          {(msg.content || msg.text || '')?.substring(0, 100)}
+                          {(msg.content || msg.text || '')?.length > 100 && '...'}
                         </span>
                       </div>
                     ))}
-                    {session.messages.length > 5 && (
+                    {(session.messages || []).length > 5 && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-                        + {session.messages.length - 5} more messages
+                        + {(session.messages || []).length - 5} more messages
                       </p>
                     )}
                   </div>

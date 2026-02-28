@@ -38,6 +38,7 @@ function DesktopChatBarContent({ className = '' }) {
     currentSessionId,
     loadChatSession,
     startNewChatSession,
+    deleteChatSessionById,
   } = useAI();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -79,6 +80,12 @@ function DesktopChatBarContent({ className = '' }) {
     startNewChatSession();
     setShowHistory(false);
   }, [startNewChatSession]);
+
+  // Handle delete chat
+  const handleDeleteChat = useCallback((e, sessionId) => {
+    e.stopPropagation();
+    deleteChatSessionById(sessionId);
+  }, [deleteChatSessionById]);
 
   // Format date for history
   const formatDate = (isoString) => {
@@ -284,18 +291,32 @@ function DesktopChatBarContent({ className = '' }) {
                         ) : (
                           <div className="space-y-1">
                             {chatHistory.slice(0, 10).map((session) => (
-                              <button
+                              <div
                                 key={session.id}
-                                onClick={() => handleLoadSession(session.id)}
-                                className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors ${
+                                className={`group flex items-center gap-1 px-3 py-2 rounded-lg text-xs transition-colors cursor-pointer ${
                                   session.id === currentSessionId
                                     ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
                                     : 'hover:bg-slate-100 text-slate-600'
                                 }`}
                               >
-                                <p className="font-medium truncate">{session.title || 'New Chat'}</p>
-                                <p className="text-slate-400 text-[10px]">{formatDate(session.updatedAt)}</p>
-                              </button>
+                                <button
+                                  onClick={() => handleLoadSession(session.id)}
+                                  className="flex-1 text-left min-w-0"
+                                >
+                                  <p className="font-medium truncate">{session.title || 'New Chat'}</p>
+                                  <p className="text-slate-400 text-[10px]">
+                                    {formatDate(session.updatedAt)}
+                                    {session.messages ? ` · ${session.messages.length} msgs` : ''}
+                                  </p>
+                                </button>
+                                <button
+                                  onClick={(e) => handleDeleteChat(e, session.id)}
+                                  className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 text-red-400 hover:text-red-600 transition-all flex-shrink-0"
+                                  title="Delete chat"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
                             ))}
                           </div>
                         )}

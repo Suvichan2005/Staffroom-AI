@@ -163,12 +163,13 @@ export function generateChatTitle(messages) {
     return 'New Chat';
   }
   
-  // Find first user message
-  const firstUserMessage = messages.find(m => m.sender === 'user');
-  if (firstUserMessage && firstUserMessage.text) {
+  // Find first user message (support both 'role' and legacy 'sender' fields)
+  const firstUserMessage = messages.find(m => m.role === 'user' || m.sender === 'user');
+  const text = firstUserMessage?.content || firstUserMessage?.text;
+  if (firstUserMessage && text) {
     // Truncate to 50 chars
-    const title = firstUserMessage.text.substring(0, 50);
-    return title.length < firstUserMessage.text.length ? `${title}...` : title;
+    const title = text.substring(0, 50);
+    return title.length < text.length ? `${title}...` : title;
   }
   
   return 'New Chat';
@@ -193,8 +194,8 @@ export function addMessageToSession(sessionId, message) {
   if (session) {
     session.messages.push(message);
     
-    // Auto-generate title from first user message
-    if (session.title === 'New Chat' && message.sender === 'user') {
+    // Auto-generate title from first user message (support both 'role' and 'sender' fields)
+    if (session.title === 'New Chat' && (message.role === 'user' || message.sender === 'user')) {
       session.title = generateChatTitle(session.messages);
     }
     
