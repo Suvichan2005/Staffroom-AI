@@ -24,9 +24,12 @@ import {
   deleteChatSessionFromFirestore,
   updateChatTitleInFirestore,
   syncLocalToFirestore,
+  subscribeToChatSessions,
+  subscribeToSession,
+  saveActiveSessionIdToFirestore,
+  getActiveSessionIdFromFirestore,
 } from '../services/firestoreChatService';
 import { useAuth } from './AuthContext';
-import { auth } from '../firebase/client';
 import { 
   teacherData, 
   syllabusList,
@@ -57,9 +60,6 @@ const AIContext = createContext(null);
 const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
 const USE_AZURE_VOICE = AI_PROVIDER === 'azure';
 
-// Helper to check if user is authenticated
-const isAuthenticated = () => !!auth.currentUser;
-
 // Helper: Read a File as base64 (strip data URL prefix, return only base64)
 function readFileAsBase64(file) {
   return new Promise((resolve, reject) => {
@@ -85,9 +85,43 @@ function readFileAsText(file) {
   });
 }
 
+/**
+ * Serialize a message for safe storage (localStorage + Firestore).
+ * Strips non-serializable fields: File objects, blob URLs, streaming state.
+ */
+function serializeMessageForStorage(msg) {
+  const serialized = {
+    id: msg.id,
+    role: msg.role,
+    content: msg.content || '',
+    timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : (msg.timestamp || new Date().toISOString()),
+  };
+  // Preserve optional fields
+  if (msg.thinking) serialized.thinking = msg.thinking;
+  if (msg.isVoice) serialized.isVoice = true;
+  if (msg.type) serialized.type = msg.type;
+  // Attachments: keep metadata only (strip File objects, blob URLs)
+  if (msg.attachments && msg.attachments.length > 0) {
+    serialized.attachments = msg.attachments.map(att => ({
+      name: att.name,
+      type: att.type,
+      mimeType: att.mimeType,
+      size: att.size,
+      // Keep data URLs but strip blob: URLs (they expire after page reload)
+      ...(att.previewUrl && !att.previewUrl.startsWith('blob:') ? { previewUrl: att.previewUrl } : {}),
+    }));
+  }
+  // Never persist transient streaming state
+  return serialized;
+}
+
 export function AIProvider({ children }) {
   // Router navigation (use this instead of window.location to preserve state)
   const navigate = useNavigate();
+  
+  // Auth context — needed to gate Firestore access on resolved auth state
+  const { user: authUser, loading: authLoading } = useAuth();
+  const isAuthed = !!authUser;
   
   // Chat UI state
   const [isOpen, setIsOpen] = useState(false);
@@ -264,29 +298,132 @@ export function AIProvider({ children }) {
     };
   }, []);
 
-  // Initialize or restore chat session on mount (using Firestore for authenticated users, localStorage for anonymous)
+  // ====================================================================
+  // CHAT PERSISTENCE — Firestore real-time sync + localStorage fallback
+  // ====================================================================
+
+  // Ref to track the current Firestore session document listener unsub
+  const sessionListenerRef = useRef(null);
+  // Ref to track the Firestore session LIST listener unsub
+  const sessionsListListenerRef = useRef(null);
+  // Ref that always mirrors the latest `messages` state (for sync comparison)
+  const messagesRef = useRef([]);
+  // Flag: set to true by local mutations (addUserMessage, addAssistantMessage, etc.)
+  // Read by save effect — only saves when a local change happened
+  const pendingSaveRef = useRef(false);
+
+  // Keep messagesRef always in sync with the latest messages state
+  useEffect(() => { messagesRef.current = messages; });
+
+  // Helper: format a session's messages for display
+  const formatSessionMessages = (session) => {
+    const msgs = (session?.messages || []).map(msg => ({
+      ...msg,
+      timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+    }));
+    return msgs.length > 0 ? msgs : [{
+      id: 'welcome',
+      role: 'assistant',
+      content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
+      timestamp: new Date(),
+    }];
+  };
+
+  // Helper: build session object from messages and save to all stores
+  const buildAndSaveSession = useCallback((msgs, sessionId, authed) => {
+    if (!sessionId) return;
+    const serialized = msgs.map(serializeMessageForStorage);
+    // Auto-title from first user message
+    let title = 'New Chat';
+    const firstUserMsg = msgs.find(m => m.role === 'user');
+    if (firstUserMsg?.content) {
+      const t = firstUserMsg.content;
+      title = t.length > 50 ? `${t.substring(0, 50)}...` : t;
+    }
+    // Get existing session shell from localStorage (for createdAt, context)
+    const existing = getChatSession(sessionId);
+    const session = {
+      id: sessionId,
+      title: existing?.title === 'New Chat' ? title : (existing?.title || title),
+      messages: serialized,
+      createdAt: existing?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      context: existing?.context || {},
+    };
+    // Save to localStorage (synchronous — survives immediate refresh)
+    saveChatSession(session);
+    // Save to Firestore (fire-and-forget)
+    if (authed) {
+      saveChatSessionToFirestore(session);
+    } else {
+      // Anonymous: update sidebar manually
+      setChatHistory(prev => {
+        const idx = prev.findIndex(s => s.id === session.id);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = { ...session };
+          return updated;
+        }
+        return [session, ...prev];
+      });
+    }
+    console.log(`[AIContext] 💾 Saved session ${sessionId} (${serialized.length} msgs)`);
+  }, []);
+
+  // Helper: create & persist a new session
+  const createAndSetNewSession = useCallback((authenticated) => {
+    const context = getContextFromURL();
+    const newSession = createNewChatSession(context);
+
+    saveChatSession(newSession);
+    setCurrentSessionId(newSession.id);
+    setCurrentSessionIdState(newSession.id);
+
+    if (authenticated) {
+      saveChatSessionToFirestore(newSession);
+      saveActiveSessionIdToFirestore(newSession.id);
+    }
+
+    setMessages([{
+      id: 'welcome',
+      role: 'assistant',
+      content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
+      timestamp: new Date(),
+    }]);
+
+    // Refresh history (will be overwritten by real-time listener if authed)
+    if (!authenticated) {
+      setChatHistory(getAllChatSessions());
+    }
+
+    console.log(`[AIContext] Started new session ${newSession.id}`);
+    return newSession.id;
+  }, [getContextFromURL]);
+
+  // ------------------------------------------------------------------
+  // EFFECT 1: Initialize chat session AFTER auth resolves
+  // ------------------------------------------------------------------
   useEffect(() => {
-    // Use a flag to prevent race conditions (especially in React StrictMode)
+    if (authLoading) {
+      console.log('[AIContext] Auth still loading, deferring chat init');
+      return;
+    }
+
     let cancelled = false;
-    
+    const authed = isAuthed;
+
     const initChatHistory = async () => {
-      // Double-check the ref to prevent duplicate initialization
-      if (sessionInitializedRef.current) {
-        console.log('[AIContext] Session already initialized, skipping');
-        return;
-      }
       sessionInitializedRef.current = true;
-      
+
       try {
         let history = [];
-        
-        // Only use Firestore if authenticated
-        if (isAuthenticated()) {
-          // Load chat history from Firestore
+
+        if (authed) {
+          console.log('[AIContext] Authenticated — loading from Firestore');
           const firestoreHistory = await getAllChatSessionsFromFirestore();
           if (cancelled) return;
-          
-          // If no Firestore data but local data exists, migrate it
+
+          // One-time migration: local → Firestore
           const localHistory = getAllChatSessions();
           if (firestoreHistory.length === 0 && localHistory.length > 0) {
             console.log('[AIContext] Migrating local chat history to Firestore');
@@ -297,298 +434,279 @@ export function AIProvider({ children }) {
             history = firestoreHistory;
           }
         } else {
-          // Anonymous user - use localStorage only
-          console.log('[AIContext] Anonymous user - using localStorage for chat history');
+          console.log('[AIContext] Anonymous — using localStorage');
           history = getAllChatSessions();
         }
-        
+
         if (cancelled) return;
         setChatHistory(history);
-        
-        // Check if there's a current session ID in storage
-        const storedSessionId = getCurrentSessionId();
-        
+
+        // Determine which session to open
+        let storedSessionId = getCurrentSessionId();
+
+        // For cross-device: check Firestore active session pointer
+        if (!storedSessionId && authed) {
+          storedSessionId = await getActiveSessionIdFromFirestore();
+          if (cancelled) return;
+        }
+
         if (storedSessionId && history.length > 0) {
-          // Try to load session
+          // Merge: check both Firestore and localStorage, take whichever has more messages
           let session = history.find(s => s.id === storedSessionId);
-          if (!session && isAuthenticated()) {
+          const localSession = getChatSession(storedSessionId);
+
+          if (!session && authed) {
             session = await getChatSessionFromFirestore(storedSessionId);
             if (cancelled) return;
           }
-          if (!session) {
-            session = getChatSession(storedSessionId);
+          if (!session) session = localSession;
+
+          // If both exist, take the one with more messages
+          if (session && localSession) {
+            const fsMsgs = session.messages?.length || 0;
+            const lsMsgs = localSession.messages?.length || 0;
+            if (lsMsgs > fsMsgs) {
+              console.log(`[AIContext] localStorage has more messages (${lsMsgs} vs ${fsMsgs}), using local`);
+              session = localSession;
+              // Sync back to Firestore
+              if (authed) saveChatSessionToFirestore(localSession);
+            }
           }
-          
+
           if (session) {
+            setCurrentSessionId(storedSessionId);
             setCurrentSessionIdState(storedSessionId);
-            // Convert stored messages to display format
-            const formattedMessages = (session.messages || []).map(msg => ({
-              ...msg,
-              timestamp: new Date(msg.timestamp),
-            }));
-            setMessages(formattedMessages.length > 0 ? formattedMessages : [
-              {
-                id: 'welcome',
-                role: 'assistant',
-                content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
-                timestamp: new Date(),
-              },
-            ]);
-            console.log(`[AIContext] Restored session ${storedSessionId}`);
+            const restored = formatSessionMessages(session);
+            setMessages(restored);
+            console.log(`[AIContext] Restored session ${storedSessionId} (${(session.messages || []).length} msgs)`);
           } else {
-            // Session not found, create new inline (not calling startNewChatSession to avoid dependency issues)
-            createAndSetNewSession();
+            createAndSetNewSession(authed);
           }
         } else if (history.length > 0) {
-          // Load most recent session
           const mostRecent = history[0];
-          setCurrentSessionIdState(mostRecent.id);
           setCurrentSessionId(mostRecent.id);
-          const formattedMessages = (mostRecent.messages || []).map(msg => ({
-            ...msg,
-            timestamp: new Date(msg.timestamp),
-          }));
-          setMessages(formattedMessages.length > 0 ? formattedMessages : [
-            {
-              id: 'welcome',
-              role: 'assistant',
-              content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
-              timestamp: new Date(),
-            },
-          ]);
+          setCurrentSessionIdState(mostRecent.id);
+          const restored = formatSessionMessages(mostRecent);
+          setMessages(restored);
           console.log(`[AIContext] Loaded most recent session`);
         } else {
-          // No sessions at all, create new inline
-          createAndSetNewSession();
+          createAndSetNewSession(authed);
         }
-        
+
         lastPathRef.current = window.location.pathname;
       } catch (error) {
         console.error('[AIContext] Error loading chat history:', error);
         if (cancelled) return;
-        // Fallback to local storage
-        const history = getAllChatSessions();
-        setChatHistory(history);
-        createAndSetNewSession();
-      }
-    };
-    
-    // Inline function to create a new session without dependency on startNewChatSession
-    const createAndSetNewSession = () => {
-      const context = getContextFromURL();
-      const newSession = createNewChatSession(context);
-      
-      saveChatSession(newSession);
-      if (isAuthenticated()) {
-        saveChatSessionToFirestore(newSession);
-      }
-      setCurrentSessionId(newSession.id);
-      setCurrentSessionIdState(newSession.id);
-      
-      setMessages([
-        {
-          id: 'welcome',
-          role: 'assistant',
-          content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
-          timestamp: new Date(),
-        },
-      ]);
-      
-      // Refresh history
-      if (isAuthenticated()) {
-        getAllChatSessionsFromFirestore().then(setChatHistory).catch(() => {
-          setChatHistory(getAllChatSessions());
-        });
-      } else {
         setChatHistory(getAllChatSessions());
+        createAndSetNewSession(authed);
       }
-      
-      console.log(`[AIContext] Started new session ${newSession.id}`);
     };
-    
+
     initChatHistory();
-    
-    // Cleanup function to handle React StrictMode double-mount
+
     return () => {
       cancelled = true;
+      sessionInitializedRef.current = false;
     };
-  }, [getContextFromURL]);
+  }, [isAuthed, authLoading, getContextFromURL, createAndSetNewSession]);
 
-  // Session management functions
-  const startNewChatSession = useCallback(() => {
-    const context = getContextFromURL();
-    const newSession = createNewChatSession(context);
-    
-    // Always save to local storage
-    saveChatSession(newSession);
-    // Save to Firestore only if authenticated
-    if (isAuthenticated()) {
-      saveChatSessionToFirestore(newSession);
+  // ------------------------------------------------------------------
+  // EFFECT 2: Real-time Firestore listener for session LIST (sidebar)
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    // Tear down previous listener
+    if (sessionsListListenerRef.current) {
+      sessionsListListenerRef.current();
+      sessionsListListenerRef.current = null;
     }
-    setCurrentSessionId(newSession.id);
-    setCurrentSessionIdState(newSession.id);
-    
-    // Reset to welcome message
-    setMessages([
-      {
-        id: 'welcome',
-        role: 'assistant',
-        content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
-        timestamp: new Date(),
-      },
-    ]);
-    
-    // Refresh history - use Firestore if authenticated, otherwise local
-    if (isAuthenticated()) {
-      getAllChatSessionsFromFirestore().then(setChatHistory).catch(() => {
-        setChatHistory(getAllChatSessions());
+
+    if (!isAuthed || authLoading) return;
+
+    const unsub = subscribeToChatSessions((sessions) => {
+      setChatHistory(sessions);
+    });
+    sessionsListListenerRef.current = unsub;
+
+    return () => {
+      if (sessionsListListenerRef.current) {
+        sessionsListListenerRef.current();
+        sessionsListListenerRef.current = null;
+      }
+    };
+  }, [isAuthed, authLoading]);
+
+  // ------------------------------------------------------------------
+  // EFFECT 3: Real-time Firestore listener for CURRENT session (messages)
+  //           → enables cross-device live sync of the open chat
+  //           Uses messagesRef to compare against current local state
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    // Tear down previous session listener
+    if (sessionListenerRef.current) {
+      sessionListenerRef.current();
+      sessionListenerRef.current = null;
+    }
+
+    if (!isAuthed || authLoading || !currentSessionId) return;
+
+    const unsub = subscribeToSession(currentSessionId, (session) => {
+      if (!session) return; // deleted remotely
+
+      const remoteMsgs = session.messages || [];
+      if (remoteMsgs.length === 0) return;
+
+      const localMsgs = messagesRef.current;
+      const remoteLastId = remoteMsgs[remoteMsgs.length - 1]?.id || null;
+      const localLastId = localMsgs[localMsgs.length - 1]?.id || null;
+
+      // Skip if remote matches what we already have locally
+      // (either our own echo or already-applied data)
+      if (remoteMsgs.length === localMsgs.length && remoteLastId === localLastId) {
+        return;
+      }
+
+      // Only apply remote data if it has STRICTLY MORE messages than local
+      // This prevents race conditions where an in-flight echo has fewer messages
+      // than what the user has locally (e.g., user sent another message before echo arrived)
+      if (remoteMsgs.length <= localMsgs.length) {
+        return;
+      }
+
+      // Genuinely new data from another device — apply it
+      console.log(`[AIContext] 🔄 Remote update: ${remoteMsgs.length} msgs (local: ${localMsgs.length})`);
+      setMessages(formatSessionMessages(session));
+      // Also update localStorage to keep offline cache current
+      saveChatSession({
+        ...session,
+        messages: remoteMsgs.map(m => serializeMessageForStorage(m)),
       });
-    } else {
-      setChatHistory(getAllChatSessions());
-    }
-    
-    console.log(`[AIContext] Started new session ${newSession.id}`);
-    return newSession.id;
-  }, [getContextFromURL]);
+    });
+    sessionListenerRef.current = unsub;
+
+    return () => {
+      if (sessionListenerRef.current) {
+        sessionListenerRef.current();
+        sessionListenerRef.current = null;
+      }
+    };
+  }, [isAuthed, authLoading, currentSessionId]);
+
+  // ------------------------------------------------------------------
+  // Session management functions
+  // ------------------------------------------------------------------
+  const startNewChatSession = useCallback(() => {
+    return createAndSetNewSession(isAuthed);
+  }, [createAndSetNewSession, isAuthed]);
 
   // Track if a session load is in progress to prevent race conditions
   const loadingSessionRef = useRef(false);
-  
+
   const loadChatSession = useCallback(async (sessionId) => {
-    // Prevent multiple simultaneous loads
-    if (loadingSessionRef.current) {
-      console.log('[AIContext] Session load already in progress, skipping');
-      return;
-    }
-    
-    // Skip if already on this session
-    if (sessionId === currentSessionId) {
-      console.log('[AIContext] Already on this session, skipping');
-      return;
-    }
-    
+    if (loadingSessionRef.current) return;
+    if (sessionId === currentSessionId) return;
+
     loadingSessionRef.current = true;
     console.log(`[AIContext] Loading session: ${sessionId}`);
-    
+
     try {
-      // Try Firestore first (if authenticated), then fallback to local
-      let session = null;
-      if (isAuthenticated()) {
-        session = await getChatSessionFromFirestore(sessionId);
-        console.log('[AIContext] Firestore session:', session ? 'found' : 'not found');
+      // Merge: check both Firestore and localStorage, take whichever has more messages
+      let firestoreSession = null;
+      if (isAuthed) {
+        firestoreSession = await getChatSessionFromFirestore(sessionId);
       }
-      if (!session) {
-        session = getChatSession(sessionId);
-        console.log('[AIContext] Local session:', session ? 'found' : 'not found');
-      }
+      const localSession = getChatSession(sessionId);
       
+      let session = firestoreSession || localSession;
+      if (firestoreSession && localSession) {
+        const fsMsgs = firestoreSession.messages?.length || 0;
+        const lsMsgs = localSession.messages?.length || 0;
+        session = lsMsgs > fsMsgs ? localSession : firestoreSession;
+      }
+
       if (session) {
-        // Set the current session ID in storage and state
         setCurrentSessionId(sessionId);
         setCurrentSessionIdState(sessionId);
-        
-        // Load messages
-        const formattedMessages = (session.messages || []).map(msg => ({
-          ...msg,
-          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-        }));
-        
-        setMessages(formattedMessages.length > 0 ? formattedMessages : [
-          {
-            id: 'welcome',
-            role: 'assistant',
-            content: "Hi! I'm your AI teaching assistant. I can help you with lesson planning, generate quizzes, track student progress, and more. What would you like help with?",
-            timestamp: new Date(),
-          },
-        ]);
-        
-        console.log(`[AIContext] Loaded session ${sessionId} with ${formattedMessages.length} messages`);
+        if (isAuthed) saveActiveSessionIdToFirestore(sessionId);
+
+        const loaded = formatSessionMessages(session);
+        setMessages(loaded);
+
+        console.log(`[AIContext] Loaded session ${sessionId} (${(session.messages || []).length} msgs)`);
       } else {
-        console.warn(`[AIContext] Session ${sessionId} not found in storage`);
+        console.warn(`[AIContext] Session ${sessionId} not found`);
       }
     } finally {
       loadingSessionRef.current = false;
     }
-  }, [currentSessionId]);
+  }, [currentSessionId, isAuthed]);
 
   const deleteChatSessionById = useCallback(async (sessionId) => {
-    // Delete from Firestore if authenticated
-    if (isAuthenticated()) {
+    if (isAuthed) {
       await deleteChatSessionFromFirestore(sessionId);
     }
-    // Always delete from local
     deleteChatSession(sessionId);
-    
-    // Refresh history based on auth state
-    if (isAuthenticated()) {
-      const firestoreHistory = await getAllChatSessionsFromFirestore();
-      setChatHistory(firestoreHistory.length > 0 ? firestoreHistory : getAllChatSessions());
-    } else {
+
+    // For anonymous users, refresh manually (authed uses real-time listener)
+    if (!isAuthed) {
       setChatHistory(getAllChatSessions());
     }
-    
-    // If deleted session was current, start new
+
     if (sessionId === currentSessionId) {
       startNewChatSession();
     }
-  }, [currentSessionId, startNewChatSession]);
+  }, [currentSessionId, startNewChatSession, isAuthed]);
 
   const renameChatSession = useCallback(async (sessionId, newTitle) => {
-    // Update in Firestore if authenticated
-    if (isAuthenticated()) {
+    if (isAuthed) {
       await updateChatTitleInFirestore(sessionId, newTitle);
     }
-    // Always update local
     updateChatTitle(sessionId, newTitle);
-    
-    // Refresh history based on auth state
-    if (isAuthenticated()) {
-      const firestoreHistory = await getAllChatSessionsFromFirestore();
-      setChatHistory(firestoreHistory.length > 0 ? firestoreHistory : getAllChatSessions());
-    } else {
+
+    if (!isAuthed) {
       setChatHistory(getAllChatSessions());
     }
-  }, []);
+  }, [isAuthed]);
 
-  // Persist messages to current session whenever they change (to both local and Firestore)
+  // ------------------------------------------------------------------
+  // EFFECT 4: Save to stores when local changes happen
+  //           Uses pendingSaveRef — only saves when a local mutation set it
+  //           No debounce — saves immediately after React render
+  // ------------------------------------------------------------------
   useEffect(() => {
-    if (currentSessionId && messages.length > 0 && sessionInitializedRef.current) {
-      const session = getChatSession(currentSessionId);
-      if (session) {
-        session.messages = messages.map(msg => ({
-          ...msg,
-          timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp,
-        }));
-        
-        // Auto-generate title from first user message if still "New Chat"
-        if (session.title === 'New Chat') {
-          const firstUserMsg = messages.find(m => m.role === 'user');
-          if (firstUserMsg && firstUserMsg.content) {
-            const text = firstUserMsg.content;
-            session.title = text.length > 50 ? `${text.substring(0, 50)}...` : text;
-          }
-        }
-        
-        // Always save to local storage
-        saveChatSession(session);
-        // Save to Firestore only if authenticated
-        if (isAuthenticated()) {
-          saveChatSessionToFirestore(session);
-        }
-        
-        // Update chatHistory state to reflect the latest messages/title
-        setChatHistory(prev => {
-          const idx = prev.findIndex(s => s.id === session.id);
-          if (idx >= 0) {
-            const updated = [...prev];
-            updated[idx] = { ...session };
-            return updated;
-          }
-          return [session, ...prev];
-        });
-      }
-    }
-  }, [messages, currentSessionId]);
+    if (!pendingSaveRef.current) return; // No local changes to save
+    if (!currentSessionId || !sessionInitializedRef.current) return;
+    if (messages.some(m => m.isStreaming)) return; // Wait for streaming to complete
+
+    pendingSaveRef.current = false;
+    buildAndSaveSession(messages, currentSessionId, isAuthed);
+  }, [messages, currentSessionId, isAuthed, buildAndSaveSession]);
+
+  // ------------------------------------------------------------------
+  // EFFECT 5: beforeunload safety net — save to localStorage on page close
+  //           Ensures messages survive even if React effect didn't fire yet
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (!currentSessionId || !sessionInitializedRef.current) return;
+      const msgs = messagesRef.current;
+      if (msgs.length === 0 || msgs.some(m => m.isStreaming)) return;
+      // Synchronous save to localStorage (Firestore requires async, can't do here)
+      const serialized = msgs.map(serializeMessageForStorage);
+      const existing = getChatSession(currentSessionId);
+      const session = {
+        id: currentSessionId,
+        title: existing?.title || 'New Chat',
+        messages: serialized,
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        context: existing?.context || {},
+      };
+      saveChatSession(session);
+      console.log(`[AIContext] 🛡️ beforeunload: saved ${serialized.length} msgs to localStorage`);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [currentSessionId]);
 
   // Add user message
   const addUserMessage = useCallback((content) => {
@@ -601,6 +719,7 @@ export function AIProvider({ children }) {
     };
     setMessages((prev) => [...prev, message]);
     setAttachments([]);
+    pendingSaveRef.current = true; // Mark for save
     return message;
   }, [attachments]);
 
@@ -614,6 +733,7 @@ export function AIProvider({ children }) {
       ...metadata,
     };
     setMessages((prev) => [...prev, message]);
+    pendingSaveRef.current = true; // Mark for save
     return message;
   }, []);
 
@@ -973,6 +1093,7 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
               msg.isStreaming ? { ...msg, isStreaming: false } : msg
             );
           });
+          pendingSaveRef.current = true; // Save voice messages after streaming completes
           
           // Clear transcript display for next turn
           setLiveTranscript('');
@@ -1556,28 +1677,20 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
 
   // Clear chat history
   const clearChat = useCallback(() => {
-    // Delete the current session and start a new one
     if (currentSessionId) {
-      // Delete from Firestore if authenticated
-      if (isAuthenticated()) {
+      if (isAuthed) {
         deleteChatSessionFromFirestore(currentSessionId);
       }
-      // Delete from local storage
       deleteChatSession(currentSessionId);
-      
-      // Refresh chat history
-      if (isAuthenticated()) {
-        getAllChatSessionsFromFirestore().then(setChatHistory).catch(() => {
-          setChatHistory(getAllChatSessions());
-        });
-      } else {
+
+      if (!isAuthed) {
         setChatHistory(getAllChatSessions());
       }
     }
     
     // Start a new session
     startNewChatSession();
-  }, [currentSessionId, startNewChatSession]);
+  }, [currentSessionId, startNewChatSession, isAuthed]);
 
   // Add attachment
   const addAttachment = useCallback((file) => {

@@ -17,7 +17,8 @@ import {
   orderBy, 
   limit,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  onSnapshot,
 } from 'firebase/firestore';
 import { db, auth } from '../firebase/client';
 
@@ -107,17 +108,37 @@ export async function saveChatSessionToFirestore(session) {
 
     const docRef = doc(db, 'users', userId, 'chatSessions', session.id);
     
-    // Prepare data for Firestore
+    // Prepare data for Firestore - strip any non-serializable fields
+    // (File objects, blob URLs, streaming state will cause Firestore to throw)
     const firestoreData = {
-      ...session,
+      id: session.id,
+      title: session.title || 'New Chat',
+      context: session.context || {},
+      createdAt: session.createdAt || new Date().toISOString(),
       updatedAt: serverTimestamp(),
-      // Ensure messages have string timestamps
-      messages: (session.messages || []).map(msg => ({
-        ...msg,
-        timestamp: msg.timestamp instanceof Date 
-          ? msg.timestamp.toISOString() 
-          : msg.timestamp,
-      })),
+      messages: (session.messages || []).map(msg => {
+        const clean = {
+          id: msg.id,
+          role: msg.role,
+          content: msg.content || '',
+          timestamp: msg.timestamp instanceof Date 
+            ? msg.timestamp.toISOString() 
+            : (msg.timestamp || new Date().toISOString()),
+        };
+        if (msg.thinking) clean.thinking = msg.thinking;
+        if (msg.isVoice) clean.isVoice = true;
+        if (msg.type) clean.type = msg.type;
+        // Attachments: metadata only (no File objects or blob URLs)
+        if (msg.attachments && msg.attachments.length > 0) {
+          clean.attachments = msg.attachments.map(att => ({
+            name: att.name || 'file',
+            type: att.type || '',
+            mimeType: att.mimeType || att.type || '',
+            size: att.size || 0,
+          }));
+        }
+        return clean;
+      }),
     };
     
     // Set createdAt only on new sessions
@@ -190,4 +211,105 @@ export async function syncLocalToFirestore(localSessions) {
   }
   
   console.log('[FirestoreChat] Migration complete');
+}
+
+// ========================================================================
+// REAL-TIME LISTENERS — for cross-device live sync
+// ========================================================================
+
+/**
+ * Helper: convert a Firestore document snapshot to a clean session object
+ */
+function docToSession(docSnap) {
+  const data = docSnap.data();
+  if (!data) return null;
+  return {
+    id: docSnap.id,
+    ...data,
+    createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+    updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
+  };
+}
+
+/**
+ * Subscribe to the chat session list (sidebar).
+ * Fires `onUpdate(sessions[])` whenever any session is added/modified/deleted.
+ * Returns an unsubscribe function.
+ */
+export function subscribeToChatSessions(onUpdate, onError) {
+  const chatsRef = getUserChatsCollection();
+  if (!chatsRef) {
+    console.warn('[FirestoreChat] subscribeToChatSessions — no auth');
+    return () => {};
+  }
+
+  const q = query(chatsRef, orderBy('updatedAt', 'desc'), limit(50));
+
+  return onSnapshot(q, (snapshot) => {
+    const sessions = snapshot.docs.map(docToSession).filter(Boolean);
+    console.log(`[FirestoreChat] 🔄 Real-time sessions update: ${sessions.length} sessions`);
+    onUpdate(sessions);
+  }, (err) => {
+    console.error('[FirestoreChat] Session list listener error:', err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Subscribe to a SINGLE chat session (messages).
+ * Fires `onUpdate(session)` whenever that document changes (e.g. from another device).
+ * Returns an unsubscribe function.
+ */
+export function subscribeToSession(sessionId, onUpdate, onError) {
+  const userId = getCurrentUserId();
+  if (!userId || !sessionId) {
+    return () => {};
+  }
+
+  const docRef = doc(db, 'users', userId, 'chatSessions', sessionId);
+
+  return onSnapshot(docRef, (snapshot) => {
+    if (!snapshot.exists()) {
+      console.warn(`[FirestoreChat] Session ${sessionId} deleted remotely`);
+      onUpdate(null);
+      return;
+    }
+    const session = docToSession(snapshot);
+    console.log(`[FirestoreChat] 🔄 Real-time session update: ${sessionId} (${(session?.messages || []).length} msgs)`);
+    onUpdate(session);
+  }, (err) => {
+    console.error(`[FirestoreChat] Session ${sessionId} listener error:`, err);
+    if (onError) onError(err);
+  });
+}
+
+/**
+ * Save the user's "active session" pointer to Firestore,
+ * so another device can open the same session.
+ */
+export async function saveActiveSessionIdToFirestore(sessionId) {
+  try {
+    const userId = getCurrentUserId();
+    if (!userId) return;
+    const docRef = doc(db, 'users', userId);
+    await setDoc(docRef, { activeSessionId: sessionId, updatedAt: serverTimestamp() }, { merge: true });
+  } catch (err) {
+    console.warn('[FirestoreChat] Error saving active session pointer:', err);
+  }
+}
+
+/**
+ * Load the user's "active session" pointer from Firestore.
+ */
+export async function getActiveSessionIdFromFirestore() {
+  try {
+    const userId = getCurrentUserId();
+    if (!userId) return null;
+    const docRef = doc(db, 'users', userId);
+    const snapshot = await getDoc(docRef);
+    return snapshot.exists() ? snapshot.data()?.activeSessionId || null : null;
+  } catch (err) {
+    console.warn('[FirestoreChat] Error loading active session pointer:', err);
+    return null;
+  }
 }
