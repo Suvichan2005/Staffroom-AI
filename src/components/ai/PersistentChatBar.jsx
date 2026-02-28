@@ -109,7 +109,6 @@ function PersistentChatBarInner({ className = '' }) {
     if (hasContent) {
       handleSend();
     } else {
-      setIsExpanded(true);
       setShowHistory(false);
       startRecording();
     }
@@ -475,8 +474,8 @@ function PersistentChatBarInner({ className = '' }) {
               </div>
             )}
 
-            {/* Expand button — when recording and collapsed */}
-            {isRecording && !isExpanded && (
+            {/* Expand button — when recording/connecting and collapsed */}
+            {(isRecording || liveStatus === 'connecting' || liveStatus === 'streaming') && !isExpanded && (
               <button
                 onClick={() => { setIsExpanded(true); setShowHistory(false); }}
                 className="p-2.5 rounded-xl text-indigo-600 hover:bg-indigo-50 transition-all flex-shrink-0"

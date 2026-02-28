@@ -13,10 +13,14 @@ import {
   attendanceLogs,
   assignments,
   notifications,
-  getUnreadNotifications
+  getUnreadNotifications,
+  getUserAttendanceLogs,
+  saveUserAttendanceLogs,
+  markClassAttendance
 } from '../data/dummyData';
 import { logGeminiCall, logAction, LogCategory } from './activityLogger';
 import { callAIGenerate } from './aiApiClient';
+import * as classManagement from '../utils/classManagement';
 
 /**
  * AI Service for School Companion
@@ -1079,6 +1083,371 @@ function tool_navigateTo(destination, options = {}) {
   };
 }
 
+// ============================================================================
+// CLASS MANAGEMENT TOOL FUNCTIONS
+// ============================================================================
+
+/**
+ * Create a new course/subject
+ */
+function tool_createCourse(subject, grade, title) {
+  try {
+    const courseData = {
+      subject: subject || 'General',
+      grade: grade || '1',
+      title: title || `${subject} Grade ${grade}`,
+    };
+    const course = classManagement.createCourse(courseData);
+    return {
+      success: true,
+      course: {
+        id: course.id,
+        title: course.title,
+        subject: course.subject,
+        grade: course.grade,
+        sections: [],
+      },
+      message: `Created course "${course.title}" (ID: ${course.id})`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Create a new section/class within a course
+ */
+function tool_createSection(courseId, sectionId, schedules) {
+  try {
+    // Try to find course by ID or by fuzzy match on title/subject
+    let resolvedCourseId = courseId;
+    if (courseId && !classManagement.findCourseById(courseId)) {
+      // Try matching by title or subject
+      const allCourses = classManagement.getAllCourses();
+      const match = allCourses.find(c =>
+        c.title.toLowerCase().includes(courseId.toLowerCase()) ||
+        c.subject.toLowerCase().includes(courseId.toLowerCase()) ||
+        c.id.toLowerCase() === courseId.toLowerCase()
+      );
+      if (match) resolvedCourseId = match.id;
+    }
+
+    const sectionData = {
+      id: sectionId || undefined,
+      schedules: schedules || [],
+    };
+    const section = classManagement.createSection(resolvedCourseId, sectionData);
+    if (!section) {
+      return { success: false, error: `Course "${courseId}" not found. Use getAvailableCourses to see existing courses.` };
+    }
+    return {
+      success: true,
+      section: {
+        id: section.id,
+        courseId: resolvedCourseId,
+        schedules: section.schedules,
+      },
+      message: `Created section "${section.id}" in course "${resolvedCourseId}"`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Add students to a section
+ */
+function tool_addStudents(classId, studentsList) {
+  try {
+    if (!classId) return { success: false, error: 'classId is required' };
+    if (!studentsList || !Array.isArray(studentsList) || studentsList.length === 0) {
+      return { success: false, error: 'students array is required and must not be empty' };
+    }
+
+    const parsedStudents = studentsList.map((s, i) => ({
+      name: typeof s === 'string' ? s : (s.name || `Student ${i + 1}`),
+      rollNo: typeof s === 'string' ? (i + 1) : (s.rollNo || i + 1),
+      email: typeof s === 'string' ? '' : (s.email || ''),
+    }));
+
+    const added = classManagement.addStudentsToClass(classId, parsedStudents);
+    return {
+      success: true,
+      addedCount: added.length,
+      students: added.map(s => ({ name: s.name, rollNo: s.rollNo, studentId: s.studentId })),
+      message: `Added ${added.length} students to class "${classId}"`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get students for a class/section
+ */
+function tool_getStudents(classId) {
+  try {
+    if (!classId) return { success: false, error: 'classId is required' };
+    const studentList = classManagement.getStudentsForClass(classId);
+    return {
+      success: true,
+      classId,
+      count: studentList.length,
+      students: studentList.map(s => ({
+        studentId: s.studentId,
+        name: s.name,
+        rollNo: s.rollNo,
+        email: s.email || '',
+      })),
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Remove a student by ID
+ */
+function tool_removeStudent(studentId) {
+  try {
+    if (!studentId) return { success: false, error: 'studentId is required' };
+    const removed = classManagement.removeStudent(studentId);
+    return {
+      success: removed,
+      message: removed ? `Student "${studentId}" removed` : `Student "${studentId}" not found (only custom-added students can be removed)`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Delete a course and all its sections/students
+ */
+function tool_deleteCourse(courseId) {
+  try {
+    if (!courseId) return { success: false, error: 'courseId is required' };
+    const deleted = classManagement.deleteCourse(courseId);
+    return {
+      success: deleted,
+      message: deleted ? `Course "${courseId}" and all its sections/students deleted` : `Course "${courseId}" not found`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Delete a section from a course
+ */
+function tool_deleteSection(courseId, sectionId) {
+  try {
+    if (!courseId || !sectionId) return { success: false, error: 'courseId and sectionId are required' };
+    const deleted = classManagement.deleteSection(courseId, sectionId);
+    return {
+      success: deleted,
+      message: deleted ? `Section "${sectionId}" deleted from course "${courseId}"` : `Section "${sectionId}" not found in course "${courseId}"`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Apply timetable schedule data to sections
+ */
+function tool_applyTimetable(scheduleData) {
+  try {
+    if (!scheduleData || !Array.isArray(scheduleData) || scheduleData.length === 0) {
+      return { success: false, error: 'scheduleData array is required' };
+    }
+    const result = classManagement.applyTimetableData(scheduleData);
+    return {
+      success: true,
+      updated: result.updated,
+      notFound: result.notFound,
+      message: `Updated ${result.updated} sections. ${result.notFound.length > 0 ? `Not found: ${result.notFound.join(', ')}` : ''}`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// ============================================================================
+// ATTENDANCE TOOL FUNCTIONS (Global - works without VoiceAttendanceLogger)
+// ============================================================================
+
+/**
+ * Fuzzy match a student name against the student list for a class
+ */
+function fuzzyMatchStudentInClass(classId, studentName) {
+  const classStudents = classManagement.getStudentsForClass(classId);
+  if (!classStudents || classStudents.length === 0) return null;
+
+  const query = studentName.toLowerCase().trim();
+  
+  // Exact match first
+  let match = classStudents.find(s => s.name.toLowerCase() === query);
+  if (match) return match;
+  
+  // Partial match (name contains query or query contains name parts)
+  match = classStudents.find(s => s.name.toLowerCase().includes(query) || query.includes(s.name.toLowerCase()));
+  if (match) return match;
+  
+  // First name match
+  match = classStudents.find(s => {
+    const firstName = s.name.split(' ')[0].toLowerCase();
+    return firstName === query || query.startsWith(firstName);
+  });
+  if (match) return match;
+  
+  // Last name match
+  match = classStudents.find(s => {
+    const parts = s.name.split(' ');
+    const lastName = parts[parts.length - 1].toLowerCase();
+    return lastName === query;
+  });
+  
+  return match || null;
+}
+
+/**
+ * Mark attendance for a single student
+ */
+function tool_markAttendance(classId, studentName, status, date) {
+  try {
+    if (!classId) return { success: false, error: 'classId is required' };
+    if (!studentName) return { success: false, error: 'studentName is required' };
+    
+    const matchedStudent = fuzzyMatchStudentInClass(classId, studentName);
+    if (!matchedStudent) {
+      const available = classManagement.getStudentsForClass(classId);
+      return {
+        success: false,
+        error: `Student "${studentName}" not found in class "${classId}"`,
+        availableStudents: available.map(s => s.name).slice(0, 20),
+      };
+    }
+
+    const attendanceDate = date || new Date().toISOString().split('T')[0];
+    const attendanceStatus = (status || 'present').toLowerCase();
+    
+    const logs = getUserAttendanceLogs();
+    // Remove existing entry for this student/class/date
+    const filtered = logs.filter(l => 
+      !(l.studentId === matchedStudent.studentId && l.classId === classId && l.date === attendanceDate)
+    );
+    // Add new record
+    filtered.push({
+      studentId: matchedStudent.studentId,
+      classId: classId,
+      date: attendanceDate,
+      status: attendanceStatus,
+      method: 'ai-agent',
+    });
+    saveUserAttendanceLogs(filtered);
+
+    return {
+      success: true,
+      student: { name: matchedStudent.name, rollNo: matchedStudent.rollNo, studentId: matchedStudent.studentId },
+      status: attendanceStatus,
+      date: attendanceDate,
+      classId,
+      message: `Marked ${matchedStudent.name} (Roll ${matchedStudent.rollNo}) as ${attendanceStatus} for ${attendanceDate}`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Mark attendance for all students in a class at once
+ */
+function tool_markBulkAttendance(classId, status, exceptions, date) {
+  try {
+    if (!classId) return { success: false, error: 'classId is required' };
+    
+    const classStudents = classManagement.getStudentsForClass(classId);
+    if (!classStudents || classStudents.length === 0) {
+      return { success: false, error: `No students found in class "${classId}"` };
+    }
+
+    const attendanceDate = date || new Date().toISOString().split('T')[0];
+    const defaultStatus = (status || 'present').toLowerCase();
+    const exceptionList = (exceptions || []).map(e => typeof e === 'string' ? e.toLowerCase() : '');
+
+    // Match exceptions to actual students
+    const exceptionStudentIds = new Set();
+    exceptionList.forEach(excName => {
+      const matched = fuzzyMatchStudentInClass(classId, excName);
+      if (matched) exceptionStudentIds.add(matched.studentId);
+    });
+
+    const oppositeStatus = defaultStatus === 'present' ? 'absent' : 'present';
+    
+    const records = classStudents.map(student => ({
+      studentId: student.studentId,
+      classId: classId,
+      date: attendanceDate,
+      status: exceptionStudentIds.has(student.studentId) ? oppositeStatus : defaultStatus,
+      method: 'ai-agent',
+    }));
+
+    markClassAttendance(classId, attendanceDate, records);
+
+    return {
+      success: true,
+      classId,
+      date: attendanceDate,
+      totalStudents: classStudents.length,
+      markedAs: defaultStatus,
+      exceptions: exceptionList.length,
+      message: `Marked ${classStudents.length} students in "${classId}" as ${defaultStatus} for ${attendanceDate}${exceptionList.length > 0 ? ` (${exceptionList.length} exceptions marked ${oppositeStatus})` : ''}`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Get today's attendance status for a class
+ */
+function tool_getTodayAttendance(classId) {
+  try {
+    if (!classId) return { success: false, error: 'classId is required' };
+    
+    const today = new Date().toISOString().split('T')[0];
+    const logs = getUserAttendanceLogs();
+    const todayLogs = logs.filter(l => l.classId === classId && l.date === today);
+    
+    const classStudents = classManagement.getStudentsForClass(classId);
+    
+    const result = classStudents.map(student => {
+      const log = todayLogs.find(l => l.studentId === student.studentId);
+      return {
+        name: student.name,
+        rollNo: student.rollNo,
+        status: log ? log.status : 'not-marked',
+      };
+    });
+
+    const present = result.filter(r => r.status === 'present').length;
+    const absent = result.filter(r => r.status === 'absent').length;
+    const notMarked = result.filter(r => r.status === 'not-marked').length;
+
+    return {
+      success: true,
+      classId,
+      date: today,
+      summary: { present, absent, notMarked, total: classStudents.length },
+      students: result,
+      message: `${classId} today: ${present} present, ${absent} absent, ${notMarked} not marked (of ${classStudents.length})`,
+    };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 // Tool execution map
 const toolFunctions = {
   getAvailableCourses: tool_getAvailableCourses,
@@ -1093,7 +1462,20 @@ const toolFunctions = {
   updateProgress: tool_updateProgress,
   findTopicByPage: tool_findTopicByPage,
   parseAttendance: tool_parseAttendance,
-  navigateTo: tool_navigateTo
+  navigateTo: tool_navigateTo,
+  // Class management tools
+  createCourse: tool_createCourse,
+  createSection: tool_createSection,
+  addStudents: tool_addStudents,
+  getStudents: tool_getStudents,
+  removeStudent: tool_removeStudent,
+  deleteCourse: tool_deleteCourse,
+  deleteSection: tool_deleteSection,
+  applyTimetable: tool_applyTimetable,
+  // Attendance tools (global)
+  markAttendance: tool_markAttendance,
+  markBulkAttendance: tool_markBulkAttendance,
+  getTodayAttendance: tool_getTodayAttendance,
 };
 
 // Tool declarations for Gemini
@@ -1332,6 +1714,233 @@ const chatToolDeclarations = [
         }
       },
       required: ["destination"]
+    }
+  },
+  // ── Class Management Tools ──
+  {
+    name: "createCourse",
+    description: "Create a new course/subject for the teacher. Use when the teacher wants to add a new subject like 'Mathematics Grade 10' or 'Physics Grade 12'.",
+    parameters: {
+      type: "object",
+      properties: {
+        subject: {
+          type: "string",
+          description: "The subject name (e.g., 'Mathematics', 'Physics', 'English', 'History'). REQUIRED."
+        },
+        grade: {
+          type: "string",
+          description: "The grade level (e.g., '6', '8', '10', '12'). REQUIRED."
+        },
+        title: {
+          type: "string",
+          description: "Optional custom title. If omitted, defaults to '{subject} Grade {grade}'."
+        }
+      },
+      required: ["subject", "grade"]
+    }
+  },
+  {
+    name: "createSection",
+    description: "Create a new section/class within an existing course. For example, adding section '10A' to 'Mathematics Grade 10'. Use getAvailableCourses first to find the courseId.",
+    parameters: {
+      type: "object",
+      properties: {
+        courseId: {
+          type: "string",
+          description: "The ID of the course to add the section to. Use getAvailableCourses to find this. REQUIRED."
+        },
+        sectionId: {
+          type: "string",
+          description: "The section identifier (e.g., '10A', '6B', '8C'). REQUIRED."
+        },
+        schedules: {
+          type: "array",
+          items: { type: "string" },
+          description: "Optional array of schedule strings like ['Mon 09:00–09:45', 'Wed 10:00–10:45']"
+        }
+      },
+      required: ["courseId", "sectionId"]
+    }
+  },
+  {
+    name: "addStudents",
+    description: "Add students to a class/section. Provide a list of student names (and optionally roll numbers/emails). Use getAvailableCourses to find the classId (section ID like '6A', '8B').",
+    parameters: {
+      type: "object",
+      properties: {
+        classId: {
+          type: "string",
+          description: "The section/class ID (e.g., '6A', '8B', '10A'). REQUIRED."
+        },
+        students: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "Student's full name. REQUIRED." },
+              rollNo: { type: "number", description: "Roll number (optional, auto-generated if omitted)" },
+              email: { type: "string", description: "Email address (optional)" }
+            },
+            required: ["name"]
+          },
+          description: "Array of student objects. REQUIRED."
+        }
+      },
+      required: ["classId", "students"]
+    }
+  },
+  {
+    name: "getStudents",
+    description: "Get the list of all students in a class/section with their names, roll numbers, and emails.",
+    parameters: {
+      type: "object",
+      properties: {
+        classId: {
+          type: "string",
+          description: "The section/class ID (e.g., '6A', '8B'). REQUIRED."
+        }
+      },
+      required: ["classId"]
+    }
+  },
+  {
+    name: "removeStudent",
+    description: "Remove a student from a class. Only works for custom-added students (not demo data). Use getStudents first to find the studentId.",
+    parameters: {
+      type: "object",
+      properties: {
+        studentId: {
+          type: "string",
+          description: "The student's unique ID. REQUIRED. Use getStudents to find this."
+        }
+      },
+      required: ["studentId"]
+    }
+  },
+  {
+    name: "deleteCourse",
+    description: "Delete an entire course and all its sections, students, and syllabus. This is destructive and cannot be undone. Use getAvailableCourses to find the courseId.",
+    parameters: {
+      type: "object",
+      properties: {
+        courseId: {
+          type: "string",
+          description: "The course ID to delete. REQUIRED."
+        }
+      },
+      required: ["courseId"]
+    }
+  },
+  {
+    name: "deleteSection",
+    description: "Delete a section from a course, including its students. Use getAvailableCourses to find courseId and sectionId.",
+    parameters: {
+      type: "object",
+      properties: {
+        courseId: {
+          type: "string",
+          description: "The parent course ID. REQUIRED."
+        },
+        sectionId: {
+          type: "string",
+          description: "The section ID to delete. REQUIRED."
+        }
+      },
+      required: ["courseId", "sectionId"]
+    }
+  },
+  {
+    name: "applyTimetable",
+    description: "Apply timetable/schedule data to sections. Provide an array of schedule entries mapping class sections to their time slots.",
+    parameters: {
+      type: "object",
+      properties: {
+        scheduleData: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              classId: { type: "string", description: "Section ID (e.g., '6A', '8B')" },
+              day: { type: "string", description: "Day abbreviation: Sun, Mon, Tue, Wed, Thu, Fri, Sat" },
+              startTime: { type: "string", description: "Start time in HH:MM format (e.g., '09:00')" },
+              endTime: { type: "string", description: "End time in HH:MM format (e.g., '09:45')" }
+            },
+            required: ["classId", "day", "startTime", "endTime"]
+          },
+          description: "Array of schedule entries. REQUIRED."
+        }
+      },
+      required: ["scheduleData"]
+    }
+  },
+  // ── Attendance Tools (Global) ──
+  {
+    name: "markAttendance",
+    description: "Mark a single student as present or absent for a class. Uses fuzzy name matching to find the student. Use getStudents first if unsure of exact names.",
+    parameters: {
+      type: "object",
+      properties: {
+        classId: {
+          type: "string",
+          description: "The class/section ID (e.g., '6A', '8B'). REQUIRED."
+        },
+        studentName: {
+          type: "string",
+          description: "The student's name (fuzzy matched). REQUIRED."
+        },
+        status: {
+          type: "string",
+          description: "Attendance status: 'present' or 'absent'. Default is 'present'.",
+          enum: ["present", "absent"]
+        },
+        date: {
+          type: "string",
+          description: "Date in YYYY-MM-DD format. Defaults to today if omitted."
+        }
+      },
+      required: ["classId", "studentName"]
+    }
+  },
+  {
+    name: "markBulkAttendance",
+    description: "Mark all students in a class as present or absent at once. Optionally exclude specific students (exceptions get the opposite status). For example: 'mark all of 6A present except Rahul and Priya'.",
+    parameters: {
+      type: "object",
+      properties: {
+        classId: {
+          type: "string",
+          description: "The class/section ID (e.g., '6A', '8B'). REQUIRED."
+        },
+        status: {
+          type: "string",
+          description: "Default status for all students: 'present' or 'absent'. Default is 'present'.",
+          enum: ["present", "absent"]
+        },
+        exceptions: {
+          type: "array",
+          items: { type: "string" },
+          description: "Names of students who should get the OPPOSITE status. Optional."
+        },
+        date: {
+          type: "string",
+          description: "Date in YYYY-MM-DD format. Defaults to today if omitted."
+        }
+      },
+      required: ["classId"]
+    }
+  },
+  {
+    name: "getTodayAttendance",
+    description: "Get today's attendance status for all students in a class. Shows who is present, absent, or not yet marked.",
+    parameters: {
+      type: "object",
+      properties: {
+        classId: {
+          type: "string",
+          description: "The class/section ID (e.g., '6A', '8B'). REQUIRED."
+        }
+      },
+      required: ["classId"]
     }
   }
 ];

@@ -1,16 +1,31 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, Building2, Upload, FileText, BookOpen, 
   ChevronRight, ChevronLeft, Check, Loader2, 
   GraduationCap, Calendar, Sparkles, X, Plus,
-  Clock, Trash2, Eye
+  Clock, Trash2, Eye, AlertCircle, Users
 } from 'lucide-react';
 import { loadUserState, saveUserState } from '../../utils/userScopedStorage';
 import { useTeacher } from '../../context/TeacherContext';
+import {
+  processScheduleDocument,
+  processStudentDocument,
+  processTeacherMappingDocument,
+  processSyllabusDocument,
+  processOnboardingDocument,
+} from '../../services/onboardingAgent';
 
 const ONBOARDING_COMPLETE_KEY = 'splash-onboarding:completed';
+
+// Progress stage labels
+const STAGE_LABELS = {
+  reading: 'Reading file\u2026',
+  analyzing: 'AI is analysing\u2026',
+  extracting: 'Extracting data\u2026',
+  finalizing: 'Almost done\u2026',
+};
 
 /**
  * SplashOnboarding - Full-screen purple splash onboarding flow
@@ -19,23 +34,43 @@ const ONBOARDING_COMPLETE_KEY = 'splash-onboarding:completed';
  * 1. Welcome splash with choice: Individual or School/Institute
  * 2. For Individual:
  *    - Upload schedule (PDF/PNG/XLSX)
- *    - Extract and clarify sections
- *    - For each: grade, subject
- *    - Upload syllabus/lesson plan per subject
- * 3. For School: Admin uploads mappings
+ *    - AI agent extracts classes + schedules automatically
+ *    - Clarify / edit extracted sections
+ *    - Upload syllabus per subject
+ * 3. For School: Admin uploads mappings, student lists, etc.
  */
 export default function SplashOnboarding({ forceShow = false, onComplete }) {
   const navigate = useNavigate();
   const teacherCtx = useTeacher();
   const [isVisible, setIsVisible] = useState(false);
   const [step, setStep] = useState(0);
-  const [onboardingType, setOnboardingType] = useState(null); // 'individual' | 'school'
+  const [onboardingType, setOnboardingType] = useState(null);
   
   // Form state
   const [scheduleFile, setScheduleFile] = useState(null);
   const [extractedSections, setExtractedSections] = useState([]);
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStage, setProcessingStage] = useState('');
+  const [parseError, setParseError] = useState('');
+
+  // School flow state
+  const [schoolFiles, setSchoolFiles] = useState({
+    teacherMapping: null,
+    studentList: null,
+    syllabus: null,
+  });
+  const [schoolResults, setSchoolResults] = useState({
+    teacherMapping: null,
+    studentList: null,
+    syllabus: null,
+  });
+  const [schoolProcessing, setSchoolProcessing] = useState({});
+  const [schoolErrors, setSchoolErrors] = useState({});
+
+  // Finalize state
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [finalizeError, setFinalizeError] = useState('');
 
   useEffect(() => {
     if (forceShow) {
@@ -50,43 +85,157 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
     }
   }, [forceShow]);
 
-  const handleComplete = useCallback(() => {
+  const handleComplete = useCallback(async () => {
+    // Actually create courses / sections from extracted data
+    if (extractedSections.length > 0 && teacherCtx) {
+      setIsFinalizing(true);
+      setFinalizeError('');
+      try {
+        // Group sections by subject to create courses
+        const bySubject = {};
+        for (const sec of extractedSections) {
+          const key = sec.subject || 'General';
+          if (!bySubject[key]) bySubject[key] = [];
+          bySubject[key].push(sec);
+        }
+
+        for (const [subject, sections] of Object.entries(bySubject)) {
+          const grade = sections[0]?.grade || '';
+          const course = teacherCtx.createCourse({
+            title: `${subject}${grade ? ` Grade ${grade}` : ''}`,
+            subject,
+            grade,
+          });
+          if (course) {
+            for (const sec of sections) {
+              const scheduleStrings = (sec.schedules || []).map(
+                (s) => `${s.day} ${s.startTime}\u2013${s.endTime}`,
+              );
+              teacherCtx.createSection(course.id, {
+                id: sec.name || sec.id,
+                schedules: scheduleStrings,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Finalize error:', err);
+        setFinalizeError(err.message);
+        setIsFinalizing(false);
+        return;
+      }
+      setIsFinalizing(false);
+    }
+
     saveUserState(ONBOARDING_COMPLETE_KEY, true);
     setIsVisible(false);
     onComplete?.();
-  }, [onComplete]);
+  }, [onComplete, extractedSections, teacherCtx]);
 
   const handleClose = () => {
-    // Mark as complete so it doesn't reopen
     saveUserState(ONBOARDING_COMPLETE_KEY, true);
     setIsVisible(false);
     onComplete?.();
   };
 
   const handleExploreUI = () => {
-    // Mark as complete so it doesn't reopen
     saveUserState(ONBOARDING_COMPLETE_KEY, true);
     setIsVisible(false);
     onComplete?.();
   };
 
-  // Simulate file processing and section extraction
+  // ---- INDIVIDUAL FLOW: AI agent schedule parsing ----
   const processScheduleFile = async (file) => {
     setIsProcessing(true);
-    // Simulate AI processing delay
-    await new Promise(r => setTimeout(r, 2000));
-    
-    // Mock extracted sections - in production, this would call AI service
-    const mockSections = [
-      { id: '1', name: '8A', grade: '', subject: '', syllabus: null },
-      { id: '2', name: '8B', grade: '', subject: '', syllabus: null },
-      { id: '3', name: '9A', grade: '', subject: '', syllabus: null },
-      { id: '4', name: '10C', grade: '', subject: '', syllabus: null },
-    ];
-    
-    setExtractedSections(mockSections);
-    setIsProcessing(false);
-    setStep(3); // Move to section clarification
+    setParseError('');
+    setProcessingStage('reading');
+
+    try {
+      const result = await processScheduleDocument(file, (stage) =>
+        setProcessingStage(stage),
+      );
+
+      if (!result.success) {
+        setParseError(
+          result.error ||
+            result.data?.suggestion ||
+            'Could not extract schedule data from this file. Try a different format.',
+        );
+        setIsProcessing(false);
+        return;
+      }
+
+      // Convert agent output into editable section objects
+      const classes = result.data?.classes || [];
+      if (classes.length === 0) {
+        setParseError(
+          'The AI found no classes in this document. Try a clearer timetable image or file.',
+        );
+        setIsProcessing(false);
+        return;
+      }
+
+      const sections = classes.map((cls, i) => ({
+        id: String(i + 1),
+        name: cls.className || '',
+        grade: cls.grade || '',
+        subject: cls.subject || '',
+        schedules: (cls.schedules || []).map((s) => ({
+          day: s.day,
+          startTime: s.startTime,
+          endTime: s.endTime,
+        })),
+        syllabus: null,
+      }));
+
+      setExtractedSections(sections);
+      setIsProcessing(false);
+      setStep(3);
+    } catch (err) {
+      console.error('Schedule processing error:', err);
+      setParseError(err.message || 'An unexpected error occurred.');
+      setIsProcessing(false);
+    }
+  };
+
+  // ---- SCHOOL FLOW: AI agent for each doc type ----
+  const processSchoolFile = async (type, file) => {
+    setSchoolFiles((p) => ({ ...p, [type]: file }));
+    setSchoolProcessing((p) => ({ ...p, [type]: true }));
+    setSchoolErrors((p) => ({ ...p, [type]: '' }));
+
+    try {
+      let result;
+      switch (type) {
+        case 'teacherMapping':
+          result = await processTeacherMappingDocument(file);
+          break;
+        case 'studentList':
+          result = await processStudentDocument(file);
+          break;
+        case 'syllabus':
+          result = await processSyllabusDocument(file);
+          break;
+        default:
+          result = await processOnboardingDocument(file);
+      }
+
+      if (!result.success) {
+        setSchoolErrors((p) => ({
+          ...p,
+          [type]:
+            result.error ||
+            result.data?.suggestion ||
+            'Could not extract data from this file.',
+        }));
+      } else {
+        setSchoolResults((p) => ({ ...p, [type]: result }));
+      }
+    } catch (err) {
+      setSchoolErrors((p) => ({ ...p, [type]: err.message }));
+    } finally {
+      setSchoolProcessing((p) => ({ ...p, [type]: false }));
+    }
   };
 
   const updateSection = (index, field, value) => {
@@ -100,7 +249,7 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
   const addSection = () => {
     setExtractedSections(prev => [
       ...prev,
-      { id: String(Date.now()), name: '', grade: '', subject: '', syllabus: null }
+      { id: String(Date.now()), name: '', grade: '', subject: '', schedules: [], syllabus: null }
     ]);
   };
 
@@ -110,7 +259,9 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
 
   if (!isVisible) return null;
 
-  // Step components
+  // ================================================================
+  // STEP COMPONENTS
+  // ================================================================
   const steps = {
     // Step 0: Welcome splash
     welcome: (
@@ -232,7 +383,7 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">Upload Your Schedule</h2>
             <p className="text-white text-lg">
-              Upload your weekly timetable and we'll extract your classes automatically
+              Upload your weekly timetable and our AI will extract your classes automatically
             </p>
           </div>
 
@@ -264,22 +415,31 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
                     <Upload className="w-7 h-7 text-white" />
                   </div>
                   <p className="text-white font-medium text-lg">Drop your schedule here</p>
-                  <p className="text-sm text-white mt-2">PDF, PNG, or Excel file</p>
+                  <p className="text-sm text-white mt-2">PDF, PNG, JPEG, Excel, or CSV</p>
                 </div>
               )}
               <input
                 id="schedule-upload"
                 type="file"
-                accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls"
+                accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv,.webp"
                 className="hidden"
                 onChange={(e) => {
                   if (e.target.files?.[0]) {
                     setScheduleFile(e.target.files[0]);
+                    setParseError('');
                   }
                 }}
               />
             </label>
           </div>
+
+          {/* Error display */}
+          {parseError && (
+            <div className="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-400/30 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-200">{parseError}</p>
+            </div>
+          )}
 
           {/* Manual option */}
           <div className="text-center mb-8">
@@ -287,7 +447,7 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             <button
               onClick={() => {
                 setExtractedSections([
-                  { id: '1', name: '', grade: '', subject: '', syllabus: null }
+                  { id: '1', name: '', grade: '', subject: '', schedules: [], syllabus: null }
                 ]);
                 setStep(3);
               }}
@@ -320,11 +480,12 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
               {isProcessing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Processing...
+                  {STAGE_LABELS[processingStage] || 'Processing\u2026'}
                 </>
               ) : (
                 <>
-                  Extract Classes
+                  <Sparkles className="w-4 h-4" />
+                  Extract with AI
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}
@@ -359,64 +520,61 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">School Setup</h2>
             <p className="text-white text-lg">
-              Upload your institution's data files
+              Upload your institution's files \u2014 AI will read and extract everything
             </p>
           </div>
 
           <div className="space-y-4 mb-8">
             {/* Teacher-Class Mapping */}
-            <div className="p-5 rounded-xl bg-white/10 border border-white/25 backdrop-blur-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/25 to-white/10 flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">Teacher ↔ Class Mapping</h3>
-                  <p className="text-sm text-white">Which teacher teaches which class</p>
-                </div>
-              </div>
-              <label className="flex items-center justify-center w-full py-4 border border-dashed border-white rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                <Upload className="w-5 h-5 text-white mr-2" />
-                <span className="text-white font-medium">Upload Excel/CSV</span>
-                <input type="file" className="hidden" accept=".xlsx,.xls,.csv" />
-              </label>
-            </div>
+            <SchoolFileUpload
+              icon={User}
+              title="Teacher \u2194 Class Mapping"
+              subtitle="Which teacher teaches which class"
+              file={schoolFiles.teacherMapping}
+              processing={schoolProcessing.teacherMapping}
+              error={schoolErrors.teacherMapping}
+              result={schoolResults.teacherMapping}
+              resultLabel={
+                schoolResults.teacherMapping
+                  ? `${schoolResults.teacherMapping.data?.mappings?.length || 0} teacher mappings found`
+                  : null
+              }
+              onUpload={(file) => processSchoolFile('teacherMapping', file)}
+            />
 
             {/* Student List */}
-            <div className="p-5 rounded-xl bg-white/10 border border-white/25 backdrop-blur-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/25 to-white/10 flex items-center justify-center">
-                  <GraduationCap className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">Student Lists</h3>
-                  <p className="text-sm text-white">Class-wise student enrollment</p>
-                </div>
-              </div>
-              <label className="flex items-center justify-center w-full py-4 border border-dashed border-white rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                <Upload className="w-5 h-5 text-white mr-2" />
-                <span className="text-white font-medium">Upload Excel/CSV</span>
-                <input type="file" className="hidden" accept=".xlsx,.xls,.csv" />
-              </label>
-            </div>
+            <SchoolFileUpload
+              icon={GraduationCap}
+              title="Student Lists"
+              subtitle="Class-wise student enrolment"
+              file={schoolFiles.studentList}
+              processing={schoolProcessing.studentList}
+              error={schoolErrors.studentList}
+              result={schoolResults.studentList}
+              resultLabel={
+                schoolResults.studentList
+                  ? `${schoolResults.studentList.data?.students?.length || 0} students found`
+                  : null
+              }
+              onUpload={(file) => processSchoolFile('studentList', file)}
+            />
 
             {/* Syllabus */}
-            <div className="p-5 rounded-xl bg-white/10 border border-white/25 backdrop-blur-sm">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/25 to-white/10 flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-white">Course Syllabus</h3>
-                  <p className="text-sm text-white">Subject-wise syllabus documents</p>
-                </div>
-              </div>
-              <label className="flex items-center justify-center w-full py-4 border border-dashed border-white rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                <Upload className="w-5 h-5 text-white mr-2" />
-                <span className="text-white font-medium">Upload PDFs</span>
-                <input type="file" className="hidden" accept=".pdf" multiple />
-              </label>
-            </div>
+            <SchoolFileUpload
+              icon={BookOpen}
+              title="Course Syllabus"
+              subtitle="Subject-wise syllabus documents"
+              file={schoolFiles.syllabus}
+              processing={schoolProcessing.syllabus}
+              error={schoolErrors.syllabus}
+              result={schoolResults.syllabus}
+              resultLabel={
+                schoolResults.syllabus
+                  ? `${schoolResults.syllabus.data?.chapters?.length || 0} chapters found`
+                  : null
+              }
+              onUpload={(file) => processSchoolFile('syllabus', file)}
+            />
           </div>
 
           <div className="flex gap-4">
@@ -436,7 +594,6 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             </button>
           </div>
 
-          {/* Skip this step */}
           <button
             onClick={handleExploreUI}
             className="w-full mt-6 flex items-center justify-center gap-2 text-sm text-white hover:text-white transition-colors"
@@ -465,7 +622,7 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">Clarify Your Classes</h2>
             <p className="text-white text-lg">
-              Tell us more about each class you teach
+              Review what the AI extracted \u2014 edit anything that looks off
             </p>
           </div>
 
@@ -482,6 +639,11 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-semibold text-white uppercase tracking-wider">
                     Class {index + 1}
+                    {section.schedules?.length > 0 && (
+                      <span className="ml-2 text-green-300 normal-case">
+                        ({section.schedules.length} period{section.schedules.length > 1 ? 's' : ''} found)
+                      </span>
+                    )}
                   </span>
                   {extractedSections.length > 1 && (
                     <button
@@ -499,30 +661,40 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
                     placeholder="Section (e.g., 8A)"
                     value={section.name}
                     onChange={(e) => updateSection(index, 'name', e.target.value)}
-                    className="px-4 py-3.5 rounded-xl bg-white/10 border border-white/25 text-black placeholder-black focus:outline-none focus:border-white focus:bg-white/15 transition-all"
+                    className="px-4 py-3.5 rounded-xl bg-white/10 border border-white/25 text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/15 transition-all"
                   />
                   <select
                     value={section.grade}
                     onChange={(e) => updateSection(index, 'grade', e.target.value)}
-                    className="px-4 py-3.5 rounded-xl bg-white/10 border border-white/25 text-black focus:outline-none focus:border-white appearance-none cursor-pointer"
+                    className="px-4 py-3.5 rounded-xl bg-white/10 border border-white/25 text-white focus:outline-none focus:border-white appearance-none cursor-pointer"
                   >
-                    <option value="" className="bg-purple-900">Select Grade</option>
+                    <option value="" className="bg-purple-900 text-white">Select Grade</option>
                     {[...Array(12)].map((_, i) => (
-                      <option key={i+1} value={String(i+1)} className="bg-purple-900">
+                      <option key={i+1} value={String(i+1)} className="bg-purple-900 text-white">
                         Grade {i+1}
                       </option>
                     ))}
-                    <option value="11" className="bg-purple-900">11th / 1st Year</option>
-                    <option value="12" className="bg-purple-900">12th / 2nd Year</option>
                   </select>
                   <input
                     type="text"
                     placeholder="Subject"
                     value={section.subject}
                     onChange={(e) => updateSection(index, 'subject', e.target.value)}
-                    className="px-4 py-3.5 rounded-xl bg-white/10 border border-white/25 text-black placeholder-black focus:outline-none focus:border-white focus:bg-white/15 transition-all"
+                    className="px-4 py-3.5 rounded-xl bg-white/10 border border-white/25 text-white placeholder-white/50 focus:outline-none focus:border-white focus:bg-white/15 transition-all"
                   />
                 </div>
+
+                {/* Schedule preview */}
+                {section.schedules?.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {section.schedules.map((s, si) => (
+                      <span key={si} className="text-xs px-2 py-1 rounded-lg bg-white/10 text-white/80 border border-white/15">
+                        <Clock className="w-3 h-3 inline-block mr-1 -mt-0.5" />
+                        {s.day} {s.startTime}\u2013{s.endTime}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
@@ -561,7 +733,6 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             </button>
           </div>
 
-          {/* Skip this step */}
           <button
             onClick={handleExploreUI}
             className="w-full mt-6 flex items-center justify-center gap-2 text-sm text-white hover:text-white transition-colors"
@@ -590,39 +761,19 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             </div>
             <h2 className="text-3xl font-bold text-white mb-3">Upload Syllabus</h2>
             <p className="text-white text-lg">
-              Upload lesson plans or syllabus sheets for each subject
+              Upload lesson plans or syllabus sheets \u2014 AI will extract chapters and topics
             </p>
           </div>
 
           {/* Syllabus per subject */}
           <div className="space-y-4 mb-8 max-h-[50vh] overflow-y-auto pr-2">
-            {/* Group by unique subjects */}
             {[...new Set(extractedSections.map(s => s.subject))].filter(Boolean).map((subject, index) => (
-              <motion.div
+              <SyllabusUploadCard
                 key={subject}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="p-5 rounded-xl bg-white/10 border border-white/25 backdrop-blur-sm"
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/25 to-white/10 flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white text-lg">{subject}</h3>
-                    <p className="text-sm text-white">
-                      Taught in: {extractedSections.filter(s => s.subject === subject).map(s => s.name).join(', ')}
-                    </p>
-                  </div>
-                </div>
-                
-                <label className="flex items-center justify-center w-full py-5 border border-dashed border-white rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                  <Upload className="w-5 h-5 text-white mr-2" />
-                  <span className="text-white font-medium">Upload syllabus PDF or image of book index</span>
-                  <input type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg" />
-                </label>
-              </motion.div>
+                subject={subject}
+                sections={extractedSections.filter(s => s.subject === subject)}
+                index={index}
+              />
             ))}
           </div>
 
@@ -633,9 +784,17 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             </div>
             <p className="text-sm text-white">
               <strong className="text-white">Pro tip:</strong> Upload your book's index page or course handout. 
-              We'll automatically extract chapters, topics, and page numbers.
+              AI will automatically extract chapters, topics, and page numbers.
             </p>
           </div>
+
+          {/* Finalize error */}
+          {finalizeError && (
+            <div className="mb-4 p-4 rounded-xl bg-red-500/20 border border-red-400/30 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-200">{finalizeError}</p>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-4">
@@ -648,10 +807,20 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             </button>
             <button
               onClick={handleComplete}
+              disabled={isFinalizing}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl bg-white text-purple-700 hover:bg-purple-50 font-medium transition-all shadow-lg"
             >
-              Complete Setup
-              <Check className="w-4 h-4" />
+              {isFinalizing ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Setting up...
+                </>
+              ) : (
+                <>
+                  Complete Setup
+                  <Check className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
 
@@ -693,7 +862,6 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
         <div className="absolute -top-24 -left-24 w-[500px] h-[500px] bg-pink-500/20 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute -bottom-24 -right-24 w-[500px] h-[500px] bg-blue-500/20 rounded-full blur-[120px]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[100px]" />
-        {/* Grid pattern overlay */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:60px_60px]" />
       </div>
 
@@ -708,7 +876,7 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
             <div
               key={s}
               className={`h-2 rounded-full transition-all duration-300 ${
-                i + 1 <= (onboardingType === 'school' ? step : step)
+                i + 1 <= step
                   ? 'w-10 bg-white shadow-lg shadow-white/30'
                   : 'w-5 bg-white/30'
               }`}
@@ -730,6 +898,174 @@ export default function SplashOnboarding({ forceShow = false, onComplete }) {
       <AnimatePresence mode="wait">
         {getStepContent()}
       </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
+
+/**
+ * School file upload card
+ */
+function SchoolFileUpload({ icon: Icon, title, subtitle, file, processing, error, result, resultLabel, onUpload }) {
+  const inputRef = useRef(null);
+
+  return (
+    <div className="p-5 rounded-xl bg-white/10 border border-white/25 backdrop-blur-sm">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/25 to-white/10 flex items-center justify-center">
+          <Icon className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-white">{title}</h3>
+          <p className="text-sm text-white/70">{subtitle}</p>
+        </div>
+        {result && (
+          <div className="flex items-center gap-1 text-green-300 text-sm">
+            <Check className="w-4 h-4" />
+            Done
+          </div>
+        )}
+      </div>
+
+      {resultLabel && (
+        <div className="mb-3 px-3 py-2 rounded-lg bg-green-500/15 border border-green-400/20 text-sm text-green-300 flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          {resultLabel}
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-3 px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/20 text-sm text-red-300 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          {error}
+        </div>
+      )}
+
+      <label className="flex items-center justify-center w-full py-4 border border-dashed border-white/50 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+        {processing ? (
+          <>
+            <Loader2 className="w-5 h-5 text-white mr-2 animate-spin" />
+            <span className="text-white font-medium">AI is reading\u2026</span>
+          </>
+        ) : file ? (
+          <>
+            <FileText className="w-5 h-5 text-white mr-2" />
+            <span className="text-white font-medium">{file.name}</span>
+            <span className="text-white/50 text-sm ml-2">(click to re-upload)</span>
+          </>
+        ) : (
+          <>
+            <Upload className="w-5 h-5 text-white mr-2" />
+            <span className="text-white font-medium">Upload file</span>
+          </>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.png,.jpg,.jpeg,.xlsx,.xls,.csv,.webp,.txt"
+          disabled={processing}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onUpload(f);
+          }}
+        />
+      </label>
+    </div>
+  );
+}
+
+/**
+ * Syllabus upload card per subject
+ */
+function SyllabusUploadCard({ subject, sections, index }) {
+  const [file, setFile] = useState(null);
+  const [processing, setProcessing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState('');
+
+  const handleUpload = async (f) => {
+    setFile(f);
+    setProcessing(true);
+    setError('');
+
+    try {
+      const res = await processSyllabusDocument(f);
+      if (res.success) {
+        setResult(res);
+      } else {
+        setError(res.error || 'Could not extract syllabus data.');
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+      className="p-5 rounded-xl bg-white/10 border border-white/25 backdrop-blur-sm"
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/25 to-white/10 flex items-center justify-center">
+          <FileText className="w-6 h-6 text-white" />
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-white text-lg">{subject}</h3>
+          <p className="text-sm text-white/70">
+            Taught in: {sections.map(s => s.name).join(', ')}
+          </p>
+        </div>
+        {result && (
+          <span className="text-green-300 text-sm flex items-center gap-1">
+            <Check className="w-4 h-4" />
+            {result.data?.chapters?.length || 0} chapters
+          </span>
+        )}
+      </div>
+
+      {error && (
+        <div className="mb-3 px-3 py-2 rounded-lg bg-red-500/15 border border-red-400/20 text-sm text-red-300 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+          {error}
+        </div>
+      )}
+
+      <label className="flex items-center justify-center w-full py-5 border border-dashed border-white/50 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+        {processing ? (
+          <>
+            <Loader2 className="w-5 h-5 text-white mr-2 animate-spin" />
+            <span className="text-white font-medium">AI extracting chapters\u2026</span>
+          </>
+        ) : file ? (
+          <>
+            <FileText className="w-5 h-5 text-white mr-2" />
+            <span className="text-white font-medium">{file.name}</span>
+          </>
+        ) : (
+          <>
+            <Upload className="w-5 h-5 text-white mr-2" />
+            <span className="text-white font-medium">Upload syllabus PDF or image of book index</span>
+          </>
+        )}
+        <input
+          type="file"
+          className="hidden"
+          accept=".pdf,.png,.jpg,.jpeg,.csv,.xlsx,.webp,.txt"
+          disabled={processing}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleUpload(f);
+          }}
+        />
+      </label>
     </motion.div>
   );
 }

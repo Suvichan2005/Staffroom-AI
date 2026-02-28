@@ -219,6 +219,85 @@ export function handleChatToolCall(toolCall, onAction) {
           action.display = `❌ ${result.error}`;
         }
         break;
+
+      // ── Class Management Tools ──
+      case 'createCourse':
+        result = toolFunctions.createCourse(args.subject, args.grade, args.title);
+        action.display = result.success
+          ? `📚 ${result.message}`
+          : `❌ ${result.error}`;
+        break;
+
+      case 'createSection':
+        result = toolFunctions.createSection(args.courseId, args.sectionId, args.schedules);
+        action.display = result.success
+          ? `🏫 ${result.message}`
+          : `❌ ${result.error}`;
+        break;
+
+      case 'addStudents':
+        result = toolFunctions.addStudents(args.classId, args.students);
+        action.display = result.success
+          ? `👥 ${result.message}`
+          : `❌ ${result.error}`;
+        break;
+
+      case 'getStudents':
+        result = toolFunctions.getStudents(args.classId);
+        action.display = result.success
+          ? `👥 ${result.count} students in ${args.classId}`
+          : `❌ ${result.error}`;
+        break;
+
+      case 'removeStudent':
+        result = toolFunctions.removeStudent(args.studentId);
+        action.display = result.success
+          ? `🗑️ ${result.message}`
+          : `❌ ${result.message || result.error}`;
+        break;
+
+      case 'deleteCourse':
+        result = toolFunctions.deleteCourse(args.courseId);
+        action.display = result.success
+          ? `🗑️ ${result.message}`
+          : `❌ ${result.message || result.error}`;
+        break;
+
+      case 'deleteSection':
+        result = toolFunctions.deleteSection(args.courseId, args.sectionId);
+        action.display = result.success
+          ? `🗑️ ${result.message}`
+          : `❌ ${result.message || result.error}`;
+        break;
+
+      case 'applyTimetable':
+        result = toolFunctions.applyTimetable(args.scheduleData);
+        action.display = result.success
+          ? `📅 ${result.message}`
+          : `❌ ${result.error}`;
+        break;
+
+      // ── Attendance Tools (Global) ──
+      case 'markAttendance':
+        result = toolFunctions.markAttendance(args.classId, args.studentName, args.status, args.date);
+        action.display = result.success
+          ? `✅ ${result.message}`
+          : `❌ ${result.error}`;
+        break;
+
+      case 'markBulkAttendance':
+        result = toolFunctions.markBulkAttendance(args.classId, args.status, args.exceptions, args.date);
+        action.display = result.success
+          ? `✅ ${result.message}`
+          : `❌ ${result.error}`;
+        break;
+
+      case 'getTodayAttendance':
+        result = toolFunctions.getTodayAttendance(args.classId);
+        action.display = result.success
+          ? `📋 ${result.message}`
+          : `❌ ${result.error}`;
+        break;
         
       default:
         result = { error: `Unknown tool: ${name}` };
@@ -279,6 +358,25 @@ export function formatToolResult(toolName, result) {
         return `Page ${result.pageNumber} is in "${result.topicTitle}" (Chapter ${result.chapterIndex}, Topic ${result.topicIndex})`;
       }
       return result.error || 'Page not found in any topic';
+
+    // Class management tools
+    case 'createCourse':
+    case 'createSection':
+    case 'addStudents':
+    case 'removeStudent':
+    case 'deleteCourse':
+    case 'deleteSection':
+    case 'applyTimetable':
+    case 'markAttendance':
+    case 'markBulkAttendance':
+    case 'getTodayAttendance':
+      return result.message || (result.success ? 'Done' : (result.error || 'Failed'));
+
+    case 'getStudents':
+      if (result.success && result.students) {
+        return `${result.count} students in ${result.classId}: ${result.students.map(s => s.name).join(', ')}`;
+      }
+      return result.error || 'No students found';
       
     default:
       return JSON.stringify(result).slice(0, 200);

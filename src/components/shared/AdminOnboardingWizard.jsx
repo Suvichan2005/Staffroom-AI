@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, Users, Calendar, Upload, CheckCircle2, 
   ChevronRight, ChevronLeft, X, School, UserPlus,
-  FileSpreadsheet, Clock, Sparkles
+  FileSpreadsheet, Clock, Sparkles, Loader2, AlertCircle
 } from 'lucide-react';
 import { useTeacher } from '../../context/TeacherContext';
+import { processStudentDocument } from '../../services/onboardingAgent';
 
 /**
  * AdminOnboardingWizard - Multi-step wizard for school setup
@@ -345,20 +346,49 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
     );
   };
 
-  // Step 4: Add Students
+  // Step 4: Add Students — uses AI agent to parse uploaded files
   const AddStudentsStep = () => {
-    const handleFileUpload = (e) => {
+    const [isParsing, setIsParsing] = useState(false);
+    const [parsedCount, setParsedCount] = useState(null);
+    const [parseErr, setParseErr] = useState('');
+
+    const handleFileUpload = async (e) => {
       const file = e.target.files[0];
-      if (file) {
-        // In production, parse CSV here
-        updateSchoolData({ studentsCsvData: file.name });
+      if (!file) return;
+
+      setIsParsing(true);
+      setParseErr('');
+      setParsedCount(null);
+      updateSchoolData({ studentsCsvData: file.name });
+
+      try {
+        const result = await processStudentDocument(file);
+        if (result.success) {
+          const students = result.data?.students || [];
+          setParsedCount(students.length);
+          updateSchoolData({
+            studentsCsvData: file.name,
+            parsedStudents: students,
+            parsedStudentClass: result.data?.className || null,
+          });
+        } else {
+          setParseErr(
+            result.error ||
+              result.data?.suggestion ||
+              'Could not extract student data from this file.',
+          );
+        }
+      } catch (err) {
+        setParseErr(err.message);
+      } finally {
+        setIsParsing(false);
       }
     };
 
     return (
       <div className="space-y-6">
         <p className="text-sm text-neutral-500">
-          Upload a CSV file with student data or add them manually later.
+          Upload a file with student data — AI will read any format (CSV, Excel, PDF, even photos of printed lists).
         </p>
         
         <div className="grid grid-cols-2 gap-4">
@@ -373,8 +403,8 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
             <FileSpreadsheet className={`w-8 h-8 mb-3 ${
               schoolData.studentUploadMethod === 'csv' ? 'text-indigo-600' : 'text-neutral-400'
             }`} />
-            <p className="font-medium text-neutral-700">Upload CSV</p>
-            <p className="text-xs text-neutral-500 mt-1">Bulk import from spreadsheet</p>
+            <p className="font-medium text-neutral-700">Upload File</p>
+            <p className="text-xs text-neutral-500 mt-1">CSV, Excel, PDF, or image</p>
           </button>
           
           <button
@@ -395,28 +425,46 @@ export default function AdminOnboardingWizard({ onComplete, onClose }) {
         
         {schoolData.studentUploadMethod === 'csv' && (
           <div className="p-6 border-2 border-dashed border-neutral-300 rounded-xl text-center">
-            <Upload className="w-10 h-10 mx-auto mb-3 text-neutral-400" />
+            {isParsing ? (
+              <Loader2 className="w-10 h-10 mx-auto mb-3 text-indigo-500 animate-spin" />
+            ) : (
+              <Upload className="w-10 h-10 mx-auto mb-3 text-neutral-400" />
+            )}
             <input
               type="file"
-              accept=".csv,.xlsx,.xls"
+              accept=".csv,.xlsx,.xls,.pdf,.png,.jpg,.jpeg,.webp,.txt"
               onChange={handleFileUpload}
               className="hidden"
               id="student-csv-upload"
+              disabled={isParsing}
             />
             <label
               htmlFor="student-csv-upload"
-              className="cursor-pointer text-indigo-600 hover:text-indigo-700 font-medium"
+              className={`cursor-pointer font-medium ${
+                isParsing
+                  ? 'text-neutral-400 pointer-events-none'
+                  : 'text-indigo-600 hover:text-indigo-700'
+              }`}
             >
-              Click to upload CSV file
+              {isParsing ? 'AI is reading the file…' : 'Click to upload file'}
             </label>
-            {schoolData.studentsCsvData && (
+            {schoolData.studentsCsvData && !isParsing && (
               <p className="text-sm text-green-600 mt-2 flex items-center justify-center gap-1">
                 <CheckCircle2 className="w-4 h-4" />
                 {schoolData.studentsCsvData}
+                {parsedCount !== null && (
+                  <span className="ml-1 font-medium">— {parsedCount} students extracted</span>
+                )}
+              </p>
+            )}
+            {parseErr && (
+              <p className="text-sm text-red-600 mt-2 flex items-center justify-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {parseErr}
               </p>
             )}
             <p className="text-xs text-neutral-400 mt-3">
-              Required columns: Name, Roll Number, Class, Section
+              Supports any format: CSV, Excel, PDF, or even a photo of a printed list
             </p>
           </div>
         )}
