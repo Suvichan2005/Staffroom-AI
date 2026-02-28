@@ -2752,12 +2752,13 @@ export async function   processChat(message, conversationHistory = [], context =
     // Get temporal context (current time, class status)
     const temporal = getTemporalContext();
 
-    // Create model with function calling and Google Search grounding
+    // Create model with function calling
+    // Note: Google Search grounding cannot be combined with functionDeclarations for gemini-2.5-flash
+    // A separate search-grounded call is made as a fallback when no function calls are triggered
     const model = genAI.getGenerativeModel({
       model: MODELS.TEXT, // Using gemini-2.5-flash for best function calling support
       tools: [
         { functionDeclarations: chatToolDeclarations },
-        { googleSearch: {} }, // Enable Google Search grounding for real-time info
       ],
       systemInstruction: `You are a helpful AI teaching assistant for a school management app. You help teachers with:
 - Tracking syllabus progress
