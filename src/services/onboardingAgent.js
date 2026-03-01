@@ -8,8 +8,7 @@
  */
 
 import { extractTextFromFile, getAcceptString as _getAcceptString } from './documentParserService.js';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+import { callAIAgent } from './aiApiClient.js';
 
 // ============================================================================
 // AGENT SYSTEM PROMPT
@@ -268,23 +267,17 @@ async function fileToBase64(file) {
 // ============================================================================
 
 /**
- * Call Gemini REST API with function-calling tool declarations.
+ * Call the backend agent endpoint with function-calling tool declarations.
  *
  * @param {Object[]} contents  – Gemini `contents` array
  * @returns {{ functionCalls: {name:string, args:Object}[], text: string }}
  */
 async function callGeminiAgent(contents) {
-  if (!GEMINI_API_KEY) {
-    throw new Error(
-      'Gemini API key is not configured (VITE_GEMINI_API_KEY). Cannot run onboarding agent.',
-    );
-  }
+  console.group('🤖 OnboardingAgent → Backend Proxy');
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-  const body = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+  const result = await callAIAgent({
     contents,
+    systemInstruction: SYSTEM_PROMPT,
     tools: [{ functionDeclarations: TOOL_DECLARATIONS }],
     toolConfig: {
       functionCallingConfig: {
@@ -295,33 +288,10 @@ async function callGeminiAgent(contents) {
       temperature: 0.1,
       maxOutputTokens: 16384,
     },
-  };
-
-  console.group('🤖 OnboardingAgent → Gemini API');
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
   });
 
-  const data = await response.json();
-
-  if (data.error) {
-    console.error('API error:', data.error);
-    console.groupEnd();
-    throw new Error(data.error.message || 'Gemini API error');
-  }
-
-  const parts = data.candidates?.[0]?.content?.parts || [];
-  const functionCalls = parts
-    .filter((p) => p.functionCall)
-    .map((p) => ({ name: p.functionCall.name, args: p.functionCall.args }));
-
-  const text = parts
-    .filter((p) => p.text)
-    .map((p) => p.text)
-    .join('\n');
+  const functionCalls = result.functionCalls || [];
+  const text = result.text || '';
 
   console.log(
     'Tool calls:',

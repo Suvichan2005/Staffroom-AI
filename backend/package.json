@@ -1,0 +1,33 @@
+{
+  "name": "staffroom-ai-backend",
+  "version": "1.0.0",
+  "description": "Secure backend gateway for Staffroom AI — auth, rate limiting, AI proxy",
+  "main": "src/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "lint": "eslint src/",
+    "test": "node --test src/**/*.test.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "compression": "^1.7.5",
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "firebase-admin": "^13.0.0",
+    "helmet": "^8.0.0",
+    "hpp": "^0.2.3",
+    "ioredis": "^5.4.2",
+    "rate-limit-redis": "^4.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "private": true
+}

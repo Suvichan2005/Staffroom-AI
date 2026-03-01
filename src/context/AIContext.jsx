@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useCallback, useRef, useEff
 import { useNavigate } from 'react-router-dom';
 import { parseVoiceTranscript, generateDailyBriefing, generateQuiz, generateAssignment, processChat } from '../services/aiService';
 import { GeminiLiveSession } from '../services/geminiLiveService';
-import { AzureRealtimeSession, isAzureRealtimeAvailable } from '../services/providers/azureRealtimeProvider';
 import { getToolsByContext, handleChatToolCall } from '../services/chatToolsDefinition';
 import { initializeAllPlugins, getChatPlugins, createPluginAPI } from '../plugins';
 import {
@@ -56,9 +55,7 @@ import {
  */
 const AIContext = createContext(null);
 
-// Determine which AI/Voice provider to use
-const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
-const USE_AZURE_VOICE = AI_PROVIDER === 'azure';
+// AI provider (always gemini — backend handles the key)
 
 // Helper: Read a File as base64 (strip data URL prefix, return only base64)
 function readFileAsBase64(file) {
@@ -1115,7 +1112,7 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
           // User must press stop button to end session.
         },
         onStatusChange: (status) => {
-          console.log(`[Voice ${USE_AZURE_VOICE ? 'Azure' : 'Gemini'}] Status:`, status);
+          console.log('[Voice Gemini] Status:', status);
           setLiveStatus(status);
         },
         onError: (error) => {
@@ -1126,20 +1123,15 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
         },
       };
       
-      // Create session based on provider
+      // Create Gemini Live session
       let session;
-      if (USE_AZURE_VOICE && isAzureRealtimeAvailable()) {
-        console.log('[Voice] Using Azure OpenAI Realtime API');
-        session = new AzureRealtimeSession(sessionOptions);
-      } else {
-        console.log('[Voice] Using Gemini Live');
-        session = new GeminiLiveSession(sessionOptions);
-      }
+      console.log('[Voice] Using Gemini Live');
+      session = new GeminiLiveSession(sessionOptions);
       
       await session.connect();
       geminiLiveSessionRef.current = session;
       
-      // Start streaming (Azure uses start(), Gemini uses startStreaming())
+      // Start streaming
       if (session.startStreaming) {
         await session.startStreaming();
       } else if (session.start) {
@@ -1159,9 +1151,7 @@ Respond helpfully and naturally to voice input. Execute relevant tools immediate
       const session = geminiLiveSessionRef.current;
       geminiLiveSessionRef.current = null; // Prevent double-stop
       
-      // Stop session and wait for final processing
-      // Azure uses async stop() that processes remaining text
-      // Gemini uses disconnect()
+      // Stop session — Gemini uses disconnect()
       try {
         if (session.stop) {
           await session.stop();

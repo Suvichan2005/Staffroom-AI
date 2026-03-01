@@ -12,42 +12,21 @@
 import { handleChatToolCall } from './chatToolsDefinition';
 import { getLiveSessionToken } from './aiApiClient';
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-
-// In production, we fetch the WebSocket URL from the secure proxy
-// to avoid exposing API keys in the client bundle
-// Disable proxy - use direct browser API calls
-const USE_PROXY = false;
-
 // Use gemini-2.5-flash-native-audio-preview-12-2025 for Live API - supports audio input with TEXT responses + tool calling
 // The native-audio model requires responseModalities: ['AUDIO'] and cannot return TEXT
 const LIVE_API_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
 
-// Direct URL (only used in development mode with local API key)
-const LIVE_API_URL_DIRECT = GEMINI_API_KEY 
-  ? `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`
-  : null;
-
 /**
- * Get the WebSocket URL for Gemini Live
- * In production, fetches from Cloud Function. In dev, uses direct URL.
+ * Get the WebSocket URL for Gemini Live (always via backend proxy)
  */
 async function getLiveApiUrl() {
-  if (USE_PROXY) {
-    try {
-      const { wsUrl } = await getLiveSessionToken();
-      return wsUrl;
-    } catch (error) {
-      console.error('Failed to get live session token:', error);
-      throw new Error('Unable to start live session - please try again');
-    }
+  try {
+    const { wsUrl } = await getLiveSessionToken();
+    return wsUrl;
+  } catch (error) {
+    console.error('Failed to get live session token:', error);
+    throw new Error('Unable to start live session - please try again');
   }
-  
-  if (!LIVE_API_URL_DIRECT) {
-    throw new Error('Gemini API key not configured for live sessions');
-  }
-  
-  return LIVE_API_URL_DIRECT;
 }
 
 /**
@@ -854,9 +833,10 @@ export function createAttendanceSession(options) {
 
 /**
  * Check if Gemini Live API is available
+ * With backend proxy, we always have a key — just need WebSocket support.
  */
 export function isGeminiLiveAvailable() {
-  return !!GEMINI_API_KEY && typeof WebSocket !== 'undefined';
+  return typeof WebSocket !== 'undefined';
 }
 
 export default {

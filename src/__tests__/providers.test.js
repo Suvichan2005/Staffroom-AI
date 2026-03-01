@@ -204,39 +204,6 @@ describe('AI Providers', () => {
     });
   });
 
-  describe('Azure Provider', () => {
-    it('should format requests correctly', async () => {
-      const { AzureProvider } = await import('../services/providers/azureProvider.js');
-      
-      // Create instance without config (won't make API calls)
-      const provider = new AzureProvider({
-        endpoint: 'https://test.openai.azure.com',
-        apiKey: 'test-key',
-        deployment: 'gpt-4o'
-      });
-      
-      expect(provider).toBeDefined();
-      expect(typeof provider.generate).toBe('function');
-      expect(typeof provider.generateStream).toBe('function');
-    });
-
-    it('should handle API errors gracefully', async () => {
-      const { azureProvider } = await import('../services/providers/azureProvider.js');
-      
-      // Mock failed response
-      global.fetch.mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        json: () => Promise.resolve({ error: { message: 'Unauthorized' } })
-      });
-      
-      // Should throw or return error, not crash
-      await expect(azureProvider.generate({ prompt: 'test' }))
-        .rejects
-        .toThrow();
-    });
-  });
-
   describe('Fallback Behavior', () => {
     it('should fall back to next provider on failure', async () => {
       const { aiRegistry } = await import('../services/providers/registry.js');

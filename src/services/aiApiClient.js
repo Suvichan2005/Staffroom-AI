@@ -1,401 +1,182 @@
 /**
- * AI API Client - Secure proxy to Firebase Cloud Functions
- * 
- * This service provides a secure interface to AI capabilities.
- * 
- * In PRODUCTION: Routes through Firebase Cloud Functions (API keys server-side)
- * In DEVELOPMENT: 
- *   - With emulator: Uses Firebase emulator endpoints
- *   - Without emulator: Uses Vite proxy for direct Azure calls (dev only)
- * 
- * Supports multiple providers:
- * - Azure OpenAI (default for Imagine Cup)
- * - Google Gemini (fallback)
+ * AI API Client — Secure Backend Proxy
+ *
+ * ALL AI calls go through the Express backend.  Zero API keys in the client.
+ *
+ * The client attaches the Firebase ID token to every request so the backend
+ * can verify the user.  The backend holds all provider keys and does the
+ * actual AI work.
+ *
+ * Backend base URL is configured via VITE_BACKEND_URL (defaults to '' which
+ * means same-origin; in dev it points at the local Express server).
  */
 
-// Configuration
-const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
-// Disable proxy - use direct browser API calls
-const USE_PROXY = false;
-const AZURE_ENDPOINT = import.meta.env.VITE_AZURE_OPENAI_ENDPOINT;
-const AZURE_API_KEY = import.meta.env.VITE_AZURE_OPENAI_API_KEY;
-const AZURE_DEPLOYMENT = import.meta.env.VITE_AZURE_OPENAI_DEPLOYMENT || 'gpt-4.1-mini';
-const AZURE_API_VERSION = import.meta.env.VITE_AZURE_OPENAI_API_VERSION || '2024-12-01-preview';
+import { getAuth } from 'firebase/auth';
 
-// Check if we can make direct Azure calls (dev mode with credentials)
-const CAN_USE_DIRECT_AZURE = import.meta.env.DEV && AZURE_ENDPOINT && AZURE_API_KEY && AI_PROVIDER === 'azure';
+// ── Configuration ───────────────────────────────────────────
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || '';
 
-// Base URL for Firebase emulator
-const EMULATOR_BASE = 'http://localhost:5001/staffroom-ai/us-central1';
+// ── Auth helper ─────────────────────────────────────────────
 
 /**
- * Get the appropriate endpoint based on provider and mode
+ * Get a fresh Firebase ID token for the current user.
+ * Returns empty string if not signed in (health-check calls).
  */
-function getEndpoint(type, provider = AI_PROVIDER) {
-  const isDev = import.meta.env.DEV;
-  const isProd = import.meta.env.PROD;
-  
-  // In production, always use Cloud Functions proxy
-  if (isProd || USE_PROXY) {
-    const prodEndpoints = {
-      azure: {
-        generate: '/api/ai/azure/generate',
-        transcribe: '/api/ai/azure/transcribe',
-        liveToken: '/api/ai/azure/speech-token',
-        health: '/api/health/azure',
-      },
-      gemini: {
-        generate: '/api/ai/generate',
-        transcribe: '/api/ai/transcribe',
-        liveToken: '/api/ai/live-token',
-        health: '/api/health',
-      }
-    };
-    return prodEndpoints[provider]?.[type] || prodEndpoints.gemini[type];
+async function getIdToken() {
+  try {
+    const user = getAuth().currentUser;
+    if (!user) return '';
+    return await user.getIdToken(/* forceRefresh */ false);
+  } catch {
+    return '';
   }
-  
-  // In dev with direct Azure access, use Vite proxy
-  if (CAN_USE_DIRECT_AZURE && type === 'generate') {
-    return 'DIRECT_AZURE'; // Special marker for direct calls
-  }
-  
-  // Fall back to emulator endpoints
-  const devEndpoints = {
-    azure: {
-      generate: `${EMULATOR_BASE}/azureGenerate`,
-      transcribe: `${EMULATOR_BASE}/azureTranscribe`,
-      liveToken: `${EMULATOR_BASE}/azureSpeechToken`,
-      health: `${EMULATOR_BASE}/azureHealth`,
-    },
-    gemini: {
-      generate: `${EMULATOR_BASE}/aiGenerate`,
-      transcribe: `${EMULATOR_BASE}/transcribe`,
-      liveToken: `${EMULATOR_BASE}/getLiveToken`,
-      health: `${EMULATOR_BASE}/health`,
-    }
-  };
-  
-  return devEndpoints[provider]?.[type] || devEndpoints.gemini[type];
 }
 
 /**
- * Make a direct Azure OpenAI call (dev mode only, uses Vite proxy)
+ * Build headers with auth.
  */
-async function callAzureDirect({ messages, tools, options, useCase }) {
-  const deployment = getDeploymentForUseCase(useCase);
-  
-  // Use Vite proxy to bypass CORS (configured in vite.config.js)
-  const url = `/azure-proxy/openai/deployments/${deployment}/chat/completions?api-version=${AZURE_API_VERSION}`;
-  
-  // Check if this is a reasoning model (o-series or gpt-5) - they don't support temperature
-  const isReasoningModel = deployment.startsWith('o') || deployment.includes('gpt-5');
-  
-  const body = {
-    messages,
-    max_completion_tokens: options?.maxTokens ?? 2048, // GPT-4.1+ uses max_completion_tokens
+async function authHeaders(extra = {}) {
+  const token = await getIdToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extra,
   };
-  
-  // Only add temperature for non-reasoning models
-  if (!isReasoningModel) {
-    body.temperature = options?.temperature ?? 0.7;
-  }
-  
-  if (tools && tools.length > 0) {
-    body.tools = tools;
-    body.tool_choice = 'auto';
-  }
-  
-  console.log(`[aiApiClient] Direct Azure call to ${deployment} via Vite proxy`);
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': AZURE_API_KEY,
-    },
-    body: JSON.stringify(body),
-  });
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    console.error('[aiApiClient] Azure error:', errorData);
-    throw new Error(errorData.error?.message || `Azure API error: ${response.status}`);
-  }
-  
-  return response.json();
 }
 
-/**
- * Get deployment name based on use case
- */
-function getDeploymentForUseCase(useCase) {
-  const MODEL_MAP = {
-    'chat': import.meta.env.VITE_AZURE_DEPLOYMENT_FAST || 'gpt-5-mini',
-    'quiz': import.meta.env.VITE_AZURE_DEPLOYMENT_FAST || 'gpt-5-mini',
-    'briefing': import.meta.env.VITE_AZURE_DEPLOYMENT_FAST || 'gpt-5-mini',
-    'analysis': import.meta.env.VITE_AZURE_DEPLOYMENT_STANDARD || 'gpt-5-mini',
-    'tools': import.meta.env.VITE_AZURE_DEPLOYMENT_STANDARD || 'gpt-5-mini',
-    'reasoning': import.meta.env.VITE_AZURE_DEPLOYMENT_REASONING || 'gpt-5-mini',
-  };
-  return MODEL_MAP[useCase] || AZURE_DEPLOYMENT;
+// ── Low-level fetch wrapper ─────────────────────────────────
+
+async function apiFetch(path, options = {}) {
+  const url = `${BACKEND_URL}${path}`;
+  const headers = await authHeaders(options.headers);
+  const res = await fetch(url, { ...options, headers });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    const err = new Error(body.message || body.error || `Request failed: ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+
+  return res.json();
 }
 
+// ── Public API ──────────────────────────────────────────────
+
 /**
- * Call the AI generation endpoint (Azure or Gemini based on config)
- * 
- * @param {Object} params - Generation parameters
- * @param {string} params.prompt - The user prompt
- * @param {string} [params.systemInstruction] - System instructions for the model
- * @param {Array} [params.tools] - Tool definitions for function calling
- * @param {Array} [params.history] - Conversation history
- * @param {string} [params.useCase] - Use case for model selection (chat, analysis, reasoning)
+ * Call the AI generation endpoint.
+ *
+ * @param {Object}  params
+ * @param {string}  [params.prompt]            – user message (text only)
+ * @param {Array}   [params.parts]             – user message parts (for multimodal / attachments)
+ * @param {string}  [params.systemInstruction] – system prompt
+ * @param {Array}   [params.tools]             – tool / function declarations
+ * @param {Array}   [params.history]           – conversation history (Gemini or OpenAI format)
+ * @param {string}  [params.type]              – 'fast' | 'default' | 'complex'
+ * @param {Object}  [params.toolConfig]        – e.g. { functionCallingConfig: { mode: 'ANY' } }
+ * @param {Object}  [params.generationConfig]
  * @returns {Promise<{text: string, functionCalls: Array, finishReason: string}>}
  */
-export async function callAIGenerate({ prompt, systemInstruction, tools, history, useCase }) {
-  const endpoint = getEndpoint('generate');
-  
-  // Build request components
-  const { messages, formattedTools } = buildAzureRequest({ prompt, systemInstruction, tools, history, useCase });
-  
-  // Use direct Azure call in dev mode when emulator isn't needed
-  if (endpoint === 'DIRECT_AZURE') {
-    console.log(`[aiApiClient] Using direct Azure call (dev mode)`);
-    try {
-      const result = await callAzureDirect({ 
-        messages, 
-        tools: formattedTools, 
-        options: { temperature: 1, maxTokens: 2048 },
-        useCase 
-      });
-      return normalizeResponse(result, 'azure');
-    } catch (error) {
-      console.error('[aiApiClient] Direct Azure call failed:', error);
-      throw error;
-    } 
-  }
-  
-  // Build request body based on provider
-  const body = AI_PROVIDER === 'azure' 
-    ? { messages, tools: formattedTools, useCase, options: { temperature: 0.7, maxTokens: 2048 } }
-    : buildGeminiRequest({ prompt, systemInstruction, tools, history });
-    
-  console.log(`[aiApiClient] Calling ${AI_PROVIDER} at ${endpoint}`);
-  
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || error.message || `AI request failed: ${response.status}`);
-  }
-  
-  const result = await response.json();
-  
-  // Normalize response format
-  return normalizeResponse(result, AI_PROVIDER);
-}
-
-/**
- * Build Azure OpenAI request format
- */
-function buildAzureRequest({ prompt, systemInstruction, tools, history, useCase }) {
+export async function callAIGenerate({
+  prompt,
+  parts: userParts,
+  systemInstruction,
+  tools,
+  history,
+  type,
+  toolConfig,
+  generationConfig,
+}) {
+  // Build messages array from history + current message.
+  // Preserves `parts` arrays for function-call / function-response round-trips
+  // and multimodal messages (inline images, file content).
   const messages = [];
-  
-  // System message
-  if (systemInstruction) {
-    messages.push({ role: 'system', content: systemInstruction });
-  }
-  
-  // History
-  if (history && history.length > 0) {
+
+  if (history?.length) {
     for (const msg of history) {
-      messages.push({ role: msg.role, content: msg.content || msg.parts?.[0]?.text });
+      if (msg.parts) {
+        // Preserve parts directly (functionCall, functionResponse, inlineData, etc.)
+        messages.push({
+          role: msg.role === 'model' ? 'assistant' : msg.role,
+          parts: msg.parts,
+        });
+      } else {
+        messages.push({
+          role: msg.role === 'model' ? 'assistant' : msg.role,
+          content: msg.content || '',
+        });
+      }
     }
   }
-  
-  // Current prompt
-  if (prompt) {
+
+  // Add current user message — either as structured parts or plain text
+  if (userParts) {
+    messages.push({ role: 'user', parts: userParts });
+  } else if (prompt) {
     messages.push({ role: 'user', content: prompt });
   }
-  
-  return {
-    messages,
-    formattedTools: tools ? formatToolsForAzure(tools) : undefined,
-    useCase: useCase || 'chat',
-    options: {
-      temperature: 0.7,
-      maxTokens: 2048,
-    }
-  };
-}
 
-/**
- * Build Gemini request format
- */
-function buildGeminiRequest({ prompt, systemInstruction, tools, history }) {
-  return {
-    prompt,
-    systemInstruction,
-    tools,
-    history,
-  };
-}
-
-/**
- * Format tools for Azure OpenAI
- */
-function formatToolsForAzure(tools) {
-  if (!tools || !Array.isArray(tools)) return undefined;
-  
-  return tools.map(tool => {
-    // Handle Gemini format
-    if (tool.functionDeclarations) {
-      return tool.functionDeclarations.map(fn => ({
-        type: 'function',
-        function: {
-          name: fn.name,
-          description: fn.description,
-          parameters: fn.parameters,
-        }
-      }));
-    }
-    
-    // Handle normalized format
-    return {
-      type: 'function',
-      function: {
-        name: tool.name,
-        description: tool.description,
-        parameters: tool.parameters,
-      }
-    };
-  }).flat();
-}
-
-/**
- * Normalize response from different providers
- */
-function normalizeResponse(result, provider) {
-  if (provider === 'azure') {
-    const choice = result.choices?.[0];
-    const message = choice?.message;
-    
-    return {
-      text: message?.content || '',
-      functionCalls: message?.tool_calls?.map(tc => ({
-        name: tc.function?.name,
-        args: JSON.parse(tc.function?.arguments || '{}'),
-      })) || [],
-      finishReason: choice?.finish_reason || 'stop',
-      usage: result.usage,
-    };
-  }
-  
-  // Gemini format (already normalized by proxy)
-  return result;
-}
-
-/**
- * Transcribe audio using the appropriate provider (Azure Speech or Whisper)
- * 
- * @param {Object} params - Transcription parameters
- * @param {string} params.audio - Base64 encoded audio data
- * @param {string} [params.mimeType] - MIME type of the audio (default: audio/webm)
- * @param {string} [params.language] - Language code (default: en-IN)
- * @returns {Promise<{text: string, success: boolean}>}
- */
-export async function transcribeAudio({ audio, mimeType = 'audio/webm', language = 'en-IN' }) {
-  const endpoint = getEndpoint('transcribe');
-  
-  console.log(`[aiApiClient] Transcribing with ${AI_PROVIDER} at ${endpoint}`);
-    
-  const response = await fetch(endpoint, {
+  return apiFetch('/api/ai/generate', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
-      audio,
-      mimeType,
-      language,
+      messages,
+      systemInstruction,
+      tools,
+      type: type || 'default',
+      toolConfig,
+      generationConfig,
     }),
   });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || error.message || `Transcription failed: ${response.status}`);
-  }
-  
-  return response.json();
 }
 
 /**
- * Get a token/URL for live voice session (Gemini Live or Azure Speech)
- * 
- * @returns {Promise<{wsUrl?: string, token?: string, region?: string, expiresIn: number}>}
+ * Call the vision endpoint (document parsing with images).
+ */
+export async function callAIVision({ prompt, imageBase64, mimeType, systemInstruction, generationConfig }) {
+  return apiFetch('/api/ai/vision', {
+    method: 'POST',
+    body: JSON.stringify({ prompt, imageBase64, mimeType, systemInstruction, generationConfig }),
+  });
+}
+
+/**
+ * Call the agent endpoint (forced function calling for onboarding).
+ */
+export async function callAIAgent({ contents, systemInstruction, tools, toolConfig, generationConfig }) {
+  return apiFetch('/api/ai/agent', {
+    method: 'POST',
+    body: JSON.stringify({ contents, systemInstruction, tools, toolConfig, generationConfig }),
+  });
+}
+
+/**
+ * Get a token / WebSocket URL for Gemini Live voice session.
  */
 export async function getLiveSessionToken() {
-  const endpoint = getEndpoint('liveToken');
-  
-  console.log(`[aiApiClient] Getting live token from ${AI_PROVIDER} at ${endpoint}`);
-    
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(error.error || error.message || `Failed to get live token: ${response.status}`);
-  }
-  
-  return response.json();
+  return apiFetch('/api/ai/live-token');
 }
 
 /**
- * Check if the AI API is healthy
- * 
- * @returns {Promise<{status: string, timestamp: string, version: string, provider: string}>}
+ * Check backend health.
  */
 export async function checkAPIHealth() {
-  const endpoint = getEndpoint('health');
-    
-  const response = await fetch(endpoint);
-  
-  if (!response.ok) {
-    throw new Error('API health check failed');
-  }
-  
-  const result = await response.json();
-  return { ...result, provider: AI_PROVIDER };
+  return apiFetch('/api/health');
 }
 
 /**
- * Get the currently configured AI provider
- * @returns {string} 'azure' | 'gemini'
+ * Get current provider name.
  */
 export function getCurrentProvider() {
-  return AI_PROVIDER;
+  return 'gemini';
 }
 
 /**
- * Helper to convert a Blob to base64
- * 
- * @param {Blob} blob - The blob to convert
- * @returns {Promise<string>} Base64 encoded string (without data URL prefix)
+ * Convert a Blob to base64 (data portion only, no data-URL prefix).
  */
 export function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      // Remove the data URL prefix (e.g., "data:audio/webm;base64,")
       const base64 = reader.result.split(',')[1];
       resolve(base64);
     };
@@ -404,9 +185,11 @@ export function blobToBase64(blob) {
   });
 }
 
+// Legacy default export for compat
 export default {
   callAIGenerate,
-  transcribeAudio,
+  callAIVision,
+  callAIAgent,
   getLiveSessionToken,
   checkAPIHealth,
   blobToBase64,

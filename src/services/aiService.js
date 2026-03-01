@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { 
   teacherData, 
   getSyllabusByRef, 
@@ -25,55 +24,9 @@ import * as classManagement from '../utils/classManagement';
 /**
  * AI Service for School Companion
  * 
- * Supports multiple AI providers:
- * - Azure OpenAI (GPT-4.1 series) - Primary for Imagine Cup
- * - Google Gemini - Fallback
- * - Mock responses - Development/testing
- * 
- * Provider is selected via VITE_AI_PROVIDER environment variable.
+ * All AI calls go through the backend proxy (callAIGenerate from aiApiClient).
+ * Zero API keys in the client bundle.
  */
-
-// Provider configuration
-const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const AZURE_CONFIGURED = !!(import.meta.env.VITE_AZURE_OPENAI_ENDPOINT && import.meta.env.VITE_AZURE_OPENAI_API_KEY);
-
-// Disable proxy - use direct browser API calls with API key from environment
-const USE_PROXY = false;
-
-// Check provider availability
-const isProviderReady = () => {
-  if (USE_PROXY) return true; // Proxy handles provider selection server-side
-  if (AI_PROVIDER === 'azure') return AZURE_CONFIGURED;
-  if (AI_PROVIDER === 'gemini') return !!GEMINI_API_KEY;
-  if (AI_PROVIDER === 'mock') return true;
-  return false;
-};
-
-if (!isProviderReady()) {
-  console.warn(`⚠️  AI Provider "${AI_PROVIDER}" not configured. AI features will use mock responses.`);
-} else {
-  console.log(`✅ AI Provider: ${AI_PROVIDER}${USE_PROXY ? ' (via proxy)' : ''}`);
-}
-
-// Initialize Gemini (only needed for direct Gemini API calls in dev)
-const genAI = (!USE_PROXY && AI_PROVIDER === 'gemini' && GEMINI_API_KEY) 
-  ? new GoogleGenerativeAI(GEMINI_API_KEY) 
-  : null;
-
-// Models
-const MODELS = {
-  TEXT: 'gemini-2.5-flash', // Fast, good for most tasks
-  PRO: 'gemini-2.5-pro'     // More capable, use for complex analysis
-};
-
-// Generation config
-const generationConfig = {
-  temperature: 0.7,
-  topK: 40,
-  topP: 0.95,
-  maxOutputTokens: 2048,
-};
 
 // Rate limit handling
 const RATE_LIMIT_CONFIG = {
@@ -98,112 +51,42 @@ function isRateLimitError(error) {
 }
 
 /**
- * Extract retry delay from error message if available
- */
-function extractRetryDelay(error) {
-  const match = error?.message?.match(/retry in (\d+(?:\.\d+)?)/i);
-  if (match) {
-    return Math.ceil(parseFloat(match[1]) * 1000); // Convert to ms
-  }
-  return null;
-}
-
-/**
- * Core AI call function with retry logic
- * Supports Azure OpenAI, Gemini, and mock responses
+ * Core AI call function with retry logic.
+ * Always routes through the backend proxy.
  */
 async function callGemini(prompt, usePro = false, retryCount = 0) {
   const startTime = Date.now();
-  const modelName = usePro ? MODELS.PRO : MODELS.TEXT;
-  
-  // Use unified AI client for Azure or when proxy is enabled
-  // This handles both production (proxy) and dev (direct Azure calls)
-  if (USE_PROXY || AI_PROVIDER === 'azure') {
-    try {
-      const useCase = usePro ? 'analysis' : 'chat';
-      const result = await callAIGenerate({
-        prompt,
-        useCase,
-      });
-      
-      const text = result.text || '';
-      logGeminiCall('callGemini', { 
-        promptPreview: prompt.substring(0, 200), 
-        model: AI_PROVIDER === 'azure' ? `azure-${useCase}` : 'proxy',
-        retryCount 
-      }, text, Date.now() - startTime);
-      
-      return text;
-    } catch (error) {
-      console.error('AI API Error:', error);
-      
-      // Handle rate limit with retry
-      if (error.message?.includes('Rate limit') && retryCount < RATE_LIMIT_CONFIG.maxRetries) {
-        const delay = RATE_LIMIT_CONFIG.baseDelayMs * Math.pow(2, retryCount);
-        console.warn(`Rate limited. Retrying in ${delay}ms (attempt ${retryCount + 1}/${RATE_LIMIT_CONFIG.maxRetries})`);
-        await sleep(delay);
-        return callGemini(prompt, usePro, retryCount + 1);
-      }
-      
-      logGeminiCall('callGemini', { 
-        promptPreview: prompt.substring(0, 200), 
-        model: AI_PROVIDER,
-        retryCount 
-      }, null, Date.now() - startTime, error);
-      
-      // Fallback to mock on error
-      console.warn('AI call failed, using mock response');
-      return getMockResponse(prompt);
-    }
-  }
-  
-  // Direct Gemini API call (development mode with Gemini)
-  if (!genAI) {
-    console.warn('Using mock response - no API key');
-    const mockResponse = getMockResponse(prompt);
-    logGeminiCall('callGemini', { prompt: prompt.substring(0, 200), model: modelName, isMock: true }, mockResponse, Date.now() - startTime);
-    return mockResponse;
-  }
 
   try {
-    const model = genAI.getGenerativeModel({ 
-      model: modelName,
-      generationConfig
+    const result = await callAIGenerate({
+      prompt,
+      type: usePro ? 'complex' : 'default',
     });
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
     
-    // Log successful call
+    const text = result.text || '';
     logGeminiCall('callGemini', { 
       promptPreview: prompt.substring(0, 200), 
-      model: modelName,
+      model: usePro ? 'gemini-2.5-pro' : 'gemini-2.5-flash',
       retryCount 
     }, text, Date.now() - startTime);
     
     return text;
   } catch (error) {
-    console.error('Gemini API Error:', error);
+    console.error('AI API Error:', error);
     
     // Handle rate limit with retry
     if (isRateLimitError(error) && retryCount < RATE_LIMIT_CONFIG.maxRetries) {
-      const suggestedDelay = extractRetryDelay(error);
-      const backoffDelay = Math.min(
+      const delay = Math.min(
         RATE_LIMIT_CONFIG.baseDelayMs * Math.pow(2, retryCount),
         RATE_LIMIT_CONFIG.maxDelayMs
       );
-      const delay = suggestedDelay || backoffDelay;
-      
       console.warn(`Rate limited. Retrying in ${delay}ms (attempt ${retryCount + 1}/${RATE_LIMIT_CONFIG.maxRetries})`);
       await sleep(delay);
       return callGemini(prompt, usePro, retryCount + 1);
     }
     
-    // Log error
     logGeminiCall('callGemini', { 
-      promptPreview: prompt.substring(0, 200), 
-      model: modelName,
+      promptPreview: prompt.substring(0, 200),
       retryCount 
     }, null, Date.now() - startTime, error);
     
@@ -1946,245 +1829,6 @@ const chatToolDeclarations = [
 ];
 
 /**
- * Azure implementation of parseVoiceTranscript with iterative tool calling
- * Matches Gemini's function calling approach but uses Azure OpenAI
- */
-async function parseVoiceTranscriptAzure(text, currentCourseId, currentSectionId) {
-  console.log('[parseVoiceTranscriptAzure] Processing:', text);
-  
-  const systemPrompt = `You are a teaching assistant helping to parse voice commands for updating syllabus progress.
-
-The user said: "${text}"
-
-Current context:
-- Current Course ID: ${currentCourseId || 'not set'}
-- Current Section ID: ${currentSectionId || 'not set'}
-
-MULTI-STEP COMMAND DETECTION:
-The user may give MULTIPLE operations in ONE command. You MUST identify ALL operations:
-
-PATTERN 1: "Mark X done, mark Y as ongoing/started"
-Example: "mark plains and valleys as done, mark the next topic as ongoing"
-→ TWO operations: 1) mark first topic complete, 2) mark next topic ongoing
-
-PATTERN 2: "Mark X done, the kids understood well, mark next at page Y"  
-Example: "mark plains as valleys as done, the kids understood it very well, mark the next topic as ongoing at page number 38"
-→ TWO operations: 1) mark first topic complete with note, 2) mark next topic ongoing at page 38
-
-PATTERN 3: "Done with X, covered to page Y"
-Example: "done with plains and valleys, covered to page 42"
-→ TWO operations: 1) mark X complete, 2) mark topic containing page Y as ongoing at that page
-
-Your task:
-1. First, identify what subject/section the user is referring to:
-   - Look for explicit mentions like "history", "geography", "8B", "6A"
-   - If they say "in it" or don't specify, use the Current Course ID context above
-   
-2. Use the tools strategically:
-   - Call getSyllabus with subject filter if user mentioned a subject
-   - Call searchTopic with filterSubject/filterSectionId to AVOID cross-subject matches
-   - IMPORTANT: "Enlightenment" in History is different from topics in Geography!
-
-3. Identify ALL operations in the command (there may be multiple):
-   - action: "mark_complete" (finished/done/completed), "mark_pending" (not done/undo/hasn't), "mark_ongoing" (started/working on), or "unclear"
-   - courseId: the course this belongs to
-   - sectionId: the section mentioned or from context
-   - chapterIndex: the chapter number (1-based index from syllabus)
-   - topicIndex: the topic number (1-based index from syllabus)
-   - currentPage: (optional) page number if mentioned
-   - notes: (optional) any notes/comments like "kids understood well"
-
-CRITICAL RULES:
-- "not done", "has not done", "hasn't done" → action: "mark_pending"
-- Notes go with the topic being worked on (ongoing), NOT completed topics
-- "covered to page X" means the NEXT topic (not current) is at page X
-- When searching topics, ALWAYS filter by subject if one was mentioned or is in context
-- Handle speech-to-text errors like "deformers" → "reformers", "planes" → "plains", "plains as valleys" → "plains and valleys"
-- If user says "in it" without specifying subject, use the Current Course ID to determine subject
-- "mark the next" means find the next topic after the current one in sequence`;
-
-  try {
-    // Call Azure with tools
-    let response = await callAIGenerate({
-      prompt: text,
-      systemInstruction: systemPrompt,
-      tools: [{ functionDeclarations: toolDeclarations }],
-      history: [],
-      useCase: 'tools'
-    });
-    
-    console.log('[parseVoiceTranscriptAzure] Initial response:', response);
-    
-    // Handle function calls iteratively (same as Gemini)
-    let iterations = 0;
-    const maxIterations = 5;
-    const conversationHistory = [];
-    
-    while (response.functionCalls && response.functionCalls.length > 0 && iterations < maxIterations) {
-      iterations++;
-      console.log(`[parseVoiceTranscriptAzure] Processing ${response.functionCalls.length} function calls (iteration ${iterations})`);
-      
-      // Execute all function calls
-      const toolResults = [];
-      for (const call of response.functionCalls) {
-        const { name, args } = call;
-        console.log(`[parseVoiceTranscriptAzure] Calling tool: ${name}`, args);
-        
-        const fn = toolFunctions[name];
-        let result;
-        
-        if (fn) {
-          try {
-            if (name === 'getAvailableCourses') {
-              result = fn();
-            } else if (name === 'getSyllabus') {
-              result = fn(args.courseId, args.subject, args.sectionId);
-            } else if (name === 'searchTopic') {
-              result = fn(args.searchQuery, args.filterSubject, args.filterSectionId);
-            } else {
-              result = { error: `Unknown function: ${name}` };
-            }
-          } catch (err) {
-            console.error(`[parseVoiceTranscriptAzure] Error calling ${name}:`, err);
-            result = { error: err.message };
-          }
-        } else {
-          result = { error: `Unknown function: ${name}` };
-        }
-        
-        console.log(`[parseVoiceTranscriptAzure] Tool result for ${name}:`, result);
-        toolResults.push({
-          name,
-          result: JSON.stringify(result)
-        });
-      }
-      
-      // Add to conversation history
-      conversationHistory.push({ role: 'assistant', content: JSON.stringify(response.functionCalls) });
-      conversationHistory.push({ role: 'user', content: `Tool results:\n${toolResults.map(t => `${t.name}: ${t.result}`).join('\n')}` });
-      
-      // Call Azure again with tool results
-      response = await callAIGenerate({
-        prompt: 'Based on the tool results, continue analyzing the user request.',
-        systemInstruction: systemPrompt,
-        tools: [{ functionDeclarations: toolDeclarations }],
-        history: conversationHistory,
-        useCase: 'tools'
-      });
-    }
-    
-    // Now ask for the final structured response
-    const finalPrompt = `Based on the syllabus information you gathered, provide your final answer.
-
-CRITICAL: Use the courseId from the syllabus where you actually found the topic!
-- If you found "Enlightenment" in the History syllabus (hist8), return courseId: "hist8"
-- If you found "Plains and Valleys" in Geography syllabus (geo6), return courseId: "geo6"
-- Do NOT use the default context course if the topic is from a different course!
-
-MULTI-STEP OPERATIONS:
-If the user's command contains MULTIPLE operations, return MULTIPLE JSON objects (one per line).
-
-Example 1: "mark plains and valleys done, mark the next as ongoing"
-Output TWO JSON objects:
-{"action": "mark_complete", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 2, "matchedTopic": "Plains and Valleys", "matchedChapter": "Landforms of the Earth", "confidence": "high"}
-{"action": "mark_ongoing", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 3, "matchedTopic": "Rivers and Deltas", "matchedChapter": "Landforms of the Earth", "confidence": "high"}
-
-Example 2: "mark plains as valleys done, kids understood well, mark next at page 38"
-Output TWO JSON objects:
-{"action": "mark_complete", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 2, "matchedTopic": "Plains and Valleys", "matchedChapter": "Landforms of the Earth", "notes": "kids understood well", "confidence": "high"}
-{"action": "mark_ongoing", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 3, "matchedTopic": "Rivers and Deltas", "matchedChapter": "Landforms of the Earth", "currentPage": 38, "confidence": "high"}
-
-Return JSON object(s) (no markdown, no explanation, one JSON per line if multiple):
-{
-  "action": "mark_complete" | "mark_ongoing" | "mark_pending" | "unclear",
-  "courseId": "the courseId where the topic was found (e.g., 'hist8', 'geo6')",
-  "sectionId": "string (from user input or context)", 
-  "chapterIndex": number,
-  "topicIndex": number,
-  "matchedTopic": "the exact topic title from syllabus",
-  "matchedChapter": "the exact chapter title from syllabus",
-  "currentPage": number (optional - only if page number mentioned),
-  "notes": "string (optional - any comments like 'kids understood well')",
-  "confidence": "high" | "medium" | "low"
-}
-
-Remember:
-- "not done", "hasn't done", "has not" → action: "mark_pending"
-- Use the exact indices from the syllabus (1-based, not 0-based)
-- courseId must match where the topic was found!
-- Notes go on the topic being worked on (ongoing), not completed topics
-- If multiple operations, output multiple JSON objects (one per line)
-- If you couldn't find the topic, set action: "unclear"`;
-
-    const finalResponse = await callAIGenerate({
-      prompt: finalPrompt,
-      systemInstruction: systemPrompt,
-      tools: [],
-      history: conversationHistory,
-      useCase: 'tools'
-    });
-    
-    const finalText = finalResponse.text || '';
-    console.log('[parseVoiceTranscriptAzure] Final response:', finalText);
-    
-    // Parse JSON from response
-    const jsonMatches = finalText.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g);
-    if (!jsonMatches || jsonMatches.length === 0) {
-      console.warn('[parseVoiceTranscriptAzure] No JSON in response, using fallback');
-      return simpleFallbackParse(text, currentCourseId, currentSectionId);
-    }
-    
-    // Parse all JSON blocks
-    const parsedResults = [];
-    for (const jsonStr of jsonMatches) {
-      try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.action && parsed.chapterIndex !== undefined && parsed.topicIndex !== undefined) {
-          parsed._source = 'azure-function-calling';
-          parsedResults.push(parsed);
-        }
-      } catch (e) {
-        console.warn('[parseVoiceTranscriptAzure] Failed to parse JSON block:', jsonStr, e);
-      }
-    }
-    
-    // If we got multiple valid results, return as batch
-    if (parsedResults.length > 1) {
-      console.log('[parseVoiceTranscriptAzure] Batch update detected:', parsedResults.length, 'topics');
-      return {
-        action: 'batch_update',
-        updates: parsedResults,
-        _source: 'azure-function-calling-batch'
-      };
-    }
-    
-    // Single result
-    if (parsedResults.length === 1) {
-      const parsed = parsedResults[0];
-      
-      // Validate required fields
-      if (!parsed.chapterIndex || !parsed.topicIndex || parsed.action === 'unclear') {
-        console.warn('[parseVoiceTranscriptAzure] Azure returned unclear result, trying fallback');
-        const fallback = simpleFallbackParse(text, currentCourseId, currentSectionId);
-        if (fallback.chapterIndex && fallback.topicIndex) {
-          return { ...fallback, _source: 'fallback-after-azure' };
-        }
-      }
-      
-      return parsed;
-    }
-    
-    // No valid results, use fallback
-    console.warn('[parseVoiceTranscriptAzure] No valid JSON results, using fallback');
-    return simpleFallbackParse(text, currentCourseId, currentSectionId);
-    
-  } catch (error) {
-    console.error('[parseVoiceTranscriptAzure] Error:', error);
-    return simpleFallbackParse(text, currentCourseId, currentSectionId);
-  }
-}
-
-/**
  * Parse voice transcript to extract syllabus update intent
  * LLM-FIRST approach with function calling for intelligent context gathering
  * 
@@ -2202,25 +1846,28 @@ export async function parseVoiceTranscript(transcript, context) {
 
   console.log('[parseVoiceTranscript] Input:', text);
 
-  // Use Azure if provider is set to Azure
-  if (AI_PROVIDER === 'azure') {
-    return parseVoiceTranscriptAzure(text, currentCourseId, currentSectionId);
-  }
-
-  // If no API key, use simple fallback
-  if (!genAI) {
-    console.warn('No Gemini API key, using simple fallback');
-    return simpleFallbackParse(text, currentCourseId, currentSectionId);
-  }
+  // All calls go through backend proxy now.
+  // Pre-load syllabus context and send everything in a single prompt.
 
   try {
-    // Create model with function calling
-    const model = genAI.getGenerativeModel({
-      model: MODELS.TEXT, // Using gemini-2.5-flash for best function calling support
-      tools: [{ functionDeclarations: toolDeclarations }]
-    });
+    // Pre-load syllabus context so we can send everything in one prompt
+    const courses = tool_getAvailableCourses();
+    
+    // Gather syllabus data for context
+    let syllabusContext = '';
+    if (currentCourseId) {
+      const syl = tool_getSyllabus(currentCourseId, null, currentSectionId);
+      syllabusContext = JSON.stringify(syl, null, 1);
+    } else {
+      const allSyl = courses.map(c => ({
+        courseId: c.courseId,
+        title: c.title,
+        syllabus: tool_getSyllabus(c.courseId)
+      }));
+      syllabusContext = JSON.stringify(allSyl, null, 1);
+    }
 
-    const systemPrompt = `You are a teaching assistant helping to parse voice commands for updating syllabus progress.
+    const prompt = `You are a teaching assistant parsing voice commands for updating syllabus progress.
 
 The user said: "${text}"
 
@@ -2228,150 +1875,39 @@ Current context:
 - Current Course ID: ${currentCourseId || 'not set'}
 - Current Section ID: ${currentSectionId || 'not set'}
 
+Available courses: ${JSON.stringify(courses)}
+
+Syllabus data:
+${syllabusContext}
+
 MULTI-STEP COMMAND DETECTION:
-The user may give MULTIPLE operations in ONE command. You MUST identify ALL operations:
-
-PATTERN 1: "Mark X done, mark Y as ongoing/started"
-Example: "mark plains and valleys as done, mark the next topic as ongoing"
-→ TWO operations: 1) mark first topic complete, 2) mark next topic ongoing
-
-PATTERN 2: "Mark X done, the kids understood well, mark next at page Y"  
-Example: "mark plains as valleys as done, the kids understood it very well, mark the next topic as ongoing at page number 38"
-→ TWO operations: 1) mark first topic complete with note, 2) mark next topic ongoing at page 38
-
-PATTERN 3: "Done with X, covered to page Y"
-Example: "done with plains and valleys, covered to page 42"
-→ TWO operations: 1) mark X complete, 2) mark topic containing page Y as ongoing at that page
-
-Your task:
-1. First, identify what subject/section the user is referring to:
-   - Look for explicit mentions like "history", "geography", "8B", "6A"
-   - If they say "in it" or don't specify, use the Current Course ID context above
-   
-2. Use the tools strategically:
-   - Call getSyllabus with subject filter if user mentioned a subject
-   - Call searchTopic with filterSubject/filterSectionId to AVOID cross-subject matches
-   - IMPORTANT: "Enlightenment" in History is different from topics in Geography!
-
-3. Identify ALL operations in the command (there may be multiple):
-   - action: "mark_complete" (finished/done/completed), "mark_pending" (not done/undo/hasn't), "mark_ongoing" (started/working on), or "unclear"
-   - courseId: the course this belongs to
-   - sectionId: the section mentioned or from context
-   - chapterIndex: the chapter number (1-based index from syllabus)
-   - topicIndex: the topic number (1-based index from syllabus)
-   - currentPage: (optional) page number if mentioned
-   - notes: (optional) any notes/comments like "kids understood well"
+The user may give MULTIPLE operations in ONE command. Identify ALL of them.
 
 CRITICAL RULES:
 - "not done", "has not done", "hasn't done" → action: "mark_pending"
 - Notes go with the topic being worked on (ongoing), NOT completed topics
-- "covered to page X" means the NEXT topic (not current) is at page X
-- When searching topics, ALWAYS filter by subject if one was mentioned or is in context
-- Handle speech-to-text errors like "deformers" → "reformers", "planes" → "plains", "plains as valleys" → "plains and valleys"
-- If user says "in it" without specifying subject, use the Current Course ID to determine subject
+- "covered to page X" means topic is at page X
+- Handle speech-to-text errors like "deformers" → "reformers", "planes" → "plains"
+- If user says "in it" without specifying subject, use the Current Course ID
 - "mark the next" means find the next topic after the current one in sequence
+- Use 1-based indices from syllabus
+- courseId must match where the topic was found!
 
-Start by identifying the subject context, then fetch the relevant syllabus.`;
-
-    const chat = model.startChat();
-    let response = await chat.sendMessage(systemPrompt);
-    
-    // Process function calls iteratively
-    let maxIterations = 5;
-    let iterations = 0;
-    
-    while (iterations < maxIterations) {
-      iterations++;
-      const candidate = response.response.candidates?.[0];
-      const content = candidate?.content;
-      
-      if (!content?.parts) break;
-      
-      // Check for function calls
-      const functionCalls = content.parts.filter(p => p.functionCall);
-      
-      if (functionCalls.length === 0) {
-        // No more function calls, get the final text response
-        break;
-      }
-      
-      // Execute function calls
-      const functionResponses = [];
-      for (const part of functionCalls) {
-        const { name, args } = part.functionCall;
-        console.log(`[LLM] Calling tool: ${name}`, args);
-        
-        const fn = toolFunctions[name];
-        if (fn) {
-          let result;
-          if (name === 'getAvailableCourses') {
-            result = fn();
-          } else if (name === 'getSyllabus') {
-            result = fn(args.courseId, args.subject, args.sectionId);
-          } else if (name === 'searchTopic') {
-            result = fn(args.searchQuery, args.filterSubject, args.filterSectionId);
-          }
-          
-          console.log(`[LLM] Tool result:`, result);
-          functionResponses.push({
-            functionResponse: {
-              name,
-              response: { result }
-            }
-          });
-        }
-      }
-      
-      // Send function responses back to LLM
-      response = await chat.sendMessage(functionResponses);
-    }
-    
-    // Now ask for the final structured response
-    const finalPrompt = `Based on the syllabus information you gathered, provide your final answer.
-
-CRITICAL: Use the courseId from the syllabus where you actually found the topic!
-- If you found "Enlightenment" in the History syllabus (hist8), return courseId: "hist8"
-- If you found "Plains and Valleys" in Geography syllabus (geo6), return courseId: "geo6"
-- Do NOT use the default context course if the topic is from a different course!
-
-MULTI-STEP OPERATIONS:
-If the user's command contains MULTIPLE operations, return MULTIPLE JSON objects (one per line).
-
-Example 1: "mark plains and valleys done, mark the next as ongoing"
-Output TWO JSON objects:
-{"action": "mark_complete", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 2, "matchedTopic": "Plains and Valleys", "matchedChapter": "Landforms of the Earth", "confidence": "high"}
-{"action": "mark_ongoing", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 3, "matchedTopic": "Rivers and Deltas", "matchedChapter": "Landforms of the Earth", "confidence": "high"}
-
-Example 2: "mark plains as valleys done, kids understood well, mark next at page 38"
-Output TWO JSON objects:
-{"action": "mark_complete", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 2, "matchedTopic": "Plains and Valleys", "matchedChapter": "Landforms of the Earth", "notes": "kids understood well", "confidence": "high"}
-{"action": "mark_ongoing", "courseId": "geo6", "sectionId": "6A", "chapterIndex": 2, "topicIndex": 3, "matchedTopic": "Rivers and Deltas", "matchedChapter": "Landforms of the Earth", "currentPage": 38, "confidence": "high"}
-
-Return JSON object(s) (no markdown, no explanation, one JSON per line if multiple):
+Return JSON (no markdown, no explanation, one JSON per line if multiple):
 {
   "action": "mark_complete" | "mark_ongoing" | "mark_pending" | "unclear",
-  "courseId": "the courseId where the topic was found (e.g., 'hist8', 'geo6')",
-  "sectionId": "string (from user input or context)", 
+  "courseId": "courseId where topic was found",
+  "sectionId": "string",
   "chapterIndex": number,
   "topicIndex": number,
-  "matchedTopic": "the exact topic title from syllabus",
-  "matchedChapter": "the exact chapter title from syllabus",
-  "currentPage": number (optional - only if page number mentioned),
-  "notes": "string (optional - any comments like 'kids understood well')",
+  "matchedTopic": "exact topic title from syllabus",
+  "matchedChapter": "exact chapter title from syllabus",
+  "currentPage": number (optional),
+  "notes": "string (optional)",
   "confidence": "high" | "medium" | "low"
-}
+}`;
 
-Remember:
-- "not done", "hasn't done", "has not" → action: "mark_pending"
-- Use the exact indices from the syllabus (1-based, not 0-based)
-- courseId must match where the topic was found!
-- Notes go on the topic being worked on (ongoing), not completed topics
-- If multiple operations, output multiple JSON objects (one per line)
-- If you couldn't find the topic, set action: "unclear"`;
-
-    const finalResponse = await chat.sendMessage(finalPrompt);
-    const finalText = finalResponse.response.text();
-    
+    const finalText = await callGemini(prompt);
     console.log('[LLM] Final response:', finalText);
     
     // Parse JSON from response - handle multiple JSON blocks for batch updates
@@ -2550,57 +2086,28 @@ Rules:
 - Always include both name and rollNo in the output
 `;
 
-  // Use Azure if provider is set to Azure
-  if (AI_PROVIDER === 'azure') {
-    try {
-      const response = await callAIGenerate({
-        prompt,
-        systemInstruction: 'You are a helpful AI that parses attendance voice commands. Return ONLY valid JSON, no markdown.',
-        tools: [],
-        history: [],
-        useCase: 'chat'
-      });
-      
-      const responseText = response.text || '';
-      console.log('[parseAttendanceVoice Azure] Response:', responseText);
-      
-      // Parse JSON from response
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        return { error: 'Failed to parse JSON from Azure response', _fallback: true, transcript };
-      }
-      
-      const json = JSON.parse(jsonMatch[0]);
-      return processAttendanceResult(json, studentList);
-      
-    } catch (error) {
-      console.error('[parseAttendanceVoice Azure] Error:', error);
-      return { error: 'Azure AI service error', _fallback: true, transcript };
-    }
-  }
-
-  // If no Gemini API key, use fallback
-  if (!genAI) {
-    return {
-      error: 'AI service unavailable',
-      _fallback: true,
-      transcript
-    };
-  }
-
+  // Route through backend proxy
   try {
-    const model = genAI.getGenerativeModel({
-      model: MODELS.TEXT,
-      generationConfig: { responseMimeType: "application/json" }
+    const response = await callAIGenerate({
+      prompt,
+      systemInstruction: 'You are a helpful AI that parses attendance voice commands. Return ONLY valid JSON, no markdown.',
+      generationConfig: { temperature: 0.1 }
     });
 
-    const result = await model.generateContent(prompt);
-    const json = JSON.parse(result.response.text());
+    const responseText = response.text || '';
+    console.log('[parseAttendanceVoice] Response:', responseText);
 
+    // Parse JSON from response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return { error: 'Failed to parse AI response', _fallback: true, transcript };
+    }
+
+    const json = JSON.parse(jsonMatch[0]);
     return processAttendanceResult(json, studentList);
 
   } catch (error) {
-    console.error('Attendance parsing error:', error);
+    console.error('[parseAttendanceVoice] Error:', error);
     return { error: error.message };
   }
 }
@@ -2970,263 +2477,6 @@ function getMockBriefing() {
 }
 
 // ============================================================================
-// AZURE CHAT PROCESSING
-// ============================================================================
-
-/**
- * Process chat message using Azure OpenAI with function calling
- * This is an alternative to the Gemini chat processing
- */
-async function processAzureChat(text, conversationHistory, context, startTime) {
-  console.log('[processAzureChat] Processing with Azure OpenAI');
-  
-  // Get temporal context
-  const temporal = getTemporalContext();
-  
-  // Track navigation intent (same as Gemini)
-  let navigationIntent = null;
-  
-  // Build system instruction (same as Gemini)
-  const systemInstruction = `You are a helpful AI teaching assistant for a school management app. You help teachers with:
-- Tracking syllabus progress
-- Finding the next topic to teach
-- Viewing schedules and attendance
-- Managing assignments
-- Identifying students at risk
-
-TEMPORAL CONTEXT (CURRENT TIME):
-📅 ${temporal.summary}
-${temporal.currentClass ? `🔴 You are IN CLASS right now with ${temporal.currentClass.classId}!` : ''}
-${temporal.todaySessions.length > 0 ? `Today's full schedule: ${temporal.todaySessions.map(s => `${s.classId} (${s.startTime})`).join(', ')}` : ''}
-
-CRITICAL CONTEXT RULES:
-1. The teacher is CURRENTLY VIEWING: ${context.urlContext?.sectionId ? `Section ${context.urlContext.sectionId} of ${context.urlContext?.courseId || 'a course'}` : 'the main dashboard'}
-2. When the user asks about "the page", "where I left off", "current topic", etc. WITHOUT specifying a section, USE THE CURRENT PAGE CONTEXT (${context.urlContext?.sectionId || 'unknown'})
-3. If user asks "what's next?" or "what should I teach?" - consider BOTH the current class (if in one) AND the page context
-4. ALWAYS check conversation history for context when user uses pronouns like "it", "that", "this"
-5. If user says "mark it as done" or "mark it complete", find the LAST topic mentioned in conversation and mark THAT topic
-
-TOOL USAGE RULES:
-1. Use the available tools to get real data - don't make up information
-2. When the user mentions a section like "8B" or "6A", use it in your tool calls
-3. If user asks about progress/page WITHOUT specifying section, use URL section: ${context.urlContext?.sectionId || 'ask for clarification'}
-4. For updateProgress: you need sectionId, chapterIndex, and topicIndex - get these from getSyllabus or searchTopic first
-
-MULTI-STEP OPERATION HANDLING (CRITICAL):
-When the teacher gives complex commands with MULTIPLE operations, YOU MUST execute them ALL in sequence:
-
-Pattern 1: "Mark X as done AND mark the next as [status]"
-EXAMPLE: "mark plains and valleys as done and the next as started"
-REQUIRED STEPS:
-1. searchTopic("plains and valleys") → get {sectionId, chapterIndex, topicIndex}
-2. updateProgress(sectionId, chapterIndex, topicIndex, "complete") → mark first topic DONE
-3. getNextTopic(sectionId) → find the NEXT topic after completion
-4. Extract indices from getNextTopic result
-5. updateProgress(sectionId, nextChapterIndex, nextTopicIndex, "ongoing") → mark next topic STARTED
-RESULT: Both operations completed successfully
-
-Pattern 2: "Done with X, covered to page Y, note Z"
-EXAMPLE: "done with plains and valleys, covered to page 42, students understood clearly"
-REQUIRED STEPS:
-1. searchTopic("plains and valleys") → get current topic indices
-2. updateProgress(status="complete") → mark current topic DONE (NO notes, NO currentPage on completed topics)
-3. findTopicByPage(sectionId, 42) → find which topic CONTAINS page 42 (this is the NEXT topic)
-4. updateProgress(status="ongoing", currentPage=42, notes="students understood clearly") → notes and page go on ONGOING topic
-KEY INSIGHT: The note refers to WHERE THEY LEFT OFF (ongoing topic), not the completed topic!
-
-Pattern 3: "Mark X as ongoing with note Y and page Z"
-EXAMPLE: "mark rivers and deltas as ongoing with note 'need extra time' at page 38"
-REQUIRED STEPS:
-1. searchTopic("rivers and deltas") → get topic indices
-2. updateProgress(status="ongoing", currentPage=38, notes="need extra time") → single call with all params
-
-Pattern 4: "Update/read note on topic X"
-EXAMPLE: "what note did I write on plains and valleys?" OR "update the note on rivers to say 'completed exercises'"
-REQUIRED STEPS (READ):
-1. searchTopic("plains and valleys") → get topic indices
-2. getProgress(sectionId) → get syllabus with progress data
-3. Find the specific topic in the syllabus and extract its notes field
-4. Report the note to user
-
-REQUIRED STEPS (UPDATE):
-1. searchTopic("rivers") → get topic indices  
-2. getProgress(sectionId) → get current progress to preserve other fields
-3. updateProgress(status=current_status, notes="completed exercises", currentPage=preserve_current) → update just the note
-
-CRITICAL RULES FOR MULTI-STEP:
-✅ DO: Execute ALL operations mentioned in a single command
-✅ DO: Chain function calls - use results from one call to inform the next
-✅ DO: Notes and currentPage go on ONGOING topics, not completed ones
-✅ DO: When finding "next topic", use getNextTopic() which handles sequence automatically
-✅ DO: Read existing progress before updating to preserve fields you're not changing
-❌ DON'T: Stop after the first operation - complete ALL requested changes
-❌ DON'T: Put notes on completed topics (status="complete" → NO notes parameter)
-❌ DON'T: Assume "done with X, page Y" means page Y is for topic X - page Y indicates the NEXT topic!
-❌ DON'T: Forget that findTopicByPage ONLY FINDS - you must call updateProgress after to actually update
-
-RESPONSE RULES:
-1. Keep responses concise and use markdown formatting
-2. When reporting progress, ALWAYS include: topic name, chapter name, page range, and current page if in progress
-3. If you're unsure about a section or topic, ask for clarification
-4. Available sections: ${teacherData.courses.flatMap(c => c.sections.map(s => `${s.id} (${c.title})`)).join(', ')}`;
-
-  // Build history in Azure format
-  const history = conversationHistory.slice(-10).map(m => ({
-    role: m.role === 'assistant' ? 'assistant' : 'user',
-    content: m.content
-  }));
-  
-  // Call Azure via aiApiClient
-  try {
-    const response = await callAIGenerate({
-      prompt: text,
-      systemInstruction,
-      tools: [{ functionDeclarations: chatToolDeclarations }],
-      history,
-      useCase: 'tools' // Use gpt-4.1-mini for function calling
-    });
-    
-    console.log('[processAzureChat] Initial response:', response);
-    
-    // Handle function calls iteratively (same as Gemini with max 5 iterations)
-    let finalResponse = response;
-    let iterations = 0;
-    const maxIterations = 5;
-    
-    while (finalResponse.functionCalls && finalResponse.functionCalls.length > 0 && iterations < maxIterations) {
-      iterations++;
-      console.log(`[processAzureChat] Processing ${finalResponse.functionCalls.length} function calls (iteration ${iterations})`);
-      
-      // Execute all function calls (same switch cases as Gemini)
-      const toolResults = [];
-      for (const call of finalResponse.functionCalls) {
-        const { name, args } = call;
-        console.log(`[processAzureChat] Calling tool: ${name}`, args);
-        
-        const fn = toolFunctions[name];
-        let result;
-        
-        if (fn) {
-          try {
-            switch (name) {
-              case 'getAvailableCourses':
-                result = fn();
-                break;
-              case 'getSyllabus':
-                result = fn(args.courseId, args.subject, args.sectionId);
-                break;
-              case 'searchTopic':
-                result = fn(args.searchQuery, args.filterSubject, args.filterSectionId);
-                break;
-              case 'getProgress':
-                result = fn(args.sectionId);
-                break;
-              case 'getNextTopic':
-                result = fn(args.sectionId);
-                break;
-              case 'getSchedule':
-                result = fn(args.daysAhead);
-                break;
-              case 'getAttendance':
-                result = fn(args.sectionId);
-                break;
-              case 'getAssignments':
-                result = fn(args.sectionId);
-                break;
-              case 'getStudentsAtRisk':
-                result = fn();
-                break;
-              case 'updateProgress':
-                result = fn(args.sectionId, args.chapterIndex, args.topicIndex, args.status, { currentPage: args.currentPage, notes: args.notes });
-                break;
-              case 'findTopicByPage':
-                result = fn(args.sectionId, args.pageNumber);
-                break;
-              case 'navigateTo':
-                result = fn(args.destination, { courseId: args.courseId, sectionId: args.sectionId });
-                // Store navigation intent for caller to handle (SAME AS GEMINI)
-                if (result.success && result.path) {
-                  navigationIntent = result;
-                }
-                break;
-              default:
-                result = { error: `Unknown function: ${name}` };
-            }
-          } catch (err) {
-            console.error(`[processAzureChat] Error calling ${name}:`, err);
-            result = { error: err.message };
-          }
-        } else {
-          result = { error: `Unknown function: ${name}` };
-        }
-        
-        console.log(`[processAzureChat] Tool result for ${name}:`, result);
-        toolResults.push({
-          name,
-          result: JSON.stringify(result)
-        });
-      }
-      
-      // Build new history with tool results (format for Azure tool message)
-      const newHistory = [
-        ...history,
-        { role: 'user', content: text },
-        { role: 'assistant', content: JSON.stringify(finalResponse.functionCalls) },
-        { role: 'user', content: `Tool results:\n${toolResults.map(t => `${t.name}: ${t.result}`).join('\n')}` }
-      ];
-      
-      // Call Azure again with tool results
-      finalResponse = await callAIGenerate({
-        prompt: 'Based on the tool results above, provide a helpful response to the user.',
-        systemInstruction,
-        tools: [{ functionDeclarations: chatToolDeclarations }],
-        history: newHistory,
-        useCase: 'tools'
-      });
-    }
-    
-    // Extract final text
-    const finalText = finalResponse.text || '';
-    console.log('[processAzureChat] Final response:', finalText);
-    
-    // Log successful chat
-    logGeminiCall('processAzureChat', {
-      messagePreview: text.substring(0, 100),
-      model: 'azure-gpt-4.1-mini',
-      toolsUsed: iterations > 0,
-      iterations,
-    }, finalText, Date.now() - startTime);
-    
-    // If navigation was requested, return object with both text and navigation (SAME AS GEMINI)
-    if (navigationIntent) {
-      return {
-        text: finalText || `Navigating to ${navigationIntent.displayName}...`,
-        navigate: navigationIntent.path
-      };
-    }
-    
-    return finalText || "I processed your request but couldn't generate a response.";
-    
-  } catch (error) {
-    console.error('[processAzureChat] Error:', error);
-    
-    // Log error (same as Gemini)
-    logGeminiCall('processAzureChat', {
-      messagePreview: text.substring(0, 100),
-      model: 'azure-gpt-4.1-mini',
-    }, null, Date.now() - startTime, error);
-    
-    // Handle rate limit errors with user-friendly message (same as Gemini)
-    if (isRateLimitError(error)) {
-      const retryDelay = extractRetryDelay(error);
-      const waitTime = retryDelay ? Math.ceil(retryDelay / 1000) : 60;
-      return `⏳ **Rate Limit Reached**\n\nI'm getting too many requests right now. Please wait about ${waitTime} seconds and try again.\n\n_In the meantime, here's what I can help with:_\n• "What's next in 8B?"\n• "Show progress for 6A"\n• "What's my schedule today?"`;
-    }
-    
-    return getFallbackResponse(text, context, conversationHistory);
-  }
-}
-
 // ============================================================================
 // LLM-FIRST CHAT AGENT
 // ============================================================================
@@ -3240,7 +2490,7 @@ RESPONSE RULES:
  * @param {object} context - { currentCourseId, currentSectionId, urlContext }
  * @returns {Promise<string>} - AI response
  */
-export async function   processChat(message, conversationHistory = [], context = {}) {
+export async function processChat(message, conversationHistory = [], context = {}) {
   const startTime = Date.now();
   const text = (message || '').trim();
   
@@ -3259,96 +2509,36 @@ export async function   processChat(message, conversationHistory = [], context =
     historyLength: conversationHistory.length 
   });
 
-  // Check if we can make AI calls (proxy mode or direct API access)
-  const canUseAI = USE_PROXY || isProviderReady();
-  
-  if (!canUseAI) {
-    console.warn(`[processChat] AI not available (provider: ${AI_PROVIDER}), using fallback response`);
-    return getFallbackResponse(text, context, conversationHistory);
-  }
-
   try {
-    // Route to Azure provider if configured
-    if (AI_PROVIDER === 'azure') {
-      return await processAzureChat(text, conversationHistory, context, startTime);
-    }
-    
-    // If using proxy mode, route through Firebase Functions
-    if (USE_PROXY) {
-      // For now, fall back to basic proxy call (function calling not yet implemented in proxy)
-      try {
-        // Convert conversation history to Gemini format
-        const history = conversationHistory.slice(-6).map(msg => ({
-          role: msg.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: msg.content }]
-        }));
-        
-        const response = await callAIGenerate({
-          prompt: text,
-          systemInstruction: `You are a helpful AI teaching assistant. Context: ${JSON.stringify(context)}`,
-          history: history,
-          temperature: 0.7
-        });
-        
-        logGeminiCall('processChat', {
-          messagePreview: text.substring(0, 100),
-          model: 'gemini-proxy',
-          useProxy: true
-        }, response, Date.now() - startTime);
-        
-        return response;
-      } catch (err) {
-        console.error('[processChat] Proxy call failed:', err);
-        return getFallbackResponse(text, context, conversationHistory);
-      }
-    }
-    
-    // Gemini path (direct API - development only)
-    // Build conversation history for context (last 10 messages)
-    // IMPORTANT: Gemini requires history to start with 'user' role, not 'model'
-    // Filter out leading assistant/model messages (like welcome message)
+    // ── Build conversation history ──────────────────────────────
+    // Gemini requires history to start with 'user' role, not 'model'
     let validHistory = conversationHistory.slice(-10);
-    
-    // Find first user message index
     const firstUserIndex = validHistory.findIndex(m => m.role === 'user');
-    if (firstUserIndex > 0) {
-      // Skip leading assistant messages
-      validHistory = validHistory.slice(firstUserIndex);
-    } else if (firstUserIndex === -1) {
-      // No user messages in history, start fresh
-      validHistory = [];
-    }
-    
-    // Exclude the last message (current message) from history - it will be sent separately
+    if (firstUserIndex > 0) validHistory = validHistory.slice(firstUserIndex);
+    else if (firstUserIndex === -1) validHistory = [];
+    // Exclude current message from history
     validHistory = validHistory.slice(0, -1);
-    
+
     const historyMessages = validHistory.map(m => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
     }));
-    
-    // Detect if user is using pronouns that need context resolution
+
+    // ── Pronoun resolution ──────────────────────────────────────
     const lower = text.toLowerCase();
-    const needsContext = /\b(it|this|that|those|these)\b/.test(lower) && 
-                         (lower.includes('mark') || lower.includes('done') || lower.includes('complete') || lower.includes('finish'));
-    
-    // If user says "mark it done", add context hint from recent messages
+    const needsContext = /\b(it|this|that|those|these)\b/.test(lower) &&
+      (lower.includes('mark') || lower.includes('done') || lower.includes('complete') || lower.includes('finish'));
+
     let enhancedMessage = text;
     if (needsContext && conversationHistory.length > 0) {
-      // Find the last assistant message that mentioned a topic
       const recentAssistantMsgs = conversationHistory
-        .filter(m => m.role === 'assistant')
-        .slice(-3);
-      
+        .filter(m => m.role === 'assistant').slice(-3);
       for (const msg of recentAssistantMsgs.reverse()) {
-        // Look for topic mentions in format "Topic Name" or → **Topic**
         const topicMatch = msg.content.match(/→\s*\*\*([^*]+)\*\*/);
         const sectionMatch = msg.content.match(/Section:\s*(\w+)|for\s+(\w+):|Next for (\w+)/i);
-        
         if (topicMatch) {
           const topic = topicMatch[1];
           const section = sectionMatch ? (sectionMatch[1] || sectionMatch[2] || sectionMatch[3]) : null;
-          
           if (section) {
             enhancedMessage = `${text} (referring to "${topic}" in section ${section} from our previous conversation)`;
             console.log('[processChat] Enhanced message with context:', enhancedMessage);
@@ -3358,18 +2548,11 @@ export async function   processChat(message, conversationHistory = [], context =
       }
     }
 
-    // Get temporal context (current time, class status)
+    // ── Temporal context ────────────────────────────────────────
     const temporal = getTemporalContext();
 
-    // Create model with function calling
-    // Note: Google Search grounding cannot be combined with functionDeclarations for gemini-2.5-flash
-    // A separate search-grounded call is made as a fallback when no function calls are triggered
-    const model = genAI.getGenerativeModel({
-      model: MODELS.TEXT, // Using gemini-2.5-flash for best function calling support
-      tools: [
-        { functionDeclarations: chatToolDeclarations },
-      ],
-      systemInstruction: `You are a helpful AI teaching assistant for a school management app. You help teachers with:
+    // ── Build full system instruction ───────────────────────────
+    const systemInstruction = `You are a helpful AI teaching assistant for a school management app. You help teachers with:
 - Tracking syllabus progress
 - Finding the next topic to teach
 - Viewing schedules and attendance
@@ -3401,53 +2584,19 @@ MULTI-STEP OPERATION HANDLING (CRITICAL):
 When the teacher gives complex commands with MULTIPLE operations, YOU MUST execute them ALL in sequence:
 
 Pattern 1: "Mark X as done AND mark the next as [status]"
-EXAMPLE: "mark plains and valleys as done and the next as started"
-REQUIRED STEPS:
-1. searchTopic("plains and valleys") → get {sectionId, chapterIndex, topicIndex}
-2. updateProgress(sectionId, chapterIndex, topicIndex, "complete") → mark first topic DONE
-3. getNextTopic(sectionId) → find the NEXT topic after completion
-4. Extract indices from getNextTopic result
-5. updateProgress(sectionId, nextChapterIndex, nextTopicIndex, "ongoing") → mark next topic STARTED
-RESULT: Both operations completed successfully
+REQUIRED STEPS: searchTopic → updateProgress(complete) → getNextTopic → updateProgress(ongoing)
 
 Pattern 2: "Done with X, covered to page Y, note Z"
-EXAMPLE: "done with plains and valleys, covered to page 42, students understood clearly"
-REQUIRED STEPS:
-1. searchTopic("plains and valleys") → get current topic indices
-2. updateProgress(status="complete") → mark current topic DONE (NO notes, NO currentPage on completed topics)
-3. findTopicByPage(sectionId, 42) → find which topic CONTAINS page 42 (this is the NEXT topic)
-4. updateProgress(status="ongoing", currentPage=42, notes="students understood clearly") → notes and page go on ONGOING topic
-KEY INSIGHT: The note refers to WHERE THEY LEFT OFF (ongoing topic), not the completed topic!
+REQUIRED STEPS: searchTopic → updateProgress(complete) → findTopicByPage(Y) → updateProgress(ongoing, page=Y, notes=Z)
+KEY: Notes and currentPage go on ONGOING topics, not completed ones!
 
 Pattern 3: "Mark X as ongoing with note Y and page Z"
-EXAMPLE: "mark rivers and deltas as ongoing with note 'need extra time' at page 38"
-REQUIRED STEPS:
-1. searchTopic("rivers and deltas") → get topic indices
-2. updateProgress(status="ongoing", currentPage=38, notes="need extra time") → single call with all params
-
-Pattern 4: "Update/read note on topic X"
-EXAMPLE: "what note did I write on plains and valleys?" OR "update the note on rivers to say 'completed exercises'"
-REQUIRED STEPS (READ):
-1. searchTopic("plains and valleys") → get topic indices
-2. getProgress(sectionId) → get syllabus with progress data
-3. Find the specific topic in the syllabus and extract its notes field
-4. Report the note to user
-
-REQUIRED STEPS (UPDATE):
-1. searchTopic("rivers") → get topic indices  
-2. getProgress(sectionId) → get current progress to preserve other fields
-3. updateProgress(status=current_status, notes="completed exercises", currentPage=preserve_current) → update just the note
+REQUIRED STEPS: searchTopic → updateProgress(ongoing, page=Z, notes=Y)
 
 CRITICAL RULES FOR MULTI-STEP:
-✅ DO: Execute ALL operations mentioned in a single command
-✅ DO: Chain function calls - use results from one call to inform the next
-✅ DO: Notes and currentPage go on ONGOING topics, not completed ones
-✅ DO: When finding "next topic", use getNextTopic() which handles sequence automatically
-✅ DO: Read existing progress before updating to preserve fields you're not changing
-❌ DON'T: Stop after the first operation - complete ALL requested changes
-❌ DON'T: Put notes on completed topics (status="complete" → NO notes parameter)
-❌ DON'T: Assume "done with X, page Y" means page Y is for topic X - page Y indicates the NEXT topic!
-❌ DON'T: Forget that findTopicByPage ONLY FINDS - you must call updateProgress after to actually update
+✅ DO: Execute ALL operations; chain function calls; notes on ONGOING topics
+✅ DO: Use getNextTopic() for sequence; read progress before updating
+❌ DON'T: Stop after first operation; put notes on completed topics
 
 RESPONSE RULES:
 1. Keep responses concise and use markdown formatting
@@ -3455,207 +2604,156 @@ RESPONSE RULES:
 3. If you're unsure about a section or topic, ask for clarification
 4. Available sections: ${teacherData.courses.flatMap(c => c.sections.map(s => `${s.id} (${c.title})`)).join(', ')}
 
-GOOGLE SEARCH:
-- Google Search grounding is not currently enabled — answer factual questions from your training knowledge
-- When the teacher asks about teaching methods, educational resources, subject content, exam tips, or curriculum info, provide your best knowledge
-
 IMAGE & FILE CAPABILITIES:
-- You CAN see and analyze images attached by the user (photos of whiteboards, textbook pages, student work, charts, etc.)
+- You CAN see and analyze images (whiteboards, textbook pages, student work, charts)
 - You CAN read text files (CSV, TXT, JSON) attached by the user
 - When an image is attached, describe what you see and provide helpful analysis
-- When a file is attached, summarize its contents and offer relevant insights
 
 EXAMPLE RESPONSES:
-- For "what page?": "In section 6A, you're currently on **Plains and Valleys** (pages 29-36). You left off at page 32."
-- For "where was I?": "Your current topic in ${context.urlContext?.sectionId || '[section]'} is **[Topic Name]** in chapter **[Chapter]**. Continue from page [X]."`
-    });
+- "In section 6A, you're currently on **Plains and Valleys** (pages 29-36). You left off at page 32."
+- "Your current topic in ${context.urlContext?.sectionId || '[section]'} is **[Topic Name]** in chapter **[Chapter]**. Continue from page [X]."`;
 
-    // Start chat with history
-    const chat = model.startChat({ history: historyMessages });
-    
-    // Build message parts - text + any attachments (images, files)
-    const messageParts = [{ text: enhancedMessage }];
-    
+    // ── Build user message parts (text + attachments) ──────────
+    const userParts = [{ text: enhancedMessage }];
     if (context.attachments && context.attachments.length > 0) {
       for (const att of context.attachments) {
         if (att.type === 'image' && att.data) {
-          // Add inline image data for Gemini vision
-          messageParts.push({
-            inlineData: {
-              mimeType: att.mimeType,
-              data: att.data, // base64
-            }
-          });
+          userParts.push({ inlineData: { mimeType: att.mimeType, data: att.data } });
         } else if (att.type === 'text' && att.data) {
-          // Add file content as text context
           const label = att.name ? `[File: ${att.name}]` : '[Attached file]';
-          messageParts.push({
-            text: `\n\n${label}\n${att.data}`
-          });
+          userParts.push({ text: `\n\n${label}\n${att.data}` });
         }
       }
     }
-    
-    // Send message (use enhanced message with attachments if any)
-    let response = await chat.sendMessage(messageParts);
-    
-    // Track navigation intent if navigateTo is called
+
+    // ── Initial AI call with tool declarations ──────────────────
+    let result = await callAIGenerate({
+      parts: userParts,
+      systemInstruction,
+      tools: [{ functionDeclarations: chatToolDeclarations }],
+      history: historyMessages,
+      type: 'default',
+      generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+    });
+
+    // ── Multi-turn tool calling loop ────────────────────────────
     let navigationIntent = null;
-    
-    // Process function calls iteratively
-    let maxIterations = 5;
     let iterations = 0;
-    
-    while (iterations < maxIterations) {
+    const maxIterations = 5;
+    // Keep a running list of all messages for subsequent turns
+    const allMessages = [...historyMessages, { role: 'user', parts: userParts }];
+
+    while (result.functionCalls && result.functionCalls.length > 0 && iterations < maxIterations) {
       iterations++;
-      const candidate = response.response.candidates?.[0];
-      const content = candidate?.content;
-      
-      if (!content?.parts) break;
-      
-      // Check for function calls
-      const functionCalls = content.parts.filter(p => p.functionCall);
-      
-      if (functionCalls.length === 0) {
-        // No more function calls, get the final text response
-        break;
-      }
-      
-      // Execute function calls
-      const functionResponses = [];
-      for (const part of functionCalls) {
-        const { name, args } = part.functionCall;
+      console.log(`[Chat] Iteration ${iterations}: ${result.functionCalls.length} function call(s)`);
+
+      // Execute each function call locally
+      const fnResponseParts = [];
+      for (const fc of result.functionCalls) {
+        const { name, args } = fc;
         console.log(`[Chat] Calling tool: ${name}`, args);
-        
         const fn = toolFunctions[name];
+        let fnResult;
         if (fn) {
-          let result;
           try {
-            // Call the appropriate function with its arguments
             switch (name) {
-              case 'getAvailableCourses':
-                result = fn();
-                break;
-              case 'getSyllabus':
-                result = fn(args.courseId, args.subject, args.sectionId);
-                break;
-              case 'searchTopic':
-                result = fn(args.searchQuery, args.filterSubject, args.filterSectionId);
-                break;
-              case 'getProgress':
-                result = fn(args.sectionId);
-                break;
-              case 'getNextTopic':
-                result = fn(args.sectionId);
-                break;
-              case 'getSchedule':
-                result = fn(args.daysAhead);
-                break;
-              case 'getAttendance':
-                result = fn(args.sectionId);
-                break;
-              case 'getAssignments':
-                result = fn(args.sectionId);
-                break;
-              case 'getStudentsAtRisk':
-                result = fn();
-                break;
-              case 'updateProgress':
-                result = fn(args.sectionId, args.chapterIndex, args.topicIndex, args.status, { currentPage: args.currentPage, notes: args.notes });
-                break;
-              case 'findTopicByPage':
-                result = fn(args.sectionId, args.pageNumber);
-                break;
+              case 'getAvailableCourses': fnResult = fn(); break;
+              case 'getSyllabus': fnResult = fn(args.courseId, args.subject, args.sectionId); break;
+              case 'searchTopic': fnResult = fn(args.searchQuery, args.filterSubject, args.filterSectionId); break;
+              case 'getProgress': fnResult = fn(args.sectionId); break;
+              case 'getNextTopic': fnResult = fn(args.sectionId); break;
+              case 'getSchedule': fnResult = fn(args.daysAhead); break;
+              case 'getAttendance': fnResult = fn(args.sectionId); break;
+              case 'getAssignments': fnResult = fn(args.sectionId); break;
+              case 'getStudentsAtRisk': fnResult = fn(); break;
+              case 'updateProgress': fnResult = fn(args.sectionId, args.chapterIndex, args.topicIndex, args.status, { currentPage: args.currentPage, notes: args.notes }); break;
+              case 'findTopicByPage': fnResult = fn(args.sectionId, args.pageNumber); break;
               case 'navigateTo':
-                result = fn(args.destination, { courseId: args.courseId, sectionId: args.sectionId });
-                // Store navigation intent for caller to handle
-                if (result.success && result.path) {
-                  navigationIntent = result;
-                }
+                fnResult = fn(args.destination, { courseId: args.courseId, sectionId: args.sectionId });
+                if (fnResult.success && fnResult.path) navigationIntent = fnResult;
                 break;
-              default:
-                result = { error: `Unknown function: ${name}` };
+              case 'createCourse': fnResult = fn(args.subject, args.grade, args.title); break;
+              case 'createSection': fnResult = fn(args.courseId, args.sectionId, args.schedules); break;
+              case 'addStudents': fnResult = fn(args.classId, args.students); break;
+              case 'getStudents': fnResult = fn(args.classId); break;
+              case 'removeStudent': fnResult = fn(args.studentId); break;
+              case 'deleteCourse': fnResult = fn(args.courseId); break;
+              case 'deleteSection': fnResult = fn(args.courseId, args.sectionId); break;
+              case 'applyTimetable': fnResult = fn(args.scheduleData); break;
+              case 'markAttendance': fnResult = fn(args.classId, args.studentName, args.status, args.date); break;
+              case 'markBulkAttendance': fnResult = fn(args.classId, args.status, args.exceptions, args.date); break;
+              case 'getTodayAttendance': fnResult = fn(args.classId); break;
+              default: fnResult = { error: `Unknown function: ${name}` };
             }
           } catch (err) {
-            console.error(`Error calling ${name}:`, err);
-            result = { error: err.message };
+            console.error(`[Chat] Error calling ${name}:`, err);
+            fnResult = { error: err.message };
           }
-          
-          console.log(`[Chat] Tool result:`, result);
-          functionResponses.push({
-            functionResponse: {
-              name,
-              response: { result }
-            }
-          });
+        } else {
+          fnResult = { error: `Unknown function: ${name}` };
         }
+        console.log(`[Chat] Tool result:`, fnResult);
+        fnResponseParts.push({ functionResponse: { name, response: { result: fnResult } } });
       }
-      
-      // Send function responses back to LLM
-      response = await chat.sendMessage(functionResponses);
+
+      // Append model's function-call turn and our function-response turn to history
+      allMessages.push({
+        role: 'model',
+        parts: result.functionCalls.map(fc => ({ functionCall: fc })),
+      });
+      allMessages.push({
+        role: 'user',
+        parts: fnResponseParts,
+      });
+
+      // Call again with the extended history (no new prompt — continuation)
+      result = await callAIGenerate({
+        systemInstruction,
+        tools: [{ functionDeclarations: chatToolDeclarations }],
+        history: allMessages,
+        type: 'default',
+        generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+      });
     }
-    
-    // Extract final text response
-    let finalText = response.response.text();
+
+    // ── Extract final text ──────────────────────────────────────
+    const finalText = result.text || '';
     console.log('[Chat] Final response:', finalText || '(empty)');
-    
-    // Extract grounding metadata (Google Search citations)
-    try {
-      const candidate = response.response.candidates?.[0];
-      const groundingMeta = candidate?.groundingMetadata;
-      if (groundingMeta?.groundingChunks?.length > 0) {
-        const sources = groundingMeta.groundingChunks
-          .filter(c => c.web?.uri)
-          .map(c => `- [${c.web.title || c.web.uri}](${c.web.uri})`)
-          .slice(0, 5); // Max 5 sources
-        if (sources.length > 0) {
-          finalText += '\n\n**Sources:**\n' + sources.join('\n');
-        }
-      }
-    } catch (groundingErr) {
-      console.warn('[Chat] Failed to extract grounding metadata:', groundingErr);
-    }
-    
-    // Log successful chat completion
+
     logGeminiCall('processChat', {
       messagePreview: text.substring(0, 100),
-      model: MODELS.TEXT,
-      toolsUsed: iterations > 1,
+      model: 'gemini-proxy',
+      toolsUsed: iterations > 0,
       iterations,
     }, finalText, Date.now() - startTime);
-    
+
     // If navigation was requested, return object with both text and navigation
     if (navigationIntent) {
       return {
         text: finalText || `Navigating to ${navigationIntent.displayName}...`,
-        navigate: navigationIntent.path
+        navigate: navigationIntent.path,
       };
     }
-    
-    // Handle empty response - provide meaningful fallback
+
     if (!finalText || finalText.trim() === '') {
       console.warn('[Chat] Empty response from AI, using fallback');
       return "I understood your request but couldn't generate a proper response. Could you please rephrase?";
     }
-    
+
     return finalText;
-    
+
   } catch (error) {
     console.error('Chat processing error:', error);
-    
-    // Log error
+
     logGeminiCall('processChat', {
       messagePreview: text.substring(0, 100),
-      model: MODELS.TEXT,
+      model: 'gemini-proxy',
     }, null, Date.now() - startTime, error);
-    
-    // Handle rate limit errors with user-friendly message
+
     if (isRateLimitError(error)) {
-      const retryDelay = extractRetryDelay(error);
-      const waitTime = retryDelay ? Math.ceil(retryDelay / 1000) : 60;
-      return `⏳ **Rate Limit Reached**\n\nI'm getting too many requests right now. Please wait about ${waitTime} seconds and try again.\n\n_In the meantime, here's what I can help with:_\n• "What's next in 8B?"\n• "Show progress for 6A"\n• "What's my schedule today?"`;
+      return `⏳ **Rate Limit Reached**\n\nI'm getting too many requests right now. Please wait about 60 seconds and try again.\n\n_In the meantime, here's what I can help with:_\n• "What's next in 8B?"\n• "Show progress for 6A"\n• "What's my schedule today?"`;
     }
-    
+
     return getFallbackResponse(text, context, conversationHistory);
   }
 }

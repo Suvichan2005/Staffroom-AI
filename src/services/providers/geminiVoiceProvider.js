@@ -6,33 +6,22 @@
  */
 
 import { toGeminiToolFormat } from './types.js';
-
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const USE_PROXY = import.meta.env.PROD || import.meta.env.VITE_USE_AI_PROXY === 'true';
+import { getLiveSessionToken } from '../aiApiClient.js';
 
 // Use gemini-2.0-flash-exp for Live API
 const LIVE_API_MODEL = 'gemini-2.0-flash-exp';
 
 /**
- * Get the WebSocket URL for Gemini Live
+ * Get the WebSocket URL for Gemini Live (always via backend proxy)
  */
 async function getLiveApiUrl() {
-  if (USE_PROXY) {
-    try {
-      const { getLiveSessionToken } = await import('../aiApiClient.js');
-      const { wsUrl } = await getLiveSessionToken();
-      return wsUrl;
-    } catch (error) {
-      console.error('[GeminiVoice] Failed to get live session token:', error);
-      throw new Error('Unable to start live session - please try again');
-    }
+  try {
+    const { wsUrl } = await getLiveSessionToken();
+    return wsUrl;
+  } catch (error) {
+    console.error('[GeminiVoice] Failed to get live session token:', error);
+    throw new Error('Unable to start live session - please try again');
   }
-  
-  if (!GEMINI_API_KEY) {
-    throw new Error('Gemini API key not configured for live sessions');
-  }
-  
-  return `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
 }
 
 /**
@@ -378,9 +367,7 @@ class GeminiVoiceProvider {
    * @returns {Promise<boolean>}
    */
   async healthCheck() {
-    if (!USE_PROXY && !GEMINI_API_KEY) {
-      return false;
-    }
+    // Provider is always "available" — backend manages the key.
     return true;
   }
 

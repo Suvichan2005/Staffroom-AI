@@ -2,17 +2,11 @@
  * Voice Recording & Transcription Service
  * 
  * Supports:
- * 1. Browser Web Speech API (free, works offline)
- * 2. OpenAI Whisper API (more accurate, requires API key)
+ * 1. Browser Web Speech API (free, works offline) — primary
+ * 2. OpenAI Whisper API (via backend proxy) — not yet implemented
  */
 
-import { transcribeAudio, blobToBase64 } from './aiApiClient';
-
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-
-// In production, we use Firebase Cloud Functions proxy (API keys are server-side)
-// Disable proxy - use direct browser API calls
-const USE_PROXY = false;
+import { blobToBase64 } from './aiApiClient';
 
 /**
  * Check if browser supports Web Speech API
@@ -139,66 +133,19 @@ export function startBrowserTranscription(options = {}) {
 }
 
 /**
- * Transcribe using OpenAI Whisper API (more accurate)
+ * Transcribe using OpenAI Whisper API (via backend proxy)
+ * 
+ * NOTE: Whisper transcription is not yet available through the backend.
+ * Falls back to browser Web Speech API instead. When the backend adds a
+ * `/api/ai/transcribe` endpoint this can be wired up.
  * 
  * @param {Blob} audioBlob - Recorded audio
  * @returns {Promise<object>} - { transcript, confidence }
  */
 export async function transcribeWithWhisper(audioBlob) {
-  // Use proxy in production (API keys are server-side)
-  if (USE_PROXY) {
-    try {
-      const audio = await blobToBase64(audioBlob);
-      const result = await transcribeAudio({
-        audio,
-        mimeType: audioBlob.type || 'audio/webm'
-      });
-      
-      return {
-        transcript: result.text,
-        confidence: 0.95,
-        method: 'whisper-proxy'
-      };
-    } catch (error) {
-      console.error('Whisper Proxy error:', error);
-      throw error;
-    }
-  }
-  
-  // Direct API call (development mode)
-  if (!OPENAI_API_KEY) {
-    throw new Error('OpenAI API key not configured. Using browser transcription instead.');
-  }
-
-  const formData = new FormData();
-  formData.append('file', audioBlob, 'audio.webm');
-  formData.append('model', 'whisper-1');
-  formData.append('language', 'en');
-
-  try {
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: formData
-    });
-
-    if (!response.ok) {
-      throw new Error(`Whisper API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    return {
-      transcript: data.text,
-      confidence: 0.95, // Whisper doesn't provide confidence, assume high
-      method: 'whisper'
-    };
-  } catch (error) {
-    console.error('Whisper API error:', error);
-    throw error;
-  }
+  throw new Error(
+    'Whisper transcription is not available yet. Use browser Web Speech API (startBrowserTranscription) instead.'
+  );
 }
 
 /**
@@ -211,29 +158,18 @@ export async function recordAndTranscribe(options = {}) {
   const { preferWhisper = false, onProgress } = options;
 
   return new Promise((resolve, reject) => {
-    // Try browser method first (always works, free)
-    if (!preferWhisper || !OPENAI_API_KEY) {
-      if (onProgress) onProgress({ status: 'listening', method: 'browser' });
+    // Always use browser method (free, zero API keys required)
+    if (onProgress) onProgress({ status: 'listening', method: 'browser' });
 
-      const recognition = startBrowserTranscription(
-        (result) => resolve(result),
-        (error) => reject(error)
-      );
+    const recognition = startBrowserTranscription(
+      (result) => resolve(result),
+      (error) => reject(error)
+    );
 
-      if (recognition) {
-        recognition.start();
-      } else {
-        reject(new Error('Speech recognition not available'));
-      }
+    if (recognition) {
+      recognition.start();
     } else {
-      // Use Whisper API (requires recording audio first)
-      recordAudio()
-        .then(async (audioBlob) => {
-          if (onProgress) onProgress({ status: 'transcribing', method: 'whisper' });
-          const result = await transcribeWithWhisper(audioBlob);
-          resolve(result);
-        })
-        .catch(reject);
+      reject(new Error('Speech recognition not available'));
     }
   });
 }

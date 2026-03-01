@@ -1,0 +1,7 @@
+# .dockerignore — keep image lean
+node_modules
+.env
+service-account.json
+*.log
+.git
+docs/

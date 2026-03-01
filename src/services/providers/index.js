@@ -8,8 +8,6 @@
 export {
   normalizeToolDeclarations,
   toGeminiToolFormat,
-  toAzureToolFormat,
-  parseAzureToolCalls,
   parseGeminiToolCalls,
 } from './types.js';
 
@@ -46,7 +44,3 @@ export {
 export { geminiProvider, GeminiProvider } from './geminiProvider.js';
 export { geminiVoiceProvider, GeminiVoiceProvider } from './geminiVoiceProvider.js';
 export { mockProvider, mockVoiceProvider, MockProvider, MockVoiceProvider } from './mockProvider.js';
-
-// Azure providers
-export { azureProvider, AzureProvider } from './azureProvider.js';
-export { azureVoiceProvider, AzureVoiceProvider } from './azureVoiceProvider.js';

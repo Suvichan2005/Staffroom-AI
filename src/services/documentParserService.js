@@ -1,14 +1,11 @@
 /**
  * Document Parser Service
  * 
- * AI-powered document parsing using Gemini API
+ * AI-powered document parsing using Gemini API (via backend proxy)
  * Supports: CSV, Excel, PDF, and image files
  */
 
-// Check if we should use proxy or direct API
-const USE_PROXY = import.meta.env.VITE_USE_AI_PROXY === 'true';
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const PROXY_URL = import.meta.env.VITE_AI_PROXY_URL || '/api/ai';
+import { callAIGenerate, callAIVision } from './aiApiClient.js';
 
 /**
  * Extract text content from various file types
@@ -201,96 +198,37 @@ function extractJSON(text) {
 }
 
 // ============================================================================
-// GEMINI API INTEGRATION
+// GEMINI API INTEGRATION (via backend proxy)
 // ============================================================================
 
 /**
- * Call Gemini API with text prompt
+ * Call Gemini API with text prompt (via backend)
  */
 async function callGeminiText(prompt, systemPrompt = '') {
-  if (USE_PROXY) {
-    const response = await fetch(`${PROXY_URL}/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, systemPrompt }),
-    });
-    return await response.json();
-  }
-  
-  // Direct API call
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [
-        { parts: [{ text: systemPrompt + '\n\n' + prompt }] }
-      ],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 8192,
-      },
-    }),
+  const result = await callAIGenerate({
+    prompt: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt,
+    generationConfig: {
+      temperature: 0.1,
+      maxOutputTokens: 8192,
+    },
   });
-  
-  const data = await response.json();
-  
-  // Check for API errors
-  if (data.error) {
-    console.error('Gemini API error:', data.error);
-    throw new Error(data.error.message || 'Gemini API error');
-  }
-  
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  console.log('Gemini text response:', text.substring(0, 200) + '...');
-  return text;
+  return result.text || '';
 }
 
 /**
- * Call Gemini API with image (vision)
+ * Call Gemini API with image — vision (via backend)
  */
 async function callGeminiVision(prompt, imageBase64, mimeType) {
-  if (USE_PROXY) {
-    const response = await fetch(`${PROXY_URL}/vision`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, image: imageBase64, mimeType }),
-    });
-    return await response.json();
-  }
-  
-  // Direct API call with image
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        parts: [
-          { text: prompt },
-          { inline_data: { mime_type: mimeType, data: imageBase64 } }
-        ]
-      }],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 25000,
-      },
-    }),
+  const result = await callAIVision({
+    prompt,
+    imageBase64,
+    mimeType,
+    generationConfig: {
+      temperature: 0.1,
+      maxOutputTokens: 25000,
+    },
   });
-  
-  const data = await response.json();
-  
-  // Check for API errors
-  if (data.error) {
-    console.error('Gemini Vision API error:', data.error);
-    throw new Error(data.error.message || 'Gemini Vision API error');
-  }
-  
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  console.log('Gemini vision response:', text.substring(0, 200) + '...');
-  return text;
+  return result.text || '';
 }
 
 // ============================================================================

@@ -3,11 +3,6 @@ import { Mic, MicOff, Loader2, Check, X, UserCheck, UserX, Square, Zap, Wifi, Wi
 import { startBrowserTranscription, isSpeechRecognitionSupported } from '../../services/voiceService';
 import { parseAttendanceVoice } from '../../services/aiService';
 import { GeminiLiveSession, isGeminiLiveAvailable } from '../../services/geminiLiveService';
-import { AzureRealtimeSession, isAzureRealtimeAvailable } from '../../services/providers/azureRealtimeProvider';
-
-// Check AI provider from environment
-const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
-const USE_AZURE = AI_PROVIDER === 'azure';
 
 /**
  * Voice Attendance Logger Component
@@ -15,7 +10,7 @@ const USE_AZURE = AI_PROVIDER === 'azure';
  * Allows teachers to mark attendance via voice input
  * Features:
  * - Standard mode: Record → Process → Update (manual stop)
- * - Live AI mode: Real-time streaming with instant tool calls (Azure or Gemini)
+ * - Live AI mode: Real-time streaming with instant tool calls (Gemini)
  * 
  * Usage: <VoiceAttendanceLogger classId="6A" students={studentList} onUpdate={callback} />
  */
@@ -38,8 +33,8 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
   const recognitionRef = useRef(null);
   const liveSessionRef = useRef(null);
 
-  // Check if Live API is available - Azure Realtime or Gemini based on provider
-  const canUseLiveAPI = USE_AZURE ? isAzureRealtimeAvailable() : isGeminiLiveAvailable();
+  // Check if Live API is available — Gemini only
+  const canUseLiveAPI = isGeminiLiveAvailable();
   
   // Automatically choose mode: Live API first, fallback to standard
   const shouldUseLiveAPI = canUseLiveAPI && !useStandardMode;
@@ -178,19 +173,14 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
         }
       };
 
-      // Create session based on provider
+      // Create session
       let session;
-      if (USE_AZURE && isAzureRealtimeAvailable()) {
-        console.log('[VoiceAttendance] Using Azure OpenAI Realtime API');
-        session = new AzureRealtimeSession(sessionOptions);
-      } else {
-        console.log('[VoiceAttendance] Using Gemini Live');
-        session = new GeminiLiveSession(sessionOptions);
-      }
+      console.log('[VoiceAttendance] Using Gemini Live');
+      session = new GeminiLiveSession(sessionOptions);
 
       await session.connect();
       
-      // Start streaming (Azure uses start(), Gemini uses startStreaming())
+      // Start streaming
       if (session.startStreaming) {
         await session.startStreaming();
       } else if (session.start) {
@@ -215,9 +205,7 @@ export default function VoiceAttendanceLogger({ classId, students, onUpdate }) {
       const session = liveSessionRef.current;
       liveSessionRef.current = null; // Prevent double-stop
       
-      // Stop session and wait for final processing
-      // Azure uses async stop() that processes remaining text
-      // Gemini uses disconnect()
+      // Stop session — Gemini uses disconnect()
       try {
         if (session.stop) {
           await session.stop();

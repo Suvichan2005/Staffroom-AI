@@ -12,7 +12,7 @@
 // Provider configuration from environment
 const AI_PROVIDER = import.meta.env.VITE_AI_PROVIDER || 'gemini';
 const AI_FALLBACK_ENABLED = import.meta.env.VITE_AI_FALLBACK_ENABLED !== 'false';
-const AI_FALLBACK_ORDER = (import.meta.env.VITE_AI_FALLBACK_ORDER || 'azure,gemini,mock').split(',');
+const AI_FALLBACK_ORDER = (import.meta.env.VITE_AI_FALLBACK_ORDER || 'gemini,mock').split(',');
 
 // Circuit breaker state
 const circuitBreaker = {
@@ -324,17 +324,6 @@ export async function initializeProviders() {
     voiceRegistry.register(geminiVoiceProvider);
   } catch (error) {
     console.warn('[Registry] Failed to load Gemini provider:', error.message);
-  }
-  
-  try {
-    // Azure providers (will be added in Phase 1)
-    const { azureProvider } = await import('./azureProvider.js');
-    const { azureVoiceProvider } = await import('./azureVoiceProvider.js');
-    aiRegistry.register(azureProvider);
-    voiceRegistry.register(azureVoiceProvider);
-  } catch (error) {
-    // Expected to fail until Azure providers are implemented
-    console.log('[Registry] Azure providers not yet available');
   }
   
   try {
