@@ -3,12 +3,15 @@
  * Handles all backend API communications
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? 'http://localhost:5000/api/v1' : '');
 
 /**
  * Generic fetch wrapper with error handling
  */
 async function apiFetch(endpoint, options = {}) {
+  if (!API_BASE_URL && !import.meta.env.DEV) {
+    throw new Error(`Data API not configured. Falling back to local data.`);
+  }
   const url = `${API_BASE_URL}${endpoint}`;
   
   const config = {

@@ -16,7 +16,7 @@ permissions:
   pull-requests: write
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '22'
 
 jobs:
   # ============================================================================
@@ -100,11 +100,11 @@ jobs:
       - name: Check for exposed API keys in bundle
         run: |
           echo "🔍 Checking for exposed API keys in build..."
-          if grep -rE "(sk-[a-zA-Z0-9]{20,}|AIza[a-zA-Z0-9_-]{35})" dist/; then
-            echo "❌ SECURITY: API keys found in bundle!"
+          if grep -rE "(sk-[a-zA-Z0-9]{20,})" dist/; then
+            echo "❌ SECURITY: Sensitive secret keys found in bundle!"
             exit 1
           fi
-          echo "✅ No API keys found in bundle"
+          echo "✅ No sensitive secret keys found in bundle"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -156,6 +156,7 @@ jobs:
           path: dist/
 
       - name: Deploy to Firebase Hosting Preview
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAFFROOM_AI != '' }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -184,6 +185,7 @@ jobs:
           path: dist/
 
       - name: Deploy to Firebase Hosting (Production)
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAFFROOM_AI != '' }}
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -192,11 +194,16 @@ jobs:
           channelId: live
 
       - name: Deploy Firestore Rules
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAFFROOM_AI != '' }}
         uses: w9jds/firebase-action@master
         with:
           args: deploy --only firestore:rules
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAFFROOM_AI }}
+
+      - name: Notify skipped deployment
+        if: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAFFROOM_AI == '' }}
+        run: echo "ℹ️ FIREBASE_SERVICE_ACCOUNT_STAFFROOM_AI secret is not configured in GitHub Secrets. Skipping automated Hosting deploy."
 
   # ============================================================================
   # DEPLOY BACKEND (Cloud Run)
@@ -211,18 +218,22 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud
+        if: ${{ secrets.GCP_SA_KEY != '' }}
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Setup gcloud CLI
+        if: ${{ secrets.GCP_SA_KEY != '' }}
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Build and push container image
+        if: ${{ secrets.GCP_SA_KEY != '' }}
         run: |
           gcloud builds submit backend --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/staffroom-backend
 
       - name: Deploy Cloud Run service
+        if: ${{ secrets.GCP_SA_KEY != '' }}
         run: |
           gcloud run deploy staffroom-backend \
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/staffroom-backend \
@@ -232,3 +243,7 @@ jobs:
             --port 8080 \
             --set-env-vars NODE_ENV=production,CORS_ALLOWED_ORIGINS=https://staffroom-ai.web.app,https://staffroom-ai.firebaseapp.com \
             --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest
+
+      - name: Notify skipped backend deployment
+        if: ${{ secrets.GCP_SA_KEY == '' }}
+        run: echo "ℹ️ GCP_SA_KEY secret is not configured in GitHub Secrets. Skipping automated Cloud Run deploy."

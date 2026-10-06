@@ -58,6 +58,12 @@ async function apiFetch(path, options = {}) {
     throw err;
   }
 
+  const contentType = res.headers?.get?.('content-type') || '';
+  if (contentType && !contentType.includes('application/json')) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Expected JSON response from AI backend, received ${contentType}: ${text.slice(0, 100)}`);
+  }
+
   return res.json();
 }
 
