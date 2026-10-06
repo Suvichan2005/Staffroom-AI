@@ -30,13 +30,14 @@ describe('AI Providers', () => {
     });
 
     it('should switch between providers', async () => {
-      const { aiRegistry } = await import('../services/providers/registry.js');
+      const { aiRegistry, initializeProviders } = await import('../services/providers/registry.js');
+      await initializeProviders();
       
       aiRegistry.setActive('mock');
-      expect(aiRegistry.getActive()).toBe('mock');
+      expect(aiRegistry.getActive()?.name).toBe('mock');
       
       aiRegistry.setActive('gemini');
-      expect(aiRegistry.getActive()).toBe('gemini');
+      expect(aiRegistry.getActive()?.name).toBe('gemini');
     });
 
     it('should handle invalid provider gracefully', async () => {
@@ -160,7 +161,7 @@ describe('AI Providers', () => {
       
       const geminiFormat = toGeminiToolFormat(tools);
       expect(geminiFormat).toBeDefined();
-      expect(geminiFormat.functionDeclarations).toBeDefined();
+      expect(geminiFormat[0]?.functionDeclarations).toBeDefined();
     });
   });
 

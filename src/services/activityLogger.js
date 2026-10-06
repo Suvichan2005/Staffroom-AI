@@ -59,19 +59,16 @@ export const LogCategory = {
  * Get current user's IP address (via external service)
  */
 let cachedIp = null;
+/**
+ * Get user IP address.
+ * Resolved server-side by the backend (from request headers) — never calls
+ * third-party services like ipify from the client. Returns 'client' as a
+ * placeholder; the backend attaches the real IP to audit entries it creates.
+ */
 export async function getUserIP() {
   if (cachedIp) return cachedIp;
-  
-  try {
-    const response = await fetch('https://api.ipify.org?format=json', {
-      signal: AbortSignal.timeout(3000)
-    });
-    const data = await response.json();
-    cachedIp = data.ip;
-    return cachedIp;
-  } catch (error) {
-    return 'unknown';
-  }
+  cachedIp = 'client';
+  return cachedIp;
 }
 
 /**
@@ -147,6 +144,10 @@ function withTimeout(promise, ms, message = 'Operation timed out') {
   ]);
 }
 
+// Track consecutive failures for alerting
+let consecutiveFirestoreFailures = 0;
+const MAX_SILENT_FAILURES = 5;
+
 /**
  * Save to Firestore (for cross-device admin access)
  * Logs all events: auth, navigation, gemini calls, etc.
@@ -172,8 +173,18 @@ async function saveToFirestore(entry) {
       5000,
       'Firestore write timed out'
     );
+    consecutiveFirestoreFailures = 0; // Reset on success
   } catch (error) {
-    // Silent fail in production - logs are non-critical
+    consecutiveFirestoreFailures++;
+    if (import.meta.env.DEV) {
+      console.warn('[activityLogger] Firestore write failed:', error.message);
+    }
+    if (consecutiveFirestoreFailures >= MAX_SILENT_FAILURES) {
+      console.error(
+        `[activityLogger] ${consecutiveFirestoreFailures} consecutive Firestore write failures. ` +
+        'Audit trail integrity may be compromised. Last error:', error.message
+      );
+    }
   }
 }
 
@@ -212,6 +223,9 @@ export async function getFirestoreLogs(maxResults = 500, emailFilter = null) {
     });
     return logs;
   } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[activityLogger] getFirestoreLogs failed:', error.message);
+    }
     return [];
   }
 }
@@ -231,6 +245,9 @@ export async function getFirestoreUniqueEmails() {
     });
     return Array.from(emails).sort();
   } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn('[activityLogger] getFirestoreUniqueEmails failed:', error.message);
+    }
     return [];
   }
 }
@@ -249,6 +266,7 @@ export async function clearFirestoreLogs() {
     await batch.commit();
     return snapshot.size;
   } catch (error) {
+    console.error('[activityLogger] clearFirestoreLogs failed:', error.message);
     return 0;
   }
 }

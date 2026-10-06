@@ -12,9 +12,8 @@
 import { handleChatToolCall } from './chatToolsDefinition';
 import { getLiveSessionToken } from './aiApiClient';
 
-// Use gemini-2.5-flash-native-audio-preview-12-2025 for Live API - supports audio input with TEXT responses + tool calling
-// The native-audio model requires responseModalities: ['AUDIO'] and cannot return TEXT
-const LIVE_API_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
+// Use gemini-3.8-live for Live API - stable real-time bidirectional audio streaming + tool calling
+const LIVE_API_MODEL = 'gemini-3.8-live';
 
 /**
  * Get the WebSocket URL for Gemini Live (always via backend proxy)
@@ -30,18 +29,21 @@ async function getLiveApiUrl() {
 }
 
 /**
- * Audio processing utilities for PCM conversion
+ * Audio processing utilities for PCM conversion.
+ * Uses AudioWorklet (runs on dedicated audio thread) instead of the
+ * deprecated ScriptProcessorNode which blocked the main thread.
  */
 class AudioProcessor {
   constructor() {
     this.audioContext = null;
     this.mediaStream = null;
-    this.audioWorklet = null;
+    this.workletNode = null;
     this.source = null;
   }
 
   async init() {
     this.audioContext = new AudioContext({ sampleRate: 16000 });
+    await this.audioContext.audioWorklet.addModule('/audio-worklet-processor.js');
     return this;
   }
 
@@ -58,23 +60,16 @@ class AudioProcessor {
       });
 
       this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
-      
-      // Create a ScriptProcessor for audio data extraction
-      // Note: ScriptProcessor is deprecated but widely supported; 
-      // AudioWorklet would be better for production
-      const processor = this.audioContext.createScriptProcessor(4096, 1, 1);
-      
-      processor.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        // Convert Float32 to Int16 PCM
-        const pcmData = this.float32ToInt16(inputData);
-        onAudioData(pcmData);
+
+      // AudioWorklet runs off the main thread — no UI jank
+      this.workletNode = new AudioWorkletNode(this.audioContext, 'pcm-capture');
+      this.workletNode.port.onmessage = (e) => {
+        onAudioData(e.data); // Int16Array PCM
       };
 
-      this.source.connect(processor);
-      processor.connect(this.audioContext.destination);
-      
-      this.processor = processor;
+      this.source.connect(this.workletNode);
+      this.workletNode.connect(this.audioContext.destination);
+
       return true;
     } catch (error) {
       console.error('Microphone access error:', error);
@@ -82,18 +77,10 @@ class AudioProcessor {
     }
   }
 
-  float32ToInt16(float32Array) {
-    const int16Array = new Int16Array(float32Array.length);
-    for (let i = 0; i < float32Array.length; i++) {
-      const s = Math.max(-1, Math.min(1, float32Array[i]));
-      int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-    }
-    return int16Array;
-  }
-
   stop() {
-    if (this.processor) {
-      this.processor.disconnect();
+    if (this.workletNode) {
+      this.workletNode.port.close();
+      this.workletNode.disconnect();
     }
     if (this.source) {
       this.source.disconnect();

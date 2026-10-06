@@ -32,16 +32,24 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.email == userEmail;
     }
     
-    // Check if user is an admin
-    // Add your admin email addresses here
+    // Check if user is an admin via custom claims (set by backend)
+    // Fallback to email whitelist for bootstrapping
     function isAdmin() {
       return isAuthenticated() && (
+        request.auth.token.role == 'admin' ||
         request.auth.token.email in [
           'admin@staffroom.ai',
           'suvichan2005@gmail.com',
           'suvanshagar@gmail.com'
-          // Add more admin emails as needed
         ]
+      );
+    }
+
+    // Check if user is HOD or admin
+    function isHODOrAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.role in ['admin', 'hod'] ||
+        isAdmin()
       );
     }
     
@@ -103,8 +111,9 @@ service cloud.firestore {
     // =========================================================================
     
     match /attendance/{recordId} {
-      // Teachers can create/read attendance records
-      allow create: if isAuthenticated();
+      // Teachers can create attendance records for themselves only
+      allow create: if isAuthenticated() 
+        && request.resource.data.teacherEmail == request.auth.token.email;
       allow read: if isAuthenticated();
       
       // Only the creator or admin can update/delete

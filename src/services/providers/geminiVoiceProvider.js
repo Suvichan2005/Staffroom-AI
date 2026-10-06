@@ -8,8 +8,8 @@
 import { toGeminiToolFormat } from './types.js';
 import { getLiveSessionToken } from '../aiApiClient.js';
 
-// Use gemini-2.0-flash-exp for Live API
-const LIVE_API_MODEL = 'gemini-2.0-flash-exp';
+// Use gemini-3.8-live for Live API
+const LIVE_API_MODEL = 'gemini-3.8-live';
 
 /**
  * Get the WebSocket URL for Gemini Live (always via backend proxy)
@@ -31,12 +31,13 @@ class AudioProcessor {
   constructor() {
     this.audioContext = null;
     this.mediaStream = null;
-    this.processor = null;
+    this.workletNode = null;
     this.source = null;
   }
 
   async init() {
     this.audioContext = new AudioContext({ sampleRate: 16000 });
+    await this.audioContext.audioWorklet.addModule('/audio-worklet-processor.js');
     return this;
   }
 
@@ -54,18 +55,15 @@ class AudioProcessor {
 
       this.source = this.audioContext.createMediaStreamSource(this.mediaStream);
       
-      const processor = this.audioContext.createScriptProcessor(4096, 1, 1);
-      
-      processor.onaudioprocess = (e) => {
-        const inputData = e.inputBuffer.getChannelData(0);
-        const pcmData = this.float32ToInt16(inputData);
-        onAudioData(pcmData);
+      // AudioWorklet runs off the main thread — no UI jank
+      this.workletNode = new AudioWorkletNode(this.audioContext, 'pcm-capture');
+      this.workletNode.port.onmessage = (e) => {
+        onAudioData(e.data); // Int16Array PCM
       };
 
-      this.source.connect(processor);
-      processor.connect(this.audioContext.destination);
-      
-      this.processor = processor;
+      this.source.connect(this.workletNode);
+      this.workletNode.connect(this.audioContext.destination);
+
       return true;
     } catch (error) {
       console.error('[GeminiVoice] Microphone access error:', error);
@@ -83,8 +81,9 @@ class AudioProcessor {
   }
 
   stop() {
-    if (this.processor) {
-      this.processor.disconnect();
+    if (this.workletNode) {
+      this.workletNode.port.close();
+      this.workletNode.disconnect();
     }
     if (this.source) {
       this.source.disconnect();

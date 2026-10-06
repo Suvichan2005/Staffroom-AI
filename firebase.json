@@ -6,43 +6,27 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|svg|png|jpg|jpeg|gif|ico|woff|woff2)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "index.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      }
+    ],
     "rewrites": [
-      {
-        "source": "/api/ai/generate",
-        "function": "aiGenerate"
-      },
-      {
-        "source": "/api/ai/transcribe",
-        "function": "transcribe"
-      },
-      {
-        "source": "/api/ai/live-token",
-        "function": "getLiveToken"
-      },
-      {
-        "source": "/api/ai/azure/generate",
-        "function": "azureGenerate"
-      },
-      {
-        "source": "/api/ai/azure/transcribe",
-        "function": "azureTranscribe"
-      },
-      {
-        "source": "/api/ai/azure/speech-token",
-        "function": "azureSpeechToken"
-      },
-      {
-        "source": "/api/health",
-        "function": "health"
-      },
-      {
-        "source": "/api/health/azure",
-        "function": "azureHealth"
-      },
-      {
-        "source": "/api/health/azure-speech",
-        "function": "azureSpeechHealth"
-      },
       {
         "source": "**",
         "destination": "/index.html"
@@ -52,22 +36,10 @@
   "firestore": {
     "rules": "firestore.rules"
   },
-  "functions": {
-    "source": "functions",
-    "runtime": "nodejs22",
-    "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log"
-    ]
-  },
+
   "emulators": {
     "auth": {
       "port": 9091
-    },
-    "functions": {
-      "port": 5002
     },
     "firestore": {
       "port": 8088

@@ -169,26 +169,49 @@ class MockProvider {
    * @param {import('./types.js').GenerateRequest} request
    * @returns {AsyncIterable<import('./types.js').StreamChunk>}
    */
-  async *generateStream(request) {
-    const response = await this.generate(request);
-    
-    // Stream text character by character with small delays
-    const text = response.text;
-    const chunkSize = 10;
-    
-    for (let i = 0; i < text.length; i += chunkSize) {
-      await new Promise(resolve => setTimeout(resolve, 30));
-      yield {
-        text: text.slice(i, i + chunkSize),
-        done: false,
-      };
+  generateStream(request, onChunk) {
+    // If a callback is passed, run stream eagerly and return full response Promise
+    if (typeof onChunk === 'function') {
+      return (async () => {
+        const response = await this.generate(request);
+        const text = response.text;
+        const chunkSize = 10;
+        for (let i = 0; i < text.length; i += chunkSize) {
+          await new Promise(resolve => setTimeout(resolve, 30));
+          onChunk({
+            text: text.slice(i, i + chunkSize),
+            done: false,
+          });
+        }
+        onChunk({
+          text: '',
+          toolCalls: response.toolCalls,
+          done: true,
+        });
+        return response;
+      })();
     }
-    
-    yield {
-      text: '',
-      toolCalls: response.toolCalls,
-      done: true,
-    };
+
+    // Otherwise return async generator
+    const self = this;
+    return (async function* () {
+      const response = await self.generate(request);
+      const text = response.text;
+      const chunkSize = 10;
+      for (let i = 0; i < text.length; i += chunkSize) {
+        await new Promise(resolve => setTimeout(resolve, 30));
+        yield {
+          text: text.slice(i, i + chunkSize),
+          done: false,
+        };
+      }
+      yield {
+        text: '',
+        toolCalls: response.toolCalls,
+        done: true,
+      };
+      return response;
+    })();
   }
 }
 
@@ -232,6 +255,10 @@ class MockVoiceProvider {
    */
   createStreamingSession(options) {
     return new MockStreamingSession(options);
+  }
+
+  createSession(options) {
+    return this.createStreamingSession(options);
   }
 }
 

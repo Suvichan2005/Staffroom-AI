@@ -54,7 +54,7 @@ app.use(hpp());
 // ── Compression ─────────────────────────────────────────────
 app.use(compression());
 
-// ── Trust proxy (Railway / Render / Cloud Run sit behind LB) ─
+// ── Trust proxy (managed platforms sit behind a load balancer) ─
 app.set('trust proxy', 1);
 
 // ── Request logging (lightweight) ───────────────────────────

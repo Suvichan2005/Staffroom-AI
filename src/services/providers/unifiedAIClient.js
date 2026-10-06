@@ -5,8 +5,8 @@
  * Replaces direct provider usage in services.
  */
 
-import { aiRegistry, voiceRegistry, initializeProviders } from './providers/registry.js';
-import { normalizeToolDeclarations } from './providers/types.js';
+import { aiRegistry, voiceRegistry, initializeProviders } from './registry.js';
+import { normalizeToolDeclarations } from './types.js';
 
 // Initialization state
 let initialized = false;
@@ -63,23 +63,40 @@ export async function generateAI(options) {
  * @param {Object} options
  * @returns {AsyncIterable<{text: string, done: boolean, toolCalls?: Array}>}
  */
-export async function* generateStreamAI(options) {
-  await ensureInitialized();
-  
-  const provider = aiRegistry.getActive();
-  
-  const request = {
-    prompt: options.prompt,
-    systemInstruction: options.systemInstruction,
-    history: options.history,
-    tools: options.tools ? normalizeToolDeclarations(options.tools) : undefined,
-    options: {
-      temperature: options.generationConfig?.temperature,
-      maxTokens: options.generationConfig?.maxOutputTokens,
-    },
-  };
-  
-  yield* provider.generateStream(request);
+export function generateStreamAI(options, onChunk) {
+  if (typeof onChunk === 'function') {
+    return (async () => {
+      await ensureInitialized();
+      const provider = aiRegistry.getActive();
+      const request = {
+        prompt: options.prompt,
+        systemInstruction: options.systemInstruction,
+        history: options.history,
+        tools: options.tools ? normalizeToolDeclarations(options.tools) : undefined,
+        options: {
+          temperature: options.generationConfig?.temperature,
+          maxTokens: options.generationConfig?.maxOutputTokens,
+        },
+      };
+      return provider.generateStream(request, onChunk);
+    })();
+  }
+
+  return (async function* () {
+    await ensureInitialized();
+    const provider = aiRegistry.getActive();
+    const request = {
+      prompt: options.prompt,
+      systemInstruction: options.systemInstruction,
+      history: options.history,
+      tools: options.tools ? normalizeToolDeclarations(options.tools) : undefined,
+      options: {
+        temperature: options.generationConfig?.temperature,
+        maxTokens: options.generationConfig?.maxOutputTokens,
+      },
+    };
+    yield* provider.generateStream(request);
+  })();
 }
 
 /**
@@ -144,18 +161,24 @@ export async function checkProviderHealth() {
   for (const name of aiRegistry.getRegisteredProviders()) {
     const provider = aiRegistry.get(name);
     try {
+      const isHealthy = await provider.healthCheck();
       results.providers[name] = {
-        healthy: await provider.healthCheck(),
+        healthy: isHealthy,
+        available: isHealthy,
         active: name === aiRegistry.activeProvider,
       };
     } catch (error) {
       results.providers[name] = {
         healthy: false,
+        available: false,
         error: error.message,
         active: name === aiRegistry.activeProvider,
       };
     }
   }
+  
+  const activeName = aiRegistry.activeProvider;
+  results.available = results.providers[activeName]?.available ?? true;
   
   return results;
 }

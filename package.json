@@ -14,7 +14,6 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
     "firebase": "^12.6.0",
     "framer-motion": "^11.0.3",
     "lucide-react": "^0.363.0",

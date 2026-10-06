@@ -94,6 +94,10 @@ class AIProviderRegistry {
     return Array.from(this.providers.keys());
   }
 
+  getProviders() {
+    return this.getRegisteredProviders();
+  }
+
   /**
    * Check if circuit breaker is open for a provider
    * @param {string} providerName

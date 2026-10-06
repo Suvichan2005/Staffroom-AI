@@ -35,7 +35,7 @@ const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const LogsPage = lazy(() => import("./pages/LogsPage"));
 
 // Shared components
-import { ProtectedRoute, AdminRoute } from "./components/shared";
+import { ProtectedRoute, AdminRoute, HODRoute } from "./components/shared";
 
 // New Layout Components
 import { ResponsiveLayout } from './components/layout';
@@ -268,11 +268,11 @@ export default function App() {
 
                   {/* Role-gated pages */}
                   <Route path="/hod-dashboard" element={
-                    <ProtectedRoute>
+                    <HODRoute>
                       <AppLayout>
                         <HODDashboard />
                       </AppLayout>
-                    </ProtectedRoute>
+                    </HODRoute>
                   } />
 
                   <Route path="/admin-dashboard" element={

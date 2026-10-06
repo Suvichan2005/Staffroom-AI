@@ -91,7 +91,13 @@ class MockResizeObserver {
 }
 global.ResizeObserver = MockResizeObserver;
 
-// Suppress console errors during tests (optional)
-// Uncomment if tests are too noisy
-// console.error = vi.fn();
-// console.warn = vi.fn();
+// Mock Firebase client for test environments
+vi.mock('../firebase/client', () => ({
+  app: {},
+  auth: {
+    currentUser: null,
+    onAuthStateChanged: vi.fn(),
+  },
+  db: {},
+  googleProvider: {},
+}));

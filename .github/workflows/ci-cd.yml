@@ -16,7 +16,7 @@ permissions:
   pull-requests: write
 
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
 
 jobs:
   # ============================================================================
@@ -88,13 +88,14 @@ jobs:
       - name: Build production bundle
         run: npm run build
         env:
-          # Don't include real API keys in build - we use Cloud Functions
+          # Frontend only needs Firebase public config and backend URL.
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
 
       - name: Check for exposed API keys in bundle
         run: |
@@ -198,10 +199,10 @@ jobs:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAFFROOM_AI }}
 
   # ============================================================================
-  # DEPLOY FUNCTIONS (main branch only, separate job for safety)
+  # DEPLOY BACKEND (Cloud Run)
   # ============================================================================
-  deploy-functions:
-    name: Deploy Cloud Functions
+  deploy-backend:
+    name: Deploy Backend to Cloud Run
     runs-on: ubuntu-latest
     needs: deploy-production
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -209,17 +210,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Install Functions dependencies
-        run: cd functions && npm ci
+      - name: Setup gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
 
-      - name: Deploy Cloud Functions
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only functions
-        env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAFFROOM_AI }}
+      - name: Build and push container image
+        run: |
+          gcloud builds submit backend --tag gcr.io/${{ secrets.GCP_PROJECT_ID }}/staffroom-backend
+
+      - name: Deploy Cloud Run service
+        run: |
+          gcloud run deploy staffroom-backend \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/staffroom-backend \
+            --region ${{ secrets.GCP_REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8080 \
+            --set-env-vars NODE_ENV=production,CORS_ALLOWED_ORIGINS=https://staffroom-ai.web.app,https://staffroom-ai.firebaseapp.com \
+            --set-secrets GEMINI_API_KEY=GEMINI_API_KEY:latest

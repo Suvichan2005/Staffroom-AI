@@ -8,7 +8,7 @@ const REQUIRED = ['GEMINI_API_KEY'];
 const OPTIONAL_WITH_DEFAULTS = {
   PORT: '8080',
   NODE_ENV: 'production',
-  CORS_ALLOWED_ORIGINS: 'https://staffroom-ai.web.app,https://staffroom-ai.firebaseapp.com',
+  CORS_ALLOWED_ORIGINS: 'https://staffroom-ai.web.app,https://staffroom-ai.firebaseapp.com,http://localhost:5173',
   REDIS_URL: '',
   RATE_LIMIT_MAX: '60',
   RATE_LIMIT_WINDOW_MS: '60000',

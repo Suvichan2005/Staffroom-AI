@@ -1,49 +1,45 @@
 // ─────────────────────────────────────────────────────────────
-// services/aiRouter.js — AI provider routing (Gemini)
+// services/aiRouter.js — AI provider routing (Google GenAI SDK)
 //
-// Provider-agnostic interface — adding new providers in future
-// only requires adding a new callXxx function + DISPATCH entry.
+// Modernized to @google/genai SDK with stable Gemini 3.8 models:
+// • Text / Fast / Default: gemini-3.8-flash
+// • Complex / In-depth:    gemini-3.8-pro
+// • Live Audio WebSocket:  gemini-3.8-live
+//
 // All keys are loaded from process.env, never from the client.
 // ─────────────────────────────────────────────────────────────
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import config from '../config/env.js';
 
 // ── Lazy singleton ──────────────────────────────────────────
 
-let _geminiClient = null;
+let _aiClient = null;
 
-function geminiClient() {
-  if (!_geminiClient) {
-    _geminiClient = new GoogleGenerativeAI(config.gemini.apiKey);
+function getAIClient() {
+  if (!_aiClient) {
+    _aiClient = new GoogleGenAI({ apiKey: config.gemini.apiKey });
   }
-  return _geminiClient;
+  return _aiClient;
 }
 
-// ── Model tiers ─────────────────────────────────────────────
+// ── Model tiers (Targeting stable Gemini 3.8 generation) ──────
 
-const MODEL_MAP = {
-  fast:    'gemini-2.5-flash',
-  default: 'gemini-2.5-flash',
-  complex: 'gemini-2.5-pro',
+export const MODEL_MAP = {
+  fast:    'gemini-3.8-flash',
+  default: 'gemini-3.8-flash',
+  complex: 'gemini-3.8-pro',
 };
+
+export const LIVE_MODEL = 'gemini-3.8-live';
 
 // ── Generate ────────────────────────────────────────────────
 
 async function callGemini({ messages, tools, systemInstruction, type, toolConfig, generationConfig }) {
   const modelId = MODEL_MAP[type] || MODEL_MAP.default;
+  const ai = getAIClient();
 
-  const modelOpts = {
-    model: modelId,
-    systemInstruction: systemInstruction || undefined,
-    tools: tools || undefined,
-  };
-
-  if (toolConfig) modelOpts.toolConfig = toolConfig;
-
-  const model = geminiClient().getGenerativeModel(modelOpts);
-
-  // Convert OpenAI-style messages → Gemini contents
+  // Convert incoming messages format to Gemini contents structure
   const contents = messages.map((m) => ({
     role: m.role === 'assistant' ? 'model' : m.role,
     parts: Array.isArray(m.parts) ? m.parts : [{ text: m.content || '' }],
@@ -54,14 +50,21 @@ async function callGemini({ messages, tools, systemInstruction, type, toolConfig
     maxOutputTokens: generationConfig?.maxOutputTokens ?? 4096,
   };
 
-  const result = await model.generateContent({ contents, generationConfig: genConfig });
-  const response = result.response;
+  if (systemInstruction) genConfig.systemInstruction = systemInstruction;
+  if (tools) genConfig.tools = tools;
+  if (toolConfig) genConfig.toolConfig = toolConfig;
+
+  const response = await ai.models.generateContent({
+    model: modelId,
+    contents,
+    config: genConfig,
+  });
 
   return {
     provider: 'gemini',
     model: modelId,
-    text: response.text?.() || '',
-    functionCalls: response.functionCalls?.() || [],
+    text: response.text || '',
+    functionCalls: response.functionCalls || [],
     finishReason: response.candidates?.[0]?.finishReason || 'STOP',
   };
 }
@@ -69,13 +72,11 @@ async function callGemini({ messages, tools, systemInstruction, type, toolConfig
 // ── Vision / document parsing ───────────────────────────────
 
 /**
- * Call Gemini with inline image data (vision).
+ * Call Gemini with inline image data (vision / document parsing).
  */
 async function callGeminiVision({ prompt, imageBase64, mimeType, systemInstruction, generationConfig }) {
-  const model = geminiClient().getGenerativeModel({
-    model: MODEL_MAP.default,
-    systemInstruction: systemInstruction || undefined,
-  });
+  const modelId = MODEL_MAP.default;
+  const ai = getAIClient();
 
   const parts = [
     { text: prompt },
@@ -87,14 +88,19 @@ async function callGeminiVision({ prompt, imageBase64, mimeType, systemInstructi
     maxOutputTokens: generationConfig?.maxOutputTokens ?? 25000,
   };
 
-  const result = await model.generateContent({ contents: [{ parts }], generationConfig: genConfig });
-  const response = result.response;
+  if (systemInstruction) genConfig.systemInstruction = systemInstruction;
+
+  const response = await ai.models.generateContent({
+    model: modelId,
+    contents: [{ parts }],
+    config: genConfig,
+  });
 
   return {
     provider: 'gemini',
-    model: MODEL_MAP.default,
-    text: response.text?.() || '',
-    functionCalls: response.functionCalls?.() || [],
+    model: modelId,
+    text: response.text || '',
+    functionCalls: response.functionCalls || [],
     finishReason: response.candidates?.[0]?.finishReason || 'STOP',
   };
 }
@@ -107,27 +113,28 @@ async function callGeminiVision({ prompt, imageBase64, mimeType, systemInstructi
  */
 async function callGeminiAgent({ contents, systemInstruction, tools, toolConfig, generationConfig }) {
   const modelId = MODEL_MAP.default;
-
-  const model = geminiClient().getGenerativeModel({
-    model: modelId,
-    systemInstruction: systemInstruction || undefined,
-    tools: tools || undefined,
-    toolConfig: toolConfig || undefined,
-  });
+  const ai = getAIClient();
 
   const genConfig = {
     temperature: generationConfig?.temperature ?? 0.1,
     maxOutputTokens: generationConfig?.maxOutputTokens ?? 16384,
   };
 
-  const result = await model.generateContent({ contents, generationConfig: genConfig });
-  const response = result.response;
+  if (systemInstruction) genConfig.systemInstruction = systemInstruction;
+  if (tools) genConfig.tools = tools;
+  if (toolConfig) genConfig.toolConfig = toolConfig;
+
+  const response = await ai.models.generateContent({
+    model: modelId,
+    contents,
+    config: genConfig,
+  });
 
   return {
     provider: 'gemini',
     model: modelId,
-    text: response.text?.() || '',
-    functionCalls: response.functionCalls?.() || [],
+    text: response.text || '',
+    functionCalls: response.functionCalls || [],
     finishReason: response.candidates?.[0]?.finishReason || 'STOP',
   };
 }
@@ -148,7 +155,7 @@ export async function generateAgent(opts) {
 
 export function getProviderStatus() {
   return {
-    gemini: { available: !!config.gemini.apiKey, label: 'Gemini' },
+    gemini: { available: !!config.gemini.apiKey, label: 'Gemini (3.8 Flash / Pro)' },
   };
 }
 
