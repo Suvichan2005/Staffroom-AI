@@ -230,9 +230,14 @@ EXAMPLE RESPONSES:
         fnResponseParts.push({ functionResponse: { name, response: { result: fnResult } } });
       }
 
+      // Preserve the raw model parts (including thoughtSignature for Gemini 3.8 models)
+      const modelParts = (result.parts && result.parts.length > 0)
+        ? result.parts
+        : result.functionCalls.map(fc => ({ functionCall: fc }));
+
       allMessages.push({
         role: 'model',
-        parts: result.functionCalls.map(fc => ({ functionCall: fc })),
+        parts: modelParts,
       });
       allMessages.push({
         role: 'user',

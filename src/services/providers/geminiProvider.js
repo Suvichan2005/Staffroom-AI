@@ -80,6 +80,7 @@ class GeminiProvider {
       return {
         text: result.text || '',
         toolCalls: parseGeminiToolCalls(functionCalls),
+        parts: result.parts || [],
         finishReason,
         usage: result.usage || {},
       };

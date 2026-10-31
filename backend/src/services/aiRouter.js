@@ -60,12 +60,25 @@ async function callGemini({ messages, tools, systemInstruction, type, toolConfig
     config: genConfig,
   });
 
+  const candidate = response.candidates?.[0];
+  const parts = candidate?.content?.parts || [];
+  let text = '';
+  const hasTextPart = parts.some((p) => typeof p.text === 'string' && p.text.length > 0);
+  if (hasTextPart) {
+    try {
+      text = response.text || '';
+    } catch {
+      text = parts.filter((p) => p.text).map((p) => p.text).join('') || '';
+    }
+  }
+
   return {
     provider: 'gemini',
     model: modelId,
-    text: response.text || '',
+    text,
     functionCalls: response.functionCalls || [],
-    finishReason: response.candidates?.[0]?.finishReason || 'STOP',
+    parts,
+    finishReason: candidate?.finishReason || 'STOP',
   };
 }
 
@@ -96,12 +109,22 @@ async function callGeminiVision({ prompt, imageBase64, mimeType, systemInstructi
     config: genConfig,
   });
 
+  const candidate = response.candidates?.[0];
+  const responseParts = candidate?.content?.parts || [];
+  let text = '';
+  try {
+    text = response.text || '';
+  } catch {
+    text = responseParts.filter((p) => p.text).map((p) => p.text).join('') || '';
+  }
+
   return {
     provider: 'gemini',
     model: modelId,
-    text: response.text || '',
+    text,
     functionCalls: response.functionCalls || [],
-    finishReason: response.candidates?.[0]?.finishReason || 'STOP',
+    parts: responseParts,
+    finishReason: candidate?.finishReason || 'STOP',
   };
 }
 
@@ -130,12 +153,25 @@ async function callGeminiAgent({ contents, systemInstruction, tools, toolConfig,
     config: genConfig,
   });
 
+  const candidate = response.candidates?.[0];
+  const parts = candidate?.content?.parts || [];
+  let text = '';
+  const hasTextPart = parts.some((p) => typeof p.text === 'string' && p.text.length > 0);
+  if (hasTextPart) {
+    try {
+      text = response.text || '';
+    } catch {
+      text = parts.filter((p) => p.text).map((p) => p.text).join('') || '';
+    }
+  }
+
   return {
     provider: 'gemini',
     model: modelId,
-    text: response.text || '',
+    text,
     functionCalls: response.functionCalls || [],
-    finishReason: response.candidates?.[0]?.finishReason || 'STOP',
+    parts,
+    finishReason: candidate?.finishReason || 'STOP',
   };
 }
 
